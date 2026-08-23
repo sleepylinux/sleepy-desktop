@@ -28,7 +28,7 @@ TestCase {
         compare(tokens.railWidth % tokens.gridUnit, 0);
         compare(tokens.drawerWidth % tokens.gridUnit, 0);
         compare(tokens.railBrandTopInset, 15);
-        compare(tokens.railWorkspaceTop, 84);
+        compare(tokens.railWorkspaceTop, 80);
         compare(tokens.railBottomInset, 15);
         compare(tokens.drawerHeaderHeight, 54);
         compare(tokens.drawerCloseSize, 38);

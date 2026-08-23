@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/scripts/lib/qml-tooling.sh"
 
 if ! command -v jq >/dev/null 2>&1; then
   printf 'FAIL: jq is required to validate the QML import scanner output\n' >&2
@@ -33,23 +34,19 @@ qmllint_bin="$(resolve_qt6_tool qmllint)"
 qmlcachegen_bin="$(resolve_qt6_tool qmlcachegen)"
 qmlimportscanner_bin="$(resolve_qt6_tool qmlimportscanner)"
 
-if ! command -v quickshell >/dev/null 2>&1; then
+if [[ -n ${SLEEPY_QUICKSHELL_BIN:-} ]]; then
+  quickshell_bin="$SLEEPY_QUICKSHELL_BIN"
+else
+  quickshell_bin="$(command -v quickshell 2>/dev/null || true)"
+fi
+
+if [[ -z "$quickshell_bin" || ! -x "$quickshell_bin" ]]; then
   printf 'FAIL: Quickshell is required so its QML modules can be validated\n' >&2
   exit 1
 fi
 
-quickshell_import_root=""
-for import_root in /usr/lib/qt6/qml /usr/local/lib/qt6/qml; do
-  if [[ -f "$import_root/Quickshell/qmldir" ]]; then
-    quickshell_import_root="$import_root"
-    break
-  fi
-done
-
-if [[ -z "$quickshell_import_root" ]]; then
-  printf 'FAIL: Quickshell is installed but its Qt 6 qmldir was not found\n' >&2
-  exit 1
-fi
+quickshell_import_root="$(find_quickshell_import_root \
+  "$quickshell_bin" "$qmllint_bin" "$qmlcachegen_bin" "$qmlimportscanner_bin")"
 
 mapfile -t qml_files < <(find "$repo_root/src" -type f -name '*.qml' -print | sort)
 if [[ ${#qml_files[@]} -eq 0 ]]; then
@@ -84,4 +81,4 @@ trap 'rm -rf "$validation_tmp"' EXIT
   "$repo_root/src/preview/main.qml"
 
 printf 'PASS: Qt 6 import scan, qmllint, and bytecode compilation succeeded (%s)\n' \
-  "$(quickshell --version | head -n 1)"
+  "$("$quickshell_bin" --version | head -n 1)"

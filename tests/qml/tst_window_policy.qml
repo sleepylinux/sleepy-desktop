@@ -10,6 +10,7 @@ TestCase {
 
     name: "WindowPolicy"
     when: windowShown
+    visible: true
     width: 1000
     height: 800
 
@@ -130,7 +131,12 @@ TestCase {
         firstButton.forceActiveFocus();
         keyClick(Qt.Key_Return);
         compare(fixture.controller.openScreenKey, "DP-1");
-        compare(fixture.drawer.visible, true);
+        compare(fixture.drawer.screenKey, "DP-1");
+        compare(fixture.controller.isOpen("quickSettings",
+                                          fixture.drawer.screenKey), true);
+        compare(fixture.drawer.windowPolicy.drawerVisible, true);
+        compare(fixture.visible, true);
+        tryCompare(fixture.drawer, "visible", true);
 
         fixture.drawer.forceActiveFocus();
         verify(fixture.drawer.activeFocus);

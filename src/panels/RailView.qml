@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
+import "../services" as Services
 import "../widgets" as Widgets
 
 FocusScope {
@@ -12,8 +13,15 @@ FocusScope {
     required property var surfaceController
     required property var workspaceModel
     property string timeText: "22\n24"
+    property string screenKey: "default"
 
     readonly property int workspaceCount: workspaceRepeater.count
+    readonly property Services.SurfaceWindowPolicy windowPolicy:
+        Services.SurfaceWindowPolicy {
+            surfaceController: root.surfaceController
+            surfaceId: "quickSettings"
+            screenKey: root.screenKey
+        }
 
     signal workspaceActivated(int index)
 
@@ -32,7 +40,7 @@ FocusScope {
         anchors {
             top: parent.top
             horizontalCenter: parent.horizontalCenter
-            topMargin: 15
+            topMargin: root.tokens.railBrandTopInset
         }
         artworkRegistry: root.artworkRegistry
     }
@@ -41,9 +49,9 @@ FocusScope {
         anchors {
             top: parent.top
             horizontalCenter: parent.horizontalCenter
-            topMargin: 80
+            topMargin: root.tokens.railWorkspaceTop
         }
-        spacing: 7
+        spacing: root.tokens.railWorkspaceSpacing
 
         Repeater {
             id: workspaceRepeater
@@ -66,9 +74,9 @@ FocusScope {
         anchors {
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
-            bottomMargin: 15
+            bottomMargin: root.tokens.railBottomInset
         }
-        spacing: 9
+        spacing: root.tokens.railBottomSpacing
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -83,11 +91,20 @@ FocusScope {
         }
 
         Widgets.StatusButton {
+            id: quickSettingsButton
             objectName: "quickSettingsButton"
-            active: root.surfaceController.isOpen("quickSettings")
+            active: root.windowPolicy.drawerVisible
             tokens: root.tokens
             colors: root.colors
-            onTriggered: root.surfaceController.toggle("quickSettings")
+            onTriggered: root.windowPolicy.toggleFromRail()
+        }
+    }
+
+    Connections {
+        target: root.windowPolicy
+
+        function onFocusReturnRequested() {
+            Qt.callLater(quickSettingsButton.forceActiveFocus);
         }
     }
 }

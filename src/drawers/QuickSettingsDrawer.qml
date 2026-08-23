@@ -2,6 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
 import Quickshell
+import "../panels" as Panels
+import "../services" as Services
 
 Scope {
     id: root
@@ -19,13 +21,27 @@ Scope {
             id: drawerWindow
 
             required property var modelData
+            readonly property string screenKey: String(modelData.name)
+            readonly property Panels.ShellGeometry geometry: Panels.ShellGeometry {
+                viewportHeight: drawerWindow.modelData.height
+                inset: root.tokens.outerInset
+                railWidth: root.tokens.railWidth
+                gap: root.tokens.drawerGap
+                drawerWidth: root.tokens.drawerWidth
+            }
+            readonly property Services.SurfaceWindowPolicy windowPolicy:
+                Services.SurfaceWindowPolicy {
+                    surfaceController: root.surfaceController
+                    surfaceId: "quickSettings"
+                    screenKey: drawerWindow.screenKey
+                }
 
             screen: modelData
-            visible: root.surfaceController.isOpen("quickSettings")
-            implicitWidth: root.tokens.drawerWidth
+            visible: windowPolicy.drawerVisible
+            implicitWidth: geometry.drawerWidth
             color: "transparent"
-            exclusiveZone: 0
-            focusable: visible
+            exclusionMode: ExclusionMode.Ignore
+            focusable: windowPolicy.drawerFocusable
             aboveWindows: true
 
             anchors {
@@ -33,21 +49,23 @@ Scope {
                 bottom: true
                 left: true
             }
-            margins.top: root.tokens.outerInset
-            margins.bottom: root.tokens.outerInset
-            margins.left: root.tokens.outerInset + root.tokens.railWidth + root.tokens.drawerGap
+            margins.top: geometry.drawerY
+            margins.bottom: geometry.drawerY
+            margins.left: geometry.drawerMarginLeft
 
             QuickSettingsView {
                 id: drawerView
 
                 width: parent.width
                 height: parent.height
-                x: root.surfaceController.isOpen("quickSettings") ? 0 : -root.tokens.gridUnit * 2
+                x: drawerWindow.windowPolicy.drawerVisible
+                   ? 0 : -root.tokens.gridUnit * 2
                 surfaceController: root.surfaceController
                 quickSettingsState: root.quickSettingsState
                 tokens: root.tokens
                 colors: root.colors
                 diagnostic: root.sessionAdapter.diagnostic
+                screenKey: drawerWindow.screenKey
 
                 Behavior on x {
                     NumberAnimation {
@@ -60,8 +78,9 @@ Scope {
             Connections {
                 target: root.surfaceController
 
-                function onSurfaceOpened(id) {
-                    if (id === "quickSettings")
+                function onSurfaceOpened(id, screenKey) {
+                    if (id === "quickSettings"
+                            && screenKey === drawerWindow.screenKey)
                         Qt.callLater(drawerView.forceActiveFocus);
                 }
             }

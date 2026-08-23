@@ -13,7 +13,7 @@ FocusScope {
     signal valueRequested(real value)
 
     activeFocusOnTab: true
-    implicitHeight: 64
+    implicitHeight: root.tokens.sliderRowHeight
     opacity: capabilityEnabled ? 1 : 0.7
 
     function requestDelta(delta) {
@@ -69,9 +69,10 @@ FocusScope {
         }
 
         Rectangle {
+            id: track
             width: parent.width
-            height: 4
-            radius: 2
+            height: root.tokens.sliderTrackHeight
+            radius: height / 2
             color: root.colors.surfaceQuiet
 
             Rectangle {
@@ -82,6 +83,28 @@ FocusScope {
 
                 Behavior on width {
                     NumberAnimation { duration: root.tokens.motionDuration }
+                }
+            }
+
+            MouseArea {
+                objectName: "sliderPointerArea"
+                anchors.fill: parent
+                enabled: root.capabilityEnabled
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                function requestAt(pointerX) {
+                    if (width <= 0)
+                        return;
+                    root.valueRequested(Math.max(0, Math.min(1, pointerX / width)));
+                }
+
+                onPressed: mouse => {
+                    root.forceActiveFocus();
+                    requestAt(mouse.x);
+                }
+                onPositionChanged: mouse => {
+                    if (pressed)
+                        requestAt(mouse.x);
                 }
             }
         }

@@ -30,11 +30,17 @@ path. The pinned `sleepy-sdk` settings schema is installed alongside the QML.
 
 The validator requires Qt 6 tooling and a discoverable Quickshell QML module.
 It intentionally rejects a generic Qt 5 `qmllint` or `qmltestrunner`.
+It discovers Nix/custom prefixes from the resolved Quickshell and Qt tool
+paths. If discovery is ambiguous, set `SLEEPY_QUICKSHELL_IMPORT_PATH` to the
+QML import root containing `Quickshell/qmldir`; an invalid explicit path is a
+hard failure.
 
 ```sh
 bash tests/run.sh
+bash tests/validate-qml-paths.sh
 bash scripts/validate-qml.sh
-bash -n tests/run.sh scripts/validate-qml.sh
+bash -n tests/run.sh tests/validate-qml-paths.sh scripts/validate-qml.sh \
+  scripts/lib/qml-tooling.sh
 ```
 
 The behavior tests use Qt's real QML test runner; they do not inspect QML source

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
 import Quickshell
+import "../services" as Services
 
 Scope {
     id: root
@@ -20,11 +21,27 @@ Scope {
             id: railWindow
 
             required property var modelData
+            readonly property string screenKey: String(modelData.name)
+            readonly property ShellGeometry geometry: ShellGeometry {
+                viewportHeight: railWindow.modelData.height
+                inset: root.tokens.outerInset
+                railWidth: root.tokens.railWidth
+                gap: root.tokens.drawerGap
+                drawerWidth: root.tokens.drawerWidth
+            }
+            readonly property Services.SurfaceWindowPolicy windowPolicy:
+                Services.SurfaceWindowPolicy {
+                    surfaceController: root.surfaceController
+                    surfaceId: "quickSettings"
+                    screenKey: railWindow.screenKey
+                }
 
             screen: modelData
-            implicitWidth: root.tokens.railWidth
+            implicitWidth: geometry.railWidth
             color: "transparent"
-            exclusiveZone: root.tokens.railWidth + root.tokens.outerInset * 2
+            exclusionMode: ExclusionMode.Normal
+            exclusiveZone: geometry.railExclusiveZone
+            focusable: windowPolicy.railFocusable
             aboveWindows: true
 
             anchors {
@@ -32,9 +49,9 @@ Scope {
                 bottom: true
                 left: true
             }
-            margins.top: root.tokens.outerInset
-            margins.bottom: root.tokens.outerInset
-            margins.left: root.tokens.outerInset
+            margins.top: geometry.railY
+            margins.bottom: geometry.railY
+            margins.left: geometry.railMarginLeft
 
             RailView {
                 anchors.fill: parent
@@ -44,6 +61,7 @@ Scope {
                 surfaceController: root.surfaceController
                 workspaceModel: root.workspaceService.items
                 timeText: root.clockService.railTime
+                screenKey: railWindow.screenKey
                 onWorkspaceActivated: index => root.workspaceService.focusWorkspace(index)
             }
         }

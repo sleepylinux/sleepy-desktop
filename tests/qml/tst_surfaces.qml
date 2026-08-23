@@ -10,6 +10,9 @@ TestCase {
 
     name: "ShellSurfaces"
     when: windowShown
+    visible: true
+    width: 640
+    height: 800
 
     Component {
         id: controllerFactory

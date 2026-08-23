@@ -1,4 +1,5 @@
 import QtQuick 6.0
+import "../services" as Services
 import "../widgets" as Widgets
 
 FocusScope {
@@ -9,15 +10,23 @@ FocusScope {
     required property var tokens
     required property var colors
     property string diagnostic: ""
+    property string screenKey: "default"
+
+    readonly property Services.SurfaceWindowPolicy windowPolicy:
+        Services.SurfaceWindowPolicy {
+            surfaceController: root.surfaceController
+            surfaceId: "quickSettings"
+            screenKey: root.screenKey
+        }
 
     implicitWidth: tokens.drawerWidth
     implicitHeight: 720
-    visible: surfaceController.isOpen("quickSettings")
+    visible: windowPolicy.drawerVisible
     opacity: visible ? 1 : 0
     focus: visible
 
     Keys.onEscapePressed: event => {
-        root.surfaceController.close("quickSettings");
+        root.surfaceController.close("quickSettings", root.screenKey);
         event.accepted = true;
     }
 
@@ -45,7 +54,7 @@ FocusScope {
 
         Item {
             width: parent.width
-            height: 54
+            height: root.tokens.drawerHeaderHeight
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter
@@ -74,8 +83,8 @@ FocusScope {
                     right: parent.right
                     verticalCenter: parent.verticalCenter
                 }
-                width: 38
-                height: 38
+                width: root.tokens.drawerCloseSize
+                height: root.tokens.drawerCloseSize
                 activeFocusOnTab: true
 
                 Rectangle {
@@ -91,12 +100,15 @@ FocusScope {
                     color: root.colors.textSecondary
                     font.pixelSize: 21
                 }
-                Keys.onReturnPressed: root.surfaceController.close("quickSettings")
-                Keys.onSpacePressed: root.surfaceController.close("quickSettings")
+                Keys.onReturnPressed:
+                    root.surfaceController.close("quickSettings", root.screenKey)
+                Keys.onSpacePressed:
+                    root.surfaceController.close("quickSettings", root.screenKey)
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.surfaceController.close("quickSettings")
+                    onClicked:
+                        root.surfaceController.close("quickSettings", root.screenKey)
                 }
             }
         }
@@ -214,12 +226,12 @@ FocusScope {
 
         Item {
             width: parent.width
-            height: 8
+            height: root.tokens.drawerSectionSpacer
         }
 
         Rectangle {
             width: parent.width
-            height: 58
+            height: root.tokens.drawerDiagnosticHeight
             radius: root.tokens.innerRadius
             color: root.colors.surfaceQuiet
             visible: root.diagnostic.length > 0

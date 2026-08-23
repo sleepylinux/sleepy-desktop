@@ -5,9 +5,16 @@ QtObject {
 
     property var registry: ({})
     property string openSurfaceId: ""
+    property string openScreenKey: ""
 
-    signal surfaceOpened(string id)
-    signal surfaceClosed(string id)
+    signal surfaceOpened(string id, string screenKey)
+    signal surfaceClosed(string id, string screenKey)
+
+    function normalizedScreenKey(screenKey) {
+        if (typeof screenKey !== "string" || screenKey.trim().length === 0)
+            return "default";
+        return screenKey.trim();
+    }
 
     function registerSurface(id, edge) {
         if (typeof id !== "string" || id.length === 0 || typeof edge !== "string"
@@ -20,39 +27,52 @@ QtObject {
         return true;
     }
 
-    function open(id) {
+    function open(id, screenKey) {
         if (!Object.prototype.hasOwnProperty.call(root.registry, id))
             return false;
-        if (root.openSurfaceId === id)
+        const targetScreenKey = root.normalizedScreenKey(screenKey);
+        if (root.openSurfaceId === id && root.openScreenKey === targetScreenKey)
             return true;
 
-        const previous = root.openSurfaceId;
+        const previousId = root.openSurfaceId;
+        const previousScreenKey = root.openScreenKey;
         root.openSurfaceId = id;
-        if (previous.length > 0)
-            root.surfaceClosed(previous);
-        root.surfaceOpened(id);
+        root.openScreenKey = targetScreenKey;
+        if (previousId.length > 0)
+            root.surfaceClosed(previousId, previousScreenKey);
+        root.surfaceOpened(id, targetScreenKey);
         return true;
     }
 
-    function close(id) {
+    function close(id, screenKey) {
         if (root.openSurfaceId.length === 0)
             return false;
         if (typeof id === "string" && id.length > 0 && root.openSurfaceId !== id)
             return false;
+        if (screenKey !== undefined
+                && root.openScreenKey !== root.normalizedScreenKey(screenKey))
+            return false;
 
-        const previous = root.openSurfaceId;
+        const previousId = root.openSurfaceId;
+        const previousScreenKey = root.openScreenKey;
         root.openSurfaceId = "";
-        root.surfaceClosed(previous);
+        root.openScreenKey = "";
+        root.surfaceClosed(previousId, previousScreenKey);
         return true;
     }
 
-    function toggle(id) {
-        if (root.openSurfaceId === id)
-            return root.close(id);
-        return root.open(id);
+    function toggle(id, screenKey) {
+        const targetScreenKey = root.normalizedScreenKey(screenKey);
+        if (root.openSurfaceId === id && root.openScreenKey === targetScreenKey)
+            return root.close(id, targetScreenKey);
+        return root.open(id, targetScreenKey);
     }
 
-    function isOpen(id) {
-        return root.openSurfaceId === id;
+    function isOpen(id, screenKey) {
+        if (root.openSurfaceId !== id)
+            return false;
+        if (screenKey === undefined)
+            return true;
+        return root.openScreenKey === root.normalizedScreenKey(screenKey);
     }
 }

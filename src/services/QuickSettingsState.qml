@@ -53,7 +53,10 @@ QtObject {
     function setLevel(feature, value) {
         if (!root.supports(feature))
             return false;
-        const normalized = Math.max(0, Math.min(1, Number(value)));
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue))
+            return false;
+        const normalized = Math.max(0, Math.min(1, numericValue));
         if (feature === "volume")
             root.volume = normalized;
         else if (feature === "brightness")
