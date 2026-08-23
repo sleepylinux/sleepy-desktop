@@ -39,15 +39,15 @@ TestCase {
 
     function test_dark_and_light_palettes_are_opaque_and_distinct() {
         const palette = createTemporaryObject(paletteFactory, testCase);
-        const darkBackground = palette.shellBackground;
-        const darkSurface = palette.surface;
+        const darkBackground = String(palette.shellBackground);
+        const darkSurface = String(palette.surface);
 
-        compare(darkBackground.a, 1);
-        compare(darkSurface.a, 1);
+        verify(/^#[0-9a-f]{6}$/i.test(darkBackground));
+        verify(/^#[0-9a-f]{6}$/i.test(darkSurface));
         palette.appearanceMode = "light";
-        compare(palette.shellBackground.a, 1);
-        compare(palette.surface.a, 1);
-        verify(palette.shellBackground !== darkBackground);
-        verify(palette.surface !== darkSurface);
+        verify(/^#[0-9a-f]{6}$/i.test(String(palette.shellBackground)));
+        verify(/^#[0-9a-f]{6}$/i.test(String(palette.surface)));
+        verify(String(palette.shellBackground) !== darkBackground);
+        verify(String(palette.surface) !== darkSurface);
     }
 }

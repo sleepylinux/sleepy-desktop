@@ -23,23 +23,17 @@ TestCase {
     }
 
     Component {
-        id: tokensFactory
-
-        Theme.ThemeTokens {}
-    }
-
-    Component {
-        id: paletteFactory
-
-        Theme.Palette {}
-    }
-
-    Component {
         id: drawerFactory
 
         Drawers.QuickSettingsView {
             width: 360
             height: 720
+            surfaceController: Services.SurfaceController {
+                Component.onCompleted: registerSurface("quickSettings", "left")
+            }
+            quickSettingsState: Services.QuickSettingsState {}
+            tokens: Theme.ThemeTokens {}
+            colors: Theme.Palette {}
         }
     }
 
@@ -82,23 +76,12 @@ TestCase {
     }
 
     function test_escape_closes_the_drawer() {
-        const controller = createTemporaryObject(controllerFactory, testCase);
-        const state = createTemporaryObject(stateFactory, testCase);
-        const tokens = createTemporaryObject(tokensFactory, testCase);
-        const palette = createTemporaryObject(paletteFactory, testCase);
-        controller.registerSurface("quickSettings", "left");
-        controller.open("quickSettings");
-
-        const drawer = createTemporaryObject(drawerFactory, testCase, {
-            "surfaceController": controller,
-            "quickSettingsState": state,
-            "tokens": tokens,
-            "palette": palette
-        });
+        const drawer = createTemporaryObject(drawerFactory, testCase);
+        drawer.surfaceController.open("quickSettings");
         drawer.forceActiveFocus();
         verify(drawer.activeFocus);
         keyClick(Qt.Key_Escape);
 
-        compare(controller.openSurfaceId, "");
+        compare(drawer.surfaceController.openSurfaceId, "");
     }
 }

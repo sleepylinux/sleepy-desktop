@@ -82,6 +82,16 @@ TestCase {
                 "sleepyctl presets activate builtin.sleepy");
     }
 
+    function test_activation_failure_names_the_mutating_command() {
+        const adapter = freshAdapter();
+
+        adapter.acceptActivationResult(7, "", "unknown preset", false);
+
+        verify(adapter.diagnostic.indexOf("presets activate") !== -1);
+        verify(adapter.diagnostic.indexOf("exit 7") !== -1);
+        compare(adapter.settings.activePresetId, "builtin.sleepy");
+    }
+
     function test_fallback_settings_cannot_be_mutated_by_consumers() {
         const adapter = freshAdapter();
 
