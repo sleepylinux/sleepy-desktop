@@ -27,6 +27,12 @@ TestCase {
         compare(tokens.innerRadius, 16);
         compare(tokens.railWidth % tokens.gridUnit, 0);
         compare(tokens.drawerWidth % tokens.gridUnit, 0);
+        compare(tokens.railBrandTopInset, 15);
+        compare(tokens.railWorkspaceTop, 84);
+        compare(tokens.railBottomInset, 15);
+        compare(tokens.drawerHeaderHeight, 54);
+        compare(tokens.drawerCloseSize, 38);
+        compare(tokens.sliderRowHeight, 64);
     }
 
     function test_reduced_motion_removes_transition_duration() {

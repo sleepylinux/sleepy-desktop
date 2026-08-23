@@ -3,6 +3,7 @@ import QtTest 1.0
 import "../../src/drawers" as Drawers
 import "../../src/services" as Services
 import "../../src/theme" as Theme
+import "../../src/widgets" as Widgets
 
 TestCase {
     id: testCase
@@ -35,6 +36,25 @@ TestCase {
             tokens: Theme.ThemeTokens {}
             colors: Theme.Palette {}
         }
+    }
+
+    Component {
+        id: sliderFactory
+
+        Widgets.SliderRow {
+            width: 300
+            label: "Volume"
+            iconText: "♪"
+            value: 0.2
+            capabilityEnabled: false
+            tokens: Theme.ThemeTokens {}
+            colors: Theme.Palette {}
+        }
+    }
+
+    SignalSpy {
+        id: sliderSpy
+        signalName: "valueRequested"
     }
 
     function test_registry_keeps_exactly_one_extensible_surface_open() {
@@ -73,6 +93,37 @@ TestCase {
         state.capabilities = {"network.toggle": true};
         compare(state.toggleFeature("network"), true);
         compare(state.networkEnabled, !initial);
+    }
+
+    function test_non_finite_levels_are_rejected_before_mutation() {
+        const state = createTemporaryObject(stateFactory, testCase);
+        state.capabilities = {"audio.volume": true};
+        const initial = state.volume;
+
+        compare(state.setLevel("volume", NaN), false);
+        compare(state.volume, initial);
+        compare(state.setLevel("volume", Infinity), false);
+        compare(state.volume, initial);
+        compare(state.setLevel("volume", "not-a-number"), false);
+        compare(state.volume, initial);
+    }
+
+    function test_pointer_adjustment_is_capability_gated() {
+        const slider = createTemporaryObject(sliderFactory, testCase);
+        const pointerArea = findChild(slider, "sliderPointerArea");
+        verify(pointerArea !== null);
+        sliderSpy.target = slider;
+        sliderSpy.clear();
+
+        mouseClick(pointerArea, pointerArea.width * 0.75,
+                   pointerArea.height / 2, Qt.LeftButton);
+        compare(sliderSpy.count, 0);
+
+        slider.capabilityEnabled = true;
+        mouseClick(pointerArea, pointerArea.width * 0.75,
+                   pointerArea.height / 2, Qt.LeftButton);
+        compare(sliderSpy.count, 1);
+        verify(Math.abs(sliderSpy.signalArguments[0][0] - 0.75) < 0.02);
     }
 
     function test_escape_closes_the_drawer() {

@@ -27,19 +27,33 @@ TestCase {
 
         compare(geometry.railX, 12);
         compare(geometry.railY, 12);
+        compare(geometry.railMarginLeft, 12);
+        compare(geometry.railExclusiveZone, 72);
+        compare(geometry.railEnvelopeRight, 84);
         compare(geometry.drawerX, 96);
+        compare(geometry.drawerMarginLeft, 96);
+        compare(geometry.drawerExclusiveZone, 0);
         compare(geometry.drawerY, geometry.railY);
         compare(geometry.drawerHeight, geometry.railHeight);
         compare(geometry.drawerRight, 456);
     }
 
-    function test_geometry_remains_aligned_when_the_viewport_changes() {
-        const geometry = createTemporaryObject(geometryFactory, testCase);
-        geometry.viewportHeight = 1224;
+    function test_geometry_remains_aligned_when_the_viewport_changes_data() {
+        return [
+            {"tag": "compact", "viewportHeight": 768, "expectedHeight": 744},
+            {"tag": "desktop", "viewportHeight": 900, "expectedHeight": 876},
+            {"tag": "tall", "viewportHeight": 1440, "expectedHeight": 1416}
+        ];
+    }
 
-        compare(geometry.railHeight, 1200);
-        compare(geometry.drawerHeight, 1200);
+    function test_geometry_remains_aligned_when_the_viewport_changes(data) {
+        const geometry = createTemporaryObject(geometryFactory, testCase);
+        geometry.viewportHeight = data.viewportHeight;
+
+        compare(geometry.railHeight, data.expectedHeight);
+        compare(geometry.drawerHeight, data.expectedHeight);
         compare(geometry.drawerY, 12);
+        compare(geometry.railEnvelopeRight + geometry.gap, geometry.drawerX);
     }
 
     function test_workspace_model_sorts_and_replaces_runtime_state() {
