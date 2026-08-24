@@ -1,5 +1,9 @@
 # sleepy-desktop
 
+## License
+
+Licensed under GPL-3.0-only. See [LICENSE](LICENSE).
+
 The first polished Sleepy desktop slice: a permanently visible inset rail, an
 aligned quick-settings drawer, and a non-persistent settings preview. The QML
 is split into focused theme, service, panel, drawer, widget, and preview

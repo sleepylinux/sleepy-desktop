@@ -75,7 +75,7 @@
 
               meta = {
                 description = "Sleepy cozy-night Quickshell desktop slice";
-                license = pkgs.lib.licenses.mit;
+                license = pkgs.lib.licenses.gpl3Only;
                 platforms = pkgs.lib.platforms.linux;
               };
             };
