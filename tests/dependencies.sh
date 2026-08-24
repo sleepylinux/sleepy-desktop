@@ -109,10 +109,14 @@ if ! rg -Fq 'pkgs.vulkan-loader' <<< "$qml_check_block" ||
     ! rg -Fq 'Xvfb :99 -screen 0 1280x800x24' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_QPA_PLATFORM=xcb' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_RHI_BACKEND=vulkan' <<< "$qml_check_block" ||
-    ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json' <<< "$qml_check_block" ||
+    ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json' <<< "$qml_check_block" ||
     ! rg -Fq 'export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib' <<< "$qml_check_block" ||
     ! rg -Fq 'QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}"' "$repository_root/tests/run.sh"; then
   printf 'FAIL: qml check must provide Xvfb/xcb and pinned Mesa lavapipe for its configurable real RHI smoke\n' >&2
+  exit 1
+fi
+if rg -Fq 'lvp_icd.x86_64.json' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must not hard-code an x86-only Mesa lavapipe ICD filename\n' >&2
   exit 1
 fi
 if ! rg -Fq 'export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml' \

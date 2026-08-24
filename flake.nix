@@ -169,7 +169,7 @@
             export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins
             export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
             export SLEEPY_TEST_RHI_BACKEND=vulkan
-            export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json
+            export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json
             export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib
             export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml
             export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml
