@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/6f1857bd786323ad89ac91c250a8485f944eb39c";
+      url = "github:sleepylinux/sleepy-session/b88f5b993ae449acf176d8fc6f0d6542776d06bd";
     };
   };
 
@@ -101,7 +101,7 @@
               passthru = {
                 sdkRevision = "5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
                 artworkRevision = "108487617077254edb4e3a3b21047f5621eef151";
-                sessionRevision = "6f1857bd786323ad89ac91c250a8485f944eb39c";
+                sessionRevision = "b88f5b993ae449acf176d8fc6f0d6542776d06bd";
                 inherit artworkRoot artworkManifest;
               };
 
