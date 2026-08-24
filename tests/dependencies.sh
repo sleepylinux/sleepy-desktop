@@ -92,6 +92,14 @@ if rg -Fq -- '--prefix QML2_IMPORT_PATH' "$flake"; then
   printf 'FAIL: packaged QML runners must not retain caller-provided QML imports\n' >&2
   exit 1
 fi
+if ! rg -Fq -- '--set QML_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+  printf 'FAIL: packaged QML runners must close modern imports to the pinned Qt and Quickshell roots\n' >&2
+  exit 1
+fi
+if rg -Fq -- '--prefix QML_IMPORT_PATH' "$flake"; then
+  printf 'FAIL: packaged QML runners must not retain caller-provided modern QML imports\n' >&2
+  exit 1
+fi
 if ! rg -Fq -- '--set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins"' "$flake"; then
   printf 'FAIL: packaged QML runners must expose only the pinned Qt SVG and base plugins\n' >&2
   exit 1
