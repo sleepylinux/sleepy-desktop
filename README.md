@@ -78,5 +78,5 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`4c4f7989b957f41f3748ddfb092b0348e2ba9e88` and `sleepy-artwork` at
-`7785ac5dac0daa6ac1a619f1e2a9a1b1d1374da1`.
+`2edbe8310eee69c40e4f75924da67a57942bd1c3` and `sleepy-artwork` at
+`0dd59cc9d8a77700f7a415997e3dcde396f55e99`.

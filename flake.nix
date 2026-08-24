@@ -5,12 +5,12 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/4c4f7989b957f41f3748ddfb092b0348e2ba9e88";
+      url = "github:sleepylinux/sleepy-sdk/2edbe8310eee69c40e4f75924da67a57942bd1c3";
       flake = false;
     };
 
     sleepy-artwork = {
-      url = "github:sleepylinux/sleepy-artwork/7785ac5dac0daa6ac1a619f1e2a9a1b1d1374da1";
+      url = "github:sleepylinux/sleepy-artwork/0dd59cc9d8a77700f7a415997e3dcde396f55e99";
       flake = false;
     };
   };
@@ -69,8 +69,8 @@
               '';
 
               passthru = {
-                sdkRevision = "4c4f7989b957f41f3748ddfb092b0348e2ba9e88";
-                artworkRevision = "7785ac5dac0daa6ac1a619f1e2a9a1b1d1374da1";
+                sdkRevision = "2edbe8310eee69c40e4f75924da67a57942bd1c3";
+                artworkRevision = "0dd59cc9d8a77700f7a415997e3dcde396f55e99";
               };
 
               meta = {
