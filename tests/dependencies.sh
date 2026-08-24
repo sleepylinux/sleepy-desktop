@@ -84,6 +84,11 @@ if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
   exit 1
 fi
 
+if ! rg -Fq -- '--prefix QML2_IMPORT_PATH : "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+  printf 'FAIL: packaged QML runners must expose the pinned Qt and Quickshell import roots\n' >&2
+  exit 1
+fi
+
 qml_check_block="$(
   sed -n '/^          qml = pkgs.runCommand /,/^          package = pkgs.runCommand /p' "$flake"
 )"

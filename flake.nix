@@ -89,6 +89,7 @@
 
                 makeWrapper "${runner}" "$out/bin/${pname}" \
                   --set QML_XHR_ALLOW_FILE_READ 1 \
+                  --prefix QML2_IMPORT_PATH : "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml" \
                   --prefix PATH : "${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
