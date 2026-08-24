@@ -41,9 +41,10 @@ hard failure.
 
 ```sh
 bash tests/run.sh
+bash tests/dependencies.sh
 bash tests/validate-qml-paths.sh
 bash scripts/validate-qml.sh
-bash -n tests/run.sh tests/validate-qml-paths.sh scripts/validate-qml.sh \
+bash -n tests/run.sh tests/dependencies.sh tests/validate-qml-paths.sh scripts/validate-qml.sh \
   scripts/lib/qml-tooling.sh
 ```
 

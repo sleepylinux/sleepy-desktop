@@ -3,6 +3,8 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
+"$repo_root/tests/dependencies.sh"
+
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner
 elif command -v qmltestrunner-qt6 >/dev/null 2>&1; then
