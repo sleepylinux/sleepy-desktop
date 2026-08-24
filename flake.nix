@@ -143,17 +143,37 @@
             nativeBuildInputs = [
               pkgs.bash
               pkgs.coreutils
+              pkgs.glibc.bin
               pkgs.jq
               pkgs.quickshell
               pkgs.ripgrep
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
+              pkgs.qt6.qtsvg
+              pkgs.vulkan-loader
+              pkgs.xorg.xorgserver
             ];
           } ''
             cd ${self}
-            export QT_QPA_PLATFORM=offscreen
+            Xvfb :99 -screen 0 1280x800x24 >/tmp/sleepy-xvfb.log 2>&1 &
+            xvfb_pid=$!
+            trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
+            for _ in $(seq 1 50); do
+              [[ -S /tmp/.X11-unix/X99 ]] && break
+              sleep 0.1
+            done
+            test -S /tmp/.X11-unix/X99
+            export DISPLAY=:99
+            export SLEEPY_TEST_QPA_PLATFORM=xcb
             export QT_QUICK_BACKEND=software
+            export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins
             export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
+            export SLEEPY_TEST_RHI_BACKEND=vulkan
+            export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json
+            export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib
+            export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml
+            export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml
+            export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             bash tests/run.sh
             bash scripts/validate-qml.sh

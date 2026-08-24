@@ -84,6 +84,48 @@ if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
   exit 1
 fi
 
+qml_check_block="$(
+  sed -n '/^          qml = pkgs.runCommand /,/^          package = pkgs.runCommand /p' "$flake"
+)"
+if ! rg -Fq 'pkgs.glibc.bin' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must provide glibc.bin so tests/run.sh can verify the generic Qt 6 runner with ldd\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkgs.qt6.qtsvg' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must provide the Qt SVG image plugin used by icon fixtures\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must expose pinned Qt declarative libexec tools to static validation\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins' \
+    <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must expose its pinned Qt SVG and base plugin roots\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkgs.vulkan-loader' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.xorg.xorgserver' <<< "$qml_check_block" ||
+    ! rg -Fq 'Xvfb :99 -screen 0 1280x800x24' <<< "$qml_check_block" ||
+    ! rg -Fq 'export SLEEPY_TEST_QPA_PLATFORM=xcb' <<< "$qml_check_block" ||
+    ! rg -Fq 'export SLEEPY_TEST_RHI_BACKEND=vulkan' <<< "$qml_check_block" ||
+    ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.x86_64.json' <<< "$qml_check_block" ||
+    ! rg -Fq 'export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib' <<< "$qml_check_block" ||
+    ! rg -Fq 'QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}"' "$repository_root/tests/run.sh"; then
+  printf 'FAIL: qml check must provide Xvfb/xcb and pinned Mesa lavapipe for its configurable real RHI smoke\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml' \
+    <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must expose its pinned Qt and Quickshell QML module roots\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml' \
+    <<< "$qml_check_block"; then
+  printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
+  exit 1
+fi
+
 checks_attrset="$(
   sed -n '/^      checks = forAllSystems (system:/,/^        });$/p' "$flake" |
     sed -n '/^        {$/,/^        });$/p'

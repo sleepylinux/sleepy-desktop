@@ -32,7 +32,7 @@ export QML2_IMPORT_PATH="$repo_root/src${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
 # Mesa software rendering so the mask/colorization path receives a real pixel
 # assertion even on headless builders.
 QT_QUICK_BACKEND=rhi \
-QSG_RHI_BACKEND=opengl \
+QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
 LIBGL_ALWAYS_SOFTWARE=1 \
 "$qml_test_runner" \
   -input "$repo_root/tests/qml/tst_icons.qml" \
