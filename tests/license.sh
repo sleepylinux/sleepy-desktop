@@ -2,15 +2,27 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-authoritative_license="${SLEEPY_AUTHORITATIVE_LICENSE:-$repository_root/../../sleepy/LICENSE}"
+license="$repository_root/LICENSE"
+expected_size=34674
+expected_sha256=fb981668c18a279e285fc4d83fba1e836cc84dd4daa73c9697d3cfd2d8aca6e0
 
-if [[ ! -f "$authoritative_license" ]]; then
-  printf 'FAIL: authoritative GPLv3 license is missing: %s\n' "$authoritative_license" >&2
+if [[ ! -f "$license" ]]; then
+  printf 'FAIL: LICENSE is missing: %s\n' "$license" >&2
   exit 1
 fi
 
-if ! cmp -s "$repository_root/LICENSE" "$authoritative_license"; then
-  printf 'FAIL: LICENSE must match the authoritative Sleepy GPLv3 text byte-for-byte\n' >&2
+if ! command -v sha256sum >/dev/null 2>&1; then
+  printf 'FAIL: sha256sum is required to verify the canonical GNU GPLv3 text\n' >&2
+  exit 1
+fi
+
+actual_size="$(wc -c < "$license")"
+actual_sha256="$(sha256sum "$license")"
+actual_sha256="${actual_sha256%% *}"
+
+if [[ "$actual_size" != "$expected_size" || "$actual_sha256" != "$expected_sha256" ]]; then
+  printf 'FAIL: LICENSE must be the canonical GNU GPLv3 text (size %s, SHA-256 %s)\n' \
+    "$expected_size" "$expected_sha256" >&2
   exit 1
 fi
 
