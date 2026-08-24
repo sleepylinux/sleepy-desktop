@@ -10,6 +10,9 @@ QtObject {
 
     signal surfaceOpened(string id, string screenKey)
     signal surfaceClosed(string id, string screenKey)
+    signal sessionConfirmationRequested(string action, string screenKey)
+    signal powerMenuRequested(string screenKey)
+    signal focusReturnRequested(string id, string screenKey)
 
     function normalizedScreenKey(screenKey) {
         if (typeof screenKey !== "string" || screenKey.trim().length === 0)
@@ -92,6 +95,7 @@ QtObject {
         root.openSurfaceId = "";
         root.openScreenKey = "";
         root.surfaceClosed(previousId, previousScreenKey);
+        root.focusReturnRequested(previousId, previousScreenKey);
         return true;
     }
 
@@ -108,5 +112,24 @@ QtObject {
         if (screenKey === undefined)
             return true;
         return root.openScreenKey === root.normalizedScreenKey(screenKey);
+    }
+
+    function requestSessionConfirmation(action, screenKey) {
+        if (["logout", "reboot", "powerOff"].indexOf(action) < 0)
+            return false;
+        const target = root.normalizedScreenKey(screenKey);
+        if (!root.open("controlCenter", target))
+            return false;
+        root.sessionConfirmationRequested(action, target);
+        return true;
+    }
+
+
+    function requestPowerMenu(screenKey) {
+        const target = root.normalizedScreenKey(screenKey);
+        if (!root.open("controlCenter", target))
+            return false;
+        root.powerMenuRequested(target);
+        return true;
     }
 }

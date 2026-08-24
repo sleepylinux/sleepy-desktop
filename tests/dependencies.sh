@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-sdk_revision=2edbe8310eee69c40e4f75924da67a57942bd1c3
+sdk_revision=5dc792faea9d743fabbb576ae1b25ed7e1f729f9
 artwork_revision=bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85
 flake="$repository_root/flake.nix"
 metadata_and_docs=("$flake" "$repository_root/README.md")

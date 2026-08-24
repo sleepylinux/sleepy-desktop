@@ -14,12 +14,12 @@ for composition_root in \
   fi
 done
 
-drawer_component="$repository_root/src/drawers/QuickSettingsDrawer.qml"
+drawer_component="$repository_root/src/drawers/ControlCenterDrawer.qml"
 if ! rg -q 'readonly property int transitionDuration:[[:space:]]*tokens\.motionDuration' \
     "$drawer_component" \
     || ! rg -q 'duration:[[:space:]]*root\.transitionDuration' \
       "$drawer_component"; then
-  printf 'FAIL: QuickSettingsDrawer transition must expose and use ThemeTokens duration\n' >&2
+  printf 'FAIL: ControlCenterDrawer transition must expose and use ThemeTokens duration\n' >&2
   exit 1
 fi
 

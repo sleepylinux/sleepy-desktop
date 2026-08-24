@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/2edbe8310eee69c40e4f75924da67a57942bd1c3";
+      url = "github:sleepylinux/sleepy-sdk/5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
       flake = false;
     };
 
@@ -43,6 +43,12 @@
                 install -Dm644 \
                   "${sleepy-sdk}/schemas/settings.schema.json" \
                   "$out/${installRoot}/contracts/settings.schema.json"
+                install -Dm644 \
+                  "${sleepy-sdk}/schemas/system.schema.json" \
+                  "$out/${installRoot}/contracts/system.schema.json"
+                install -Dm644 \
+                  "${sleepy-sdk}/schemas/preset.schema.json" \
+                  "$out/${installRoot}/contracts/preset.schema.json"
 
                 test "$(jq -er '.version' '${artworkManifest}')" = 1
                 primary_mark_relative="$(jq -er '.assets["branding.primaryMark"]' '${artworkManifest}')"
@@ -84,7 +90,7 @@
               '';
 
               passthru = {
-                sdkRevision = "2edbe8310eee69c40e4f75924da67a57942bd1c3";
+                sdkRevision = "5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
                 artworkRevision = "bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85";
                 inherit artworkRoot artworkManifest;
               };

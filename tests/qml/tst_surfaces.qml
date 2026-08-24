@@ -25,28 +25,25 @@ TestCase {
     }
 
     Component {
-        id: stateFactory
-
-        Services.QuickSettingsState {}
-    }
-
-    Component {
         id: drawerFactory
 
-        Drawers.QuickSettingsView {
+        Drawers.ControlCenterView {
             width: 360
             height: 720
             surfaceController: Services.SurfaceController {
                 Component.onCompleted: registerSurface("quickSettings", "left")
             }
-            surfaceId: "quickSettings"
-            quickSettingsState: Services.QuickSettingsState {}
+            screenKey: "default"
+            systemAdapter: Services.SystemAdapterCore {}
+            presetAdapter: Services.PresetAdapterCore {}
+            clockService: QtObject { property date currentTime: new Date(2026, 7, 24, 8, 3) }
             tokens: Theme.ThemeTokens {}
             colors: Theme.Palette {}
             effects: Theme.EffectsPolicy { effectsProfile: "none" }
             iconRegistry: QtObject {
                 function sourceFor(name) { return testCase.tintFixture; }
             }
+            onCloseRequested: surfaceController.close("quickSettings", screenKey)
         }
     }
 
@@ -95,32 +92,6 @@ TestCase {
 
         compare(controller.open("missing"), false);
         compare(controller.openSurfaceId, "quickSettings");
-    }
-
-    function test_unsupported_system_mutations_are_disabled() {
-        const state = createTemporaryObject(stateFactory, testCase);
-        state.capabilities = {"network.toggle": false};
-        const initial = state.networkEnabled;
-
-        compare(state.toggleFeature("network"), false);
-        compare(state.networkEnabled, initial);
-
-        state.capabilities = {"network.toggle": true};
-        compare(state.toggleFeature("network"), true);
-        compare(state.networkEnabled, !initial);
-    }
-
-    function test_non_finite_levels_are_rejected_before_mutation() {
-        const state = createTemporaryObject(stateFactory, testCase);
-        state.capabilities = {"audio.volume": true};
-        const initial = state.volume;
-
-        compare(state.setLevel("volume", NaN), false);
-        compare(state.volume, initial);
-        compare(state.setLevel("volume", Infinity), false);
-        compare(state.volume, initial);
-        compare(state.setLevel("volume", "not-a-number"), false);
-        compare(state.volume, initial);
     }
 
     function test_pointer_adjustment_is_capability_gated() {

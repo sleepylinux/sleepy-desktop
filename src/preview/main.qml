@@ -12,12 +12,14 @@ Window {
     readonly property alias surfaceController: surfaces
     readonly property alias surfaceRegistry: previewSurfaceRegistry
     readonly property alias iconRegistry: icons
+    readonly property alias previewStateObject: previewState
+    readonly property alias controlCenterView: previewDrawer
     property string primaryMarkSource: "@sleepyPrimaryMark@"
     property string artworkRoot: "@sleepyArtworkRoot@"
     property string manifestSource: "@sleepyArtworkManifest@"
 
-    width: 1180
-    height: 780
+    width: 1280
+    height: 800
     minimumWidth: 980
     minimumHeight: 680
     visible: true
@@ -46,7 +48,8 @@ Window {
         id: surfaces
         surfaceRegistry: previewSurfaceRegistry
     }
-    Services.QuickSettingsState { id: quickSettings }
+    Services.SystemAdapterCore { id: previewSystem }
+    Services.PresetAdapterCore { id: previewPresets; activePresetId: "builtin.sleepy" }
     Services.ArtworkRegistry {
         id: artwork
         primaryMarkSource: root.primaryMarkSource
@@ -62,7 +65,7 @@ Window {
         color: colors.shellBackground
     }
 
-    Row {
+    Column {
         id: header
         anchors {
             top: parent.top
@@ -73,7 +76,7 @@ Window {
         spacing: tokens.gridUnit
 
         Column {
-            width: 330
+            width: parent.width
             spacing: 4
 
             Text {
@@ -91,9 +94,9 @@ Window {
             }
         }
 
-        Row {
+        Flow {
+            width: parent.width
             spacing: 8
-            anchors.verticalCenter: parent.verticalCenter
 
             Preview.PreviewChoice {
                 label: "Dark"
@@ -101,6 +104,12 @@ Window {
                 tokens: tokens
                 colors: colors
                 onTriggered: previewState.setAppearanceMode("dark")
+            }
+            Preview.PreviewChoice {
+                label: "Confirm"
+                selected: previewState.scene === "confirmation"
+                tokens: tokens; colors: colors
+                onTriggered: previewState.setScene("confirmation")
             }
             Preview.PreviewChoice {
                 label: "Light"
@@ -136,6 +145,24 @@ Window {
                 tokens: tokens
                 colors: colors
                 onTriggered: previewState.setReducedMotion(!previewState.reducedMotion)
+            }
+            Preview.PreviewChoice {
+                label: "Presets"
+                selected: previewState.scene === "presets"
+                tokens: tokens; colors: colors
+                onTriggered: previewState.setScene("presets")
+            }
+            Preview.PreviewChoice {
+                label: "Conflict"
+                selected: previewState.scene === "conflict"
+                tokens: tokens; colors: colors
+                onTriggered: previewState.setScene("conflict")
+            }
+            Preview.PreviewChoice {
+                label: "Compact"
+                selected: previewState.scene === "compact"
+                tokens: tokens; colors: colors
+                onTriggered: previewState.setScene("compact")
             }
         }
     }
@@ -176,22 +203,24 @@ Window {
             timeText: "22\n24"
         }
 
-        Drawers.QuickSettingsView {
+        Drawers.ControlCenterView {
             id: previewDrawer
             anchors {
                 top: parent.top
-                bottom: parent.bottom
                 left: previewRail.right
                 leftMargin: tokens.drawerGap
             }
-            width: tokens.drawerWidth
+            width: 408
             surfaceController: surfaces
-            quickSettingsState: quickSettings
+            systemAdapter: previewSystem
+            presetAdapter: previewPresets
             tokens: tokens
             colors: colors
             effects: effects
             iconRegistry: icons
-            surfaceId: "controlCenter"
+            clockService: QtObject { property date currentTime: new Date(2026, 7, 24, 8, 3) }
+            screenKey: "default"
+            height: previewState.scene === "compact" ? 560 : parent.height
         }
 
         Rectangle {
@@ -267,12 +296,65 @@ Window {
     }
 
     Component.onCompleted: {
+        const snapshot = {
+            "schemaVersion": 1, "generation": 1,
+            "capabilities": {
+                "network.enabled": "available", "bluetooth.enabled": "available",
+                "audio.volume": "available", "audio.muted": "available",
+                "audio.microphoneLevel": "available", "audio.microphoneMuted": "available",
+                "audio.outputDevice": "available", "display.brightness": "available",
+                "display.nightLightEnabled": "available", "power.profile": "available",
+                "battery.status": "available", "media.transport": "available"
+            },
+            "diagnostics": {},
+            "sessionActions": {"lock": "available", "logout": "available", "reboot": "available", "powerOff": "available"},
+            "network": {"enabled": true, "connectedName": "Sleepy Wi-Fi", "signalLevel": 0.86},
+            "bluetooth": {"enabled": true, "connectedDevice": "Moonbuds"},
+            "audio": {"volume": 0.62, "muted": false, "microphoneLevel": 0.48,
+                "microphoneMuted": false, "outputDeviceId": "preview-speakers",
+                "outputDevices": [{"id": "preview-speakers", "label": "Cozy speakers", "isDefault": true}]},
+            "display": {"brightness": 0.74, "nightLightEnabled": true},
+            "power": {"batteryLevel": 0.78, "charging": false, "currentProfile": "balanced",
+                "availableProfiles": ["power-saver", "balanced", "performance"]},
+            "media": {"title": "Lavender Hours", "artist": "Sleepy Radio", "playing": true}
+        };
+        previewSystem.beginSnapshot();
+        previewSystem.acceptSnapshotResult(1, 0, JSON.stringify(snapshot), "", false);
+        previewPresets.acceptListResult(0, JSON.stringify({"presets": [
+            {"schemaVersion": 1, "id": "builtin.sleepy", "name": "Sleepy", "origin": "builtin",
+             "keybindings": {"surface.controlCenter.toggle": "Mod+Shift+C"},
+             "drawers": {"leftQuickSettings": {}}, "layouts": {}, "pluginRequirements": []},
+            {"schemaVersion": 1, "id": "91fd2419-291f-48cc-8e03-02abb84d720c", "name": "Night work", "origin": "user",
+             "basePresetId": "builtin.sleepy", "keybindings": {"surface.controlCenter.toggle": "Mod+C"},
+             "drawers": {"leftQuickSettings": {}}, "layouts": {}, "pluginRequirements": []}
+        ]}), "", false);
         const registered = previewSurfaceRegistry.registerDescriptor({
             "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
             "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
-            "availability": true, "initialFocusKey": "network"
+            "availability": true, "initialFocusKey": "lock"
         });
-        if (!registered || !surfaces.open("controlCenter"))
+        if (!registered || !surfaces.open("controlCenter", "default"))
             console.warn("Sleepy preview: failed to open the default control center");
+    }
+
+    Connections {
+        target: previewState
+        function onPreviewChanged() {
+            if (previewState.scene === "presets")
+                previewDrawer.openPresets();
+            else if (previewState.scene === "conflict") {
+                previewDrawer.openBindings("91fd2419-291f-48cc-8e03-02abb84d720c");
+                previewPresets.conflictMessage = "Binding conflict: surface.controlCenter.toggle and app.terminal.open";
+                previewPresets.conflictActions = ["surface.controlCenter.toggle", "app.terminal.open"];
+            } else if (previewState.scene === "confirmation") {
+                previewPresets.conflictMessage = "";
+                previewPresets.conflictActions = [];
+                previewDrawer.requestSessionAction("reboot");
+            } else {
+                previewPresets.conflictMessage = "";
+                previewPresets.conflictActions = [];
+                previewDrawer.page = "main";
+            }
+        }
     }
 }

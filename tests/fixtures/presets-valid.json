@@ -1,0 +1,25 @@
+{
+  "presets": [
+    {
+      "schemaVersion": 1,
+      "id": "builtin.sleepy",
+      "name": "Sleepy",
+      "origin": "builtin",
+      "keybindings": {"surface.controlCenter.toggle": "Mod+Shift+C"},
+      "drawers": {"leftQuickSettings": {}},
+      "layouts": {},
+      "pluginRequirements": []
+    },
+    {
+      "schemaVersion": 1,
+      "id": "42db48b6-70c7-4fca-b36f-90658bdfba41",
+      "name": "Night work",
+      "origin": "user",
+      "basePresetId": "builtin.sleepy",
+      "keybindings": {"surface.controlCenter.toggle": "Mod+C"},
+      "drawers": {"leftQuickSettings": {}},
+      "layouts": {},
+      "pluginRequirements": []
+    }
+  ]
+}

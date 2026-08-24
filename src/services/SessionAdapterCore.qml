@@ -62,7 +62,7 @@ QtObject {
     function activationCommand(presetId) {
         if (typeof presetId !== "string" || presetId.trim().length === 0)
             return [];
-        return [root.executable, "presets", "activate", presetId];
+        return [root.executable, "presets", "activate", presetId, "--apply"];
     }
 
     function acceptActivationResult(exitCode, stdoutText, stderrText, timedOut) {

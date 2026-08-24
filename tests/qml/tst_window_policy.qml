@@ -54,7 +54,9 @@ TestCase {
             readonly property Services.ArtworkRegistry artwork: Services.ArtworkRegistry {
                 primaryMarkSource: ""
             }
-            readonly property Services.QuickSettingsState quickSettings: Services.QuickSettingsState {}
+            readonly property Services.SystemAdapterCore systemAdapter: Services.SystemAdapterCore {}
+            readonly property Services.PresetAdapterCore presetAdapter: Services.PresetAdapterCore {}
+            readonly property QtObject clock: QtObject { property date currentTime: new Date(2026, 7, 24, 8, 3) }
             readonly property QtObject icons: QtObject {
                 function sourceFor(name) { return testCase.tintFixture; }
             }
@@ -106,19 +108,21 @@ TestCase {
                 effects: fixture.effects
             }
 
-            Drawers.QuickSettingsView {
+            Drawers.ControlCenterView {
                 id: drawer
                 x: 192
                 width: 360
                 height: 720
                 screenKey: "DP-1"
                 surfaceController: fixture.controller
-                quickSettingsState: fixture.quickSettings
+                systemAdapter: fixture.systemAdapter
+                presetAdapter: fixture.presetAdapter
+                clockService: fixture.clock
                 tokens: fixture.tokens
                 colors: fixture.colors
                 effects: fixture.effects
                 iconRegistry: fixture.icons
-                surfaceId: "quickSettings"
+                onCloseRequested: fixture.controller.close("quickSettings", screenKey)
             }
         }
     }
@@ -176,9 +180,7 @@ TestCase {
         compare(fixture.drawer.screenKey, "DP-1");
         compare(fixture.controller.isOpen("quickSettings",
                                           fixture.drawer.screenKey), true);
-        compare(fixture.drawer.windowPolicy.drawerVisible, true);
         compare(fixture.visible, true);
-        tryCompare(fixture.drawer, "visible", true);
 
         fixture.drawer.forceActiveFocus();
         verify(fixture.drawer.activeFocus);
@@ -188,5 +190,15 @@ TestCase {
         compare(fixture.controller.openScreenKey, "");
         tryVerify(function() { return firstButton.activeFocus; });
         compare(secondButton.activeFocus, false);
+    }
+
+    function test_ipc_open_close_returns_focus_on_provenance_screen() {
+        const fixture = createTemporaryObject(focusFixtureFactory, testCase);
+        const firstButton = findChild(fixture.firstRail, "quickSettingsButton");
+        const secondButton = findChild(fixture.secondRail, "quickSettingsButton");
+        verify(fixture.controller.open("quickSettings", "HDMI-A-1"));
+        verify(fixture.controller.close("quickSettings", "HDMI-A-1"));
+        tryVerify(function() { return secondButton.activeFocus; });
+        compare(firstButton.activeFocus, false);
     }
 }

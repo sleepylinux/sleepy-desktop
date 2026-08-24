@@ -131,6 +131,15 @@ FocusScope {
                         Qt.callLater(surfaceButton.forceActiveFocus);
                     }
                 }
+                Connections {
+                    target: root.surfaceController
+
+                    function onFocusReturnRequested(id, screenKey) {
+                        if (id === surfaceButton.modelData.id
+                                && screenKey === root.screenKey)
+                            Qt.callLater(surfaceButton.forceActiveFocus);
+                    }
+                }
             }
         }
     }

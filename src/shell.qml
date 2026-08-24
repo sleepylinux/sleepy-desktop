@@ -11,9 +11,13 @@ ShellRoot {
     id: root
 
     Services.SessionAdapter { id: sessionAdapter }
+    Services.SystemAdapter { id: systemAdapter }
+    Services.PresetAdapter {
+        id: presetAdapter
+        activePresetId: sessionAdapter.settings.activePresetId
+    }
     Services.WorkspaceService { id: workspaceService }
     Services.ClockService { id: clockService }
-    Services.QuickSettingsState { id: quickSettingsState }
     Services.SurfaceRegistry {
         id: surfaceRegistry
         Component.onCompleted: registerDescriptor({
@@ -23,12 +27,28 @@ ShellRoot {
             "triggerIcon": "icons.control-center",
             "triggerLabel": "Control center",
             "availability": true,
-            "initialFocusKey": "network"
+            "initialFocusKey": "lock"
         })
     }
     Services.SurfaceController {
         id: surfaces
         surfaceRegistry: surfaceRegistry
+    }
+    Services.ShortcutRouter {
+        id: shortcutRouter
+        surfaceController: surfaces
+        onSessionActionRequested: (action, outputName) => {
+            if (!systemAdapter.sessionActionAvailable(action))
+                return;
+            if (action === "lock")
+                systemAdapter.perform("lock", "confirmed");
+            else
+                surfaces.requestSessionConfirmation(action, outputName);
+        }
+    }
+    Services.ShellIpc {
+        shortcutRouter: shortcutRouter
+        surfaceController: surfaces
     }
     Services.ArtworkRegistry {
         id: artwork
@@ -56,21 +76,22 @@ ShellRoot {
         colors: colors
         artworkRegistry: artwork
         iconRegistry: icons
+        clockService: clockService
         surfaceRegistry: surfaceRegistry
         surfaceController: surfaces
         workspaceService: workspaceService
-        clockService: clockService
         effects: effects
     }
 
-    Drawers.QuickSettingsDrawer {
+    Drawers.ControlCenterDrawer {
         tokens: tokens
         colors: colors
         surfaceController: surfaces
         surfaceRegistry: surfaceRegistry
         iconRegistry: icons
+        clockService: clockService
         effects: effects
-        quickSettingsState: quickSettingsState
-        sessionAdapter: sessionAdapter
+        systemAdapter: systemAdapter
+        presetAdapter: presetAdapter
     }
 }

@@ -4,9 +4,10 @@
 
 Licensed under GPL-3.0-only. See [LICENSE](LICENSE).
 
-The Sleepy desktop material and surface foundation: a permanently visible
-inset rail, descriptor-driven left or right drawers, and a non-persistent
-settings preview. The QML is split into focused theme, service, surface,
+The Sleepy desktop Control Center: a permanently visible inset rail,
+descriptor-driven per-screen drawers, confirmed system controls, durable named
+preset and keybinding management, and a non-persistent visual gallery. The QML
+is split into focused theme, service, surface,
 panel, drawer, widget, and preview modules so later surfaces share one
 screen-scoped, single-open-surface controller.
 
@@ -14,18 +15,24 @@ The default look is a layered cozy-night lavender glass palette built on a
 12 px grid, 22 px shell radii, and 16 px inner radii. Full, reduced, and none
 effects profiles keep a high-opacity contrast floor; none is opaque and has no
 decorative motion. All controls are keyboard reachable. Reduced motion changes
-non-essential transition duration to zero. Network,
-Bluetooth, night light, focus, volume, and brightness controls remain view-only
-until a capability adapter explicitly reports support.
+non-essential transition duration to zero. Network, Bluetooth, audio,
+microphone, output, brightness, night light, power, battery, media, and session
+controls reflect typed adapter state; unsupported hardware disables only the
+affected control.
 
 ## Runtime contract
 
-`SessionAdapter.qml` is the only settings boundary. It runs
-`sleepyctl settings show` on startup and `sleepyctl presets activate <id>` when
+`SessionAdapter.qml` remains the appearance-settings boundary. It runs
+`sleepyctl settings show` on startup and `sleepyctl presets activate <id> --apply` when
 requested, validates the complete schema-v1 document, and falls back to a new
 immutable default snapshot on timeout, nonzero exit, or malformed output. The
 shell starts immediately and logs the diagnostic instead of waiting for the
-session service.
+session service. `SystemAdapter.qml` sends client-generated positive request
+generations to the typed `sleepyctl system`/`session` facade, preserves the
+last valid snapshot, and applies no optimistic mutation. `PresetAdapter.qml`
+owns preset and keybinding transport; editing a built-in first creates an
+update-safe user copy. Preset selection and activation are separate operations,
+and the binding editor exposes every SDK semantic action, including unbound ones.
 
 Artwork is requested only by reviewed logical manifest names. At runtime the
 icon registry safely loads the pinned installed manifest; there is no second
@@ -36,7 +43,8 @@ enables local-file XHR process-wide for QML in that process; it is not an OS
 sandbox or a path allowlist. Sleepy QML never refers to a source checkout or
 workstation path. Functional SVGs are tinted through Qt 6 `MultiEffect`, with a
 visible geometric fallback when resolution or manifest validation fails.
-The pinned `sleepy-sdk` settings schema is installed alongside the QML.
+The pinned `sleepy-sdk` settings, preset, and system schemas are installed
+alongside the QML.
 
 ## Validate
 
@@ -63,8 +71,9 @@ pass with Mesa software rendering for the real `MultiEffect` pixel assertion.
 
 ## Preview
 
-The packaged preview changes appearance, effects, and reduced-motion values in
-local memory only. It never creates a session adapter and cannot persist:
+The packaged gallery changes appearance, effects, reduced-motion, compact,
+preset, and binding-conflict scenes in local memory only. It never creates a
+process adapter and cannot persist:
 
 ```sh
 nix run .#sleepy-settings-preview
@@ -89,7 +98,7 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`2edbe8310eee69c40e4f75924da67a57942bd1c3` and the reviewed public
+`5dc792faea9d743fabbb576ae1b25ed7e1f729f9` and the reviewed public
 `sleepy-artwork` flake at
 `bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`

@@ -6,6 +6,7 @@ QtObject {
     property string appearanceMode: "dark"
     property string effectsProfile: "full"
     property bool reducedMotion: false
+    property string scene: "main"
 
     signal previewChanged
 
@@ -27,6 +28,14 @@ QtObject {
 
     function setReducedMotion(enabled) {
         root.reducedMotion = Boolean(enabled);
+        root.previewChanged();
+        return true;
+    }
+
+    function setScene(scene) {
+        if (["main", "compact", "presets", "conflict", "confirmation"].indexOf(scene) < 0)
+            return false;
+        root.scene = scene;
         root.previewChanged();
         return true;
     }

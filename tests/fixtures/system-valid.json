@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "generation": 7,
+  "capabilities": {
+    "network.enabled": "available",
+    "bluetooth.enabled": "available",
+    "audio.volume": "available",
+    "audio.muted": "available",
+    "audio.microphoneLevel": "available",
+    "audio.microphoneMuted": "available",
+    "audio.outputDevice": "available",
+    "display.brightness": "available",
+    "display.nightLightEnabled": "available",
+    "power.profile": "available",
+    "battery.status": "available",
+    "media.transport": "available"
+  },
+  "diagnostics": {},
+  "sessionActions": {
+    "lock": "available",
+    "logout": "available",
+    "reboot": "available",
+    "powerOff": "available"
+  },
+  "network": {"enabled": true, "connectedName": "Sleepy Wi-Fi", "signalLevel": 0.82},
+  "bluetooth": {"enabled": true, "connectedDevice": "Moonbuds"},
+  "audio": {
+    "volume": 0.62,
+    "muted": false,
+    "microphoneLevel": 0.48,
+    "microphoneMuted": false,
+    "outputDeviceId": "sink.living-room",
+    "outputDevices": [
+      {"id": "sink.living-room", "label": "Living room", "isDefault": true},
+      {"id": "sink.headphones", "label": "Headphones", "isDefault": false}
+    ]
+  },
+  "display": {"brightness": 0.74, "nightLightEnabled": true},
+  "power": {
+    "batteryLevel": 0.78,
+    "charging": false,
+    "currentProfile": "balanced",
+    "availableProfiles": ["power-saver", "balanced", "performance"]
+  },
+  "media": {"title": "Lavender Hours", "artist": "Sleepy Radio", "playing": true}
+}
