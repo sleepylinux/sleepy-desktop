@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sdk_revision=5dc792faea9d743fabbb576ae1b25ed7e1f729f9
 artwork_revision=108487617077254edb4e3a3b21047f5621eef151
-session_revision=d949ad3ca4d156b6ab37ceff7d6ae81e88a3d6d4
+session_revision=6f1857bd786323ad89ac91c250a8485f944eb39c
 flake="$repository_root/flake.nix"
 metadata_and_docs=("$flake" "$repository_root/README.md")
 
@@ -84,8 +84,16 @@ if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
   exit 1
 fi
 
-if ! rg -Fq -- '--prefix QML2_IMPORT_PATH : "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
-  printf 'FAIL: packaged QML runners must expose the pinned Qt and Quickshell import roots\n' >&2
+if ! rg -Fq -- '--set QML2_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+  printf 'FAIL: packaged QML runners must close imports to the pinned Qt and Quickshell roots\n' >&2
+  exit 1
+fi
+if rg -Fq -- '--prefix QML2_IMPORT_PATH' "$flake"; then
+  printf 'FAIL: packaged QML runners must not retain caller-provided QML imports\n' >&2
+  exit 1
+fi
+if ! rg -Fq -- '--set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins"' "$flake"; then
+  printf 'FAIL: packaged QML runners must expose only the pinned Qt SVG and base plugins\n' >&2
   exit 1
 fi
 
@@ -132,6 +140,20 @@ fi
 if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml' \
     <<< "$qml_check_block"; then
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
+  exit 1
+fi
+
+preview_check_block="$(
+  sed -n '/^          preview = pkgs.runCommand /,/^        });$/p' "$flake"
+)"
+if ! rg -Fq 'timeout 3 "$preview_package/bin/sleepy-settings-preview"' <<< "$preview_check_block" ||
+    ! rg -Fq '[[ $preview_status -ne 124 ]]' <<< "$preview_check_block"; then
+  printf 'FAIL: packaged preview check must preserve the timeout-alive assertion\n' >&2
+  exit 1
+fi
+if ! rg -Fq "grep -Fq 'Unsupported image format'" <<< "$preview_check_block" ||
+    ! rg -Fq "grep -Fq 'QML Image:'" <<< "$preview_check_block"; then
+  printf 'FAIL: packaged preview check must reject every SVG/image decoding error\n' >&2
   exit 1
 fi
 

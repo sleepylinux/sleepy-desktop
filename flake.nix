@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/d949ad3ca4d156b6ab37ceff7d6ae81e88a3d6d4";
+      url = "github:sleepylinux/sleepy-session/6f1857bd786323ad89ac91c250a8485f944eb39c";
     };
   };
 
@@ -89,7 +89,8 @@
 
                 makeWrapper "${runner}" "$out/bin/${pname}" \
                   --set QML_XHR_ALLOW_FILE_READ 1 \
-                  --prefix QML2_IMPORT_PATH : "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml" \
+                  --set QML2_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml" \
+                  --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
                   --prefix PATH : "${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
@@ -99,7 +100,7 @@
               passthru = {
                 sdkRevision = "5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
                 artworkRevision = "108487617077254edb4e3a3b21047f5621eef151";
-                sessionRevision = "d949ad3ca4d156b6ab37ceff7d6ae81e88a3d6d4";
+                sessionRevision = "6f1857bd786323ad89ac91c250a8485f944eb39c";
                 inherit artworkRoot artworkManifest;
               };
 
@@ -202,15 +203,23 @@
           '';
 
           preview = pkgs.runCommand "sleepy-desktop-preview-contracts" {
-            nativeBuildInputs = [ pkgs.coreutils ];
+            nativeBuildInputs = [ pkgs.coreutils pkgs.gnugrep ];
           } ''
             preview_package=${componentPackages.sleepy-settings-preview}
             test -x "$preview_package/bin/sleepy-settings-preview"
+            preview_log="$TMPDIR/sleepy-preview.log"
             set +e
             QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
-              timeout 3 "$preview_package/bin/sleepy-settings-preview"
+              timeout 3 "$preview_package/bin/sleepy-settings-preview" \
+                >"$preview_log" 2>&1
             preview_status=$?
             set -e
+            cat "$preview_log"
+            if grep -Fq 'Unsupported image format' "$preview_log" || \
+                grep -Fq 'QML Image:' "$preview_log"; then
+              printf 'packaged preview emitted a QML image decoding error\n' >&2
+              exit 1
+            fi
             if [[ $preview_status -ne 124 ]]; then
               printf 'packaged preview exited unexpectedly with status %s\n' "$preview_status" >&2
               exit 1
