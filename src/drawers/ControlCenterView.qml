@@ -32,6 +32,7 @@ FocusScope {
     signal sessionActionConfirmed(string action, string confirmation)
     signal systemCommandRequested(var command, int generation)
     signal presetCommandRequested(var command)
+    signal presetImportRequested(string path, string mode)
 
     implicitWidth: drawerWidth
     implicitHeight: 720
@@ -95,7 +96,7 @@ FocusScope {
     }
     function openBindings(id) {
         const preset = root.presetFor(id);
-        if (!preset || !root.presetAdapter.canEdit(preset)) return false;
+        if (!preset) return false;
         root.bindingPresetId = id;
         bindingEditor.keybindings = preset.keybindings;
         root.page = "bindings";
@@ -247,6 +248,7 @@ FocusScope {
                 id: connectionsSection; objectName: "connectionsSection"; width: parent.width; columns: 2; spacing: 8
                 Widgets.CompactToggle {
                     id: networkToggle; objectName: "networkToggle"; width: (connectionsSection.width - 8) / 2
+                    rightTarget: bluetoothToggle; homeTarget: networkToggle; endTarget: bluetoothToggle
                     label: "Network"; detail: root.systemState && root.systemState.network && root.systemState.network.connectedName ? root.systemState.network.connectedName : "Offline"; iconName: "icons.network"
                     checked: root.systemState && root.systemState.network ? root.systemState.network.enabled : false
                     capabilityEnabled: root.capabilityEnabled("network.enabled"); busy: root.capabilityBusy("network.enabled")
@@ -254,7 +256,8 @@ FocusScope {
                     onToggled: checked => root.requestMutation("network.enabled", checked)
                 }
                 Widgets.CompactToggle {
-                    objectName: "bluetoothToggle"; width: (connectionsSection.width - 8) / 2
+                    id: bluetoothToggle; objectName: "bluetoothToggle"; width: (connectionsSection.width - 8) / 2
+                    leftTarget: networkToggle; homeTarget: networkToggle; endTarget: bluetoothToggle
                     label: "Bluetooth"; detail: root.systemState && root.systemState.bluetooth && root.systemState.bluetooth.connectedDevice ? root.systemState.bluetooth.connectedDevice : "No device"; iconName: "icons.bluetooth"
                     checked: root.systemState && root.systemState.bluetooth ? root.systemState.bluetooth.enabled : false
                     capabilityEnabled: root.capabilityEnabled("bluetooth.enabled"); busy: root.capabilityBusy("bluetooth.enabled")
@@ -271,19 +274,29 @@ FocusScope {
                 Widgets.LevelControl { objectName: "brightnessControl"; width: parent.width; label: "Brightness"; iconName: "icons.brightness"; value: root.systemState && root.systemState.display && root.systemState.display.brightness !== null ? root.systemState.display.brightness : 0; capabilityEnabled: root.capabilityEnabled("display.brightness"); busy: root.capabilityBusy("display.brightness"); iconRegistry: root.iconRegistry; tokens: root.tokens; colors: root.colors; onValueRequested: value => root.requestMutation("display.brightness", value) }
                 Grid {
                     width: parent.width; columns: 2; spacing: 8
-                    Widgets.CompactToggle { width: (parent.width - 8) / 2; label: "Mute output"; detail: "Speaker audio"; iconName: "icons.volume"; checked: root.systemState && root.systemState.audio ? root.systemState.audio.muted : false; capabilityEnabled: root.capabilityEnabled("audio.muted"); busy: root.capabilityBusy("audio.muted"); iconRegistry: root.iconRegistry; tokens: root.tokens; colors: root.colors; onToggled: checked => root.requestMutation("audio.muted", checked) }
-                    Widgets.CompactToggle { width: (parent.width - 8) / 2; label: "Mute mic"; detail: "Microphone input"; iconName: "icons.microphone"; checked: root.systemState && root.systemState.audio ? root.systemState.audio.microphoneMuted : false; capabilityEnabled: root.capabilityEnabled("audio.microphoneMuted"); busy: root.capabilityBusy("audio.microphoneMuted"); iconRegistry: root.iconRegistry; tokens: root.tokens; colors: root.colors; onToggled: checked => root.requestMutation("audio.microphoneMuted", checked) }
+                    Widgets.CompactToggle { id: muteOutputToggle; objectName: "muteOutputToggle"; width: (parent.width - 8) / 2; label: "Mute output"; detail: "Speaker audio"; iconName: "icons.volume"; checked: root.systemState && root.systemState.audio ? root.systemState.audio.muted : false; capabilityEnabled: root.capabilityEnabled("audio.muted"); busy: root.capabilityBusy("audio.muted"); rightTarget: muteMicrophoneToggle; homeTarget: muteOutputToggle; endTarget: muteMicrophoneToggle; iconRegistry: root.iconRegistry; tokens: root.tokens; colors: root.colors; onToggled: checked => root.requestMutation("audio.muted", checked) }
+                    Widgets.CompactToggle { id: muteMicrophoneToggle; objectName: "muteMicrophoneToggle"; width: (parent.width - 8) / 2; label: "Mute mic"; detail: "Microphone input"; iconName: "icons.microphone"; checked: root.systemState && root.systemState.audio ? root.systemState.audio.microphoneMuted : false; capabilityEnabled: root.capabilityEnabled("audio.microphoneMuted"); busy: root.capabilityBusy("audio.microphoneMuted"); leftTarget: muteOutputToggle; homeTarget: muteOutputToggle; endTarget: muteMicrophoneToggle; iconRegistry: root.iconRegistry; tokens: root.tokens; colors: root.colors; onToggled: checked => root.requestMutation("audio.microphoneMuted", checked) }
                 }
                 Column {
                     width: parent.width; spacing: 5
                     Repeater {
+                        id: outputDeviceRepeater
                         model: root.systemState && root.systemState.audio ? root.systemState.audio.outputDevices : []
                         delegate: Widgets.DeviceRow {
                             required property var modelData
+                            required property int index
                             objectName: "outputDevice-" + modelData.id
                             width: parent.width
                             deviceId: modelData.id; label: modelData.label; selected: modelData.id === root.systemState.audio.outputDeviceId
                             capabilityEnabled: root.capabilityEnabled("audio.outputDevice"); colors: root.colors
+                            busy: root.capabilityBusy("audio.outputDevice")
+                            onNavigationRequested: direction => {
+                                const target = direction === "home" ? 0
+                                    : direction === "end" ? outputDeviceRepeater.count - 1
+                                    : Math.max(0, Math.min(outputDeviceRepeater.count - 1,
+                                        index + (direction === "down" ? 1 : -1)));
+                                outputDeviceRepeater.itemAt(target).forceActiveFocus();
+                            }
                             onSelectedRequested: id => root.requestMutation("audio.outputDevice", id)
                         }
                     }
@@ -366,6 +379,7 @@ FocusScope {
             onBindingEditorRequested: id => root.openBindings(id)
             onCommandRequested: command => root.presetCommandRequested(command)
             onExportRequested: command => root.presetCommandRequested(command)
+            onImportRequested: (path, mode) => root.presetImportRequested(path, mode)
         }
         BindingEditorView {
             id: bindingEditor

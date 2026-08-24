@@ -71,5 +71,59 @@ TestCase {
         compare(spy.count, 1);
     }
 
+    function loadedView() {
+        const view = createTemporaryObject(factory, testCase);
+        view.systemAdapter.beginSnapshot();
+        view.systemAdapter.acceptSnapshotResult(1, 0,
+            fixture("system-valid.json").replace('"generation": 7', '"generation": 1'),
+            "", false);
+        view.presetAdapter.acceptListResult(0, fixture("presets-valid.json"), "", false);
+        view.presetAdapter.activePresetId = "builtin.sleepy";
+        return view;
+    }
+
+    function test_actual_grid_device_media_and_binding_focus_navigation() {
+        const view = loadedView();
+        const network = findChild(view, "networkToggle");
+        network.forceActiveFocus();
+        keyClick(Qt.Key_Right);
+        tryCompare(findChild(view, "bluetoothToggle"), "activeFocus", true);
+        keyClick(Qt.Key_Home);
+        tryCompare(network, "activeFocus", true);
+
+        const muteOutput = findChild(view, "muteOutputToggle");
+        muteOutput.forceActiveFocus();
+        keyClick(Qt.Key_End);
+        tryCompare(findChild(view, "muteMicrophoneToggle"), "activeFocus", true);
+
+        const firstDevice = findChild(view, "outputDevice-sink.living-room");
+        firstDevice.forceActiveFocus();
+        keyClick(Qt.Key_Down);
+        tryCompare(findChild(view, "outputDevice-sink.headphones"), "activeFocus", true);
+        keyClick(Qt.Key_Home);
+        tryCompare(firstDevice, "activeFocus", true);
+
+        const previous = findChild(view, "mediaControl-previous");
+        previous.forceActiveFocus();
+        keyClick(Qt.Key_End);
+        tryCompare(findChild(view, "mediaControl-next"), "activeFocus", true);
+        keyClick(Qt.Key_Left);
+        tryCompare(findChild(view, "mediaControl-playPause"), "activeFocus", true);
+
+        view.openPresets();
+        const presetRow = findChild(view, "presetRow-builtin.sleepy");
+        presetRow.forceActiveFocus();
+        keyClick(Qt.Key_Tab);
+        tryCompare(findChild(view, "presetAction-builtin.sleepy"), "activeFocus", true);
+        keyClick(Qt.Key_Return);
+        compare(view.page, "bindings");
+        const firstBinding = findChild(view, "bindingRow-app.terminal.open");
+        firstBinding.forceActiveFocus();
+        keyClick(Qt.Key_End);
+        tryCompare(findChild(view, "bindingRow-display.brightness.down"), "activeFocus", true);
+        keyClick(Qt.Key_Home);
+        tryCompare(firstBinding, "activeFocus", true);
+    }
+
     Component { id: signalSpy; SignalSpy {} }
 }

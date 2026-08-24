@@ -72,8 +72,54 @@ TestCase {
         const adapter = fresh();
         adapter.activePresetId = "builtin.sleepy";
         verify(adapter.acceptCommandResult(
-            adapter.activateCommand("user-id"), 0, '{"status":"committed"}', "", false));
+            adapter.activateCommand("user-id"), 0, fixture("apply-committed.json"),
+            "", false));
         compare(adapter.activePresetId, "user-id");
+    }
+
+    function test_apply_report_closed_statuses_never_claim_attempted_activation() {
+        const reports = [
+            ["rolledBackConfirmed", "apply-rolled-back-confirmed.json"],
+            ["commitStateUnknown", "apply-commit-state-unknown.json"],
+            ["reloadPending", "apply-reload-pending.json"]
+        ];
+        for (let i = 0; i < reports.length; ++i) {
+            const adapter = fresh();
+            adapter.activePresetId = "builtin.sleepy";
+            verify(!adapter.acceptCommandResult(adapter.activateCommand("user-id"), 0,
+                fixture(reports[i][1]), "", false));
+            compare(adapter.activePresetId, "builtin.sleepy");
+            verify(adapter.diagnostic.indexOf(reports[i][0]) >= 0);
+            compare(adapter.refreshRequired, false);
+            const diagnostic = adapter.diagnostic;
+            verify(adapter.acceptListResult(0, fixture("presets-valid.json"), "", false));
+            compare(adapter.diagnostic, diagnostic);
+            compare(adapter.activePresetId, "builtin.sleepy");
+        }
+    }
+
+    function test_apply_report_rejects_unknown_fields_and_wrong_active_id() {
+        const adapter = fresh();
+        adapter.activePresetId = "builtin.sleepy";
+        verify(!adapter.acceptCommandResult(adapter.activateCommand("user-id"), 0,
+            '{"status":"committed","activePresetId":"other","extra":true}', "", false));
+        compare(adapter.activePresetId, "builtin.sleepy");
+        verify(!adapter.acceptCommandResult(adapter.activateCommand("user-id"), 0,
+            '{"status":"committed","activePresetId":"other"}', "", false));
+        compare(adapter.activePresetId, "builtin.sleepy");
+    }
+
+    function test_builtin_binding_apply_uses_atomic_task3_command_and_report_id() {
+        const adapter = fresh();
+        adapter.activePresetId = "builtin.sleepy";
+        const command = adapter.setBindingCommand(
+            "builtin.sleepy", "app.terminal.open", "Mod+T", true);
+        compare(command.join(" "),
+            "sleepyctl keybindings set --preset builtin.sleepy app.terminal.open Mod+T --apply");
+        verify(adapter.acceptCommandResult(command, 0,
+            '{"status":"committed","activePresetId":"dd4d415e-5af0-4c12-aaf4-69e5bb893a61"}',
+            "", false));
+        compare(adapter.activePresetId, "dd4d415e-5af0-4c12-aaf4-69e5bb893a61");
     }
 
     function test_confirmed_duplicate_exposes_update_safe_copy_for_editing() {
@@ -97,11 +143,26 @@ TestCase {
     function test_export_result_is_strict_and_retrievable() {
         const adapter = fresh();
         const preset = JSON.parse(fixture("presets-valid.json")).presets[1];
-        verify(adapter.acceptExportResult(0, JSON.stringify({preset: preset}), "", false));
+        verify(adapter.acceptExportResult(0, JSON.stringify(preset), "", false));
         verify(adapter.lastExportJson.indexOf('"name": "Night work"') >= 0);
         const stable = adapter.lastExportJson;
         verify(!adapter.acceptExportResult(0,
-            JSON.stringify({preset: preset, unknown: true}), "", false));
+            JSON.stringify(Object.assign({}, preset, {unknown: true})), "", false));
         compare(adapter.lastExportJson, stable);
+    }
+
+    function test_import_apply_is_derived_from_document_target_not_selection() {
+        const adapter = fresh();
+        adapter.activePresetId = "42db48b6-70c7-4fca-b36f-90658bdfba41";
+        const active = JSON.parse(fixture("presets-valid.json")).presets[1];
+        compare(adapter.importCommandForDocument(
+            "/tmp/active.json", "replace", JSON.stringify(active)).join(" "),
+            "sleepyctl presets import --input /tmp/active.json --mode replace --apply");
+        active.id = "dd4d415e-5af0-4c12-aaf4-69e5bb893a61";
+        compare(adapter.importCommandForDocument(
+            "/tmp/inactive.json", "replace", JSON.stringify(active)).join(" "),
+            "sleepyctl presets import --input /tmp/inactive.json --mode replace");
+        compare(adapter.importCommandForDocument(
+            "/tmp/bad.json", "replace", '{"id":"missing"}'), null);
     }
 }

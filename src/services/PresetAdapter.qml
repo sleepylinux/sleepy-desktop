@@ -12,6 +12,7 @@ PresetAdapterCore {
     function run(command) {
         if (!command || process.running) return false;
         root.activeCommand = command;
+        root.refreshRequired = false;
         root.busy = true;
         root.timedOut = false;
         process.exec(command);
@@ -25,6 +26,11 @@ PresetAdapterCore {
     function remove(id) { return root.run(root.deleteCommand(id)); }
     function setBinding(id, action, accelerator, apply) {
         return root.run(root.setBindingCommand(id, action, accelerator, apply));
+    }
+    function importPreset(path, mode) {
+        importFile.path = path;
+        const command = root.importCommandForDocument(path, mode, importFile.text());
+        return command ? root.run(command) : false;
     }
 
     Component.onCompleted: { if (root.loadOnStartup) Qt.callLater(root.refresh); }
@@ -47,8 +53,13 @@ PresetAdapterCore {
                 ? root.acceptListResult(exitCode, output.text, errorOutput.text, false)
                 : root.acceptCommandResult(root.activeCommand, exitCode,
                     output.text, errorOutput.text, false);
-            if (accepted && !isList) Qt.callLater(root.refresh);
+            if ((accepted || root.refreshRequired) && !isList)
+                Qt.callLater(root.refresh);
         }
+    }
+    readonly property FileView importFile: FileView {
+        blockLoading: true
+        printErrors: false
     }
     readonly property Timer timeout: Timer {
         interval: root.timeoutMs

@@ -4,6 +4,7 @@ set -euo pipefail
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sdk_revision=5dc792faea9d743fabbb576ae1b25ed7e1f729f9
 artwork_revision=bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85
+session_revision=818e19f242bf4d67adbf1c2294ad2557e915a458
 flake="$repository_root/flake.nix"
 metadata_and_docs=("$flake" "$repository_root/README.md")
 
@@ -39,8 +40,10 @@ require_nix_block_attribute() {
 
 require_nix_block_attribute sleepy-sdk url "github:sleepylinux/sleepy-sdk/$sdk_revision"
 require_nix_block_attribute sleepy-artwork url "github:sleepylinux/sleepy-artwork/$artwork_revision"
+require_nix_block_attribute sleepy-session url "github:sleepylinux/sleepy-session/$session_revision"
 require_nix_block_attribute passthru sdkRevision "$sdk_revision"
 require_nix_block_attribute passthru artworkRevision "$artwork_revision"
+require_nix_block_attribute passthru sessionRevision "$session_revision"
 
 for revision in \
   4c4f7989b957f41f3748ddfb092b0348e2ba9e88 \
@@ -54,6 +57,17 @@ done
 
 rg -Fq "$sdk_revision" "$repository_root/README.md"
 rg -Fq "$artwork_revision" "$repository_root/README.md"
+rg -Fq "$session_revision" "$repository_root/README.md"
+
+if ! rg -Fq 'sessionPackage = sleepy-session.packages.${system}.sleepy-session;' "$flake"; then
+  printf 'FAIL: desktop package must consume the exact sleepy-session package\n' >&2
+  exit 1
+fi
+
+if ! rg -Fq -- '--prefix PATH : "${sessionPackage}/bin"' "$flake"; then
+  printf 'FAIL: packaged runners must expose pinned sleepyctl on PATH\n' >&2
+  exit 1
+fi
 
 if ! rg -Fq 'sleepy-artwork.checks.${system}.assets' "$flake"; then
   printf 'FAIL: desktop checks must consume exact sleepy-artwork checks.<system>.assets\n' >&2

@@ -46,6 +46,7 @@ TestCase {
         view.systemAdapter.acceptSnapshotResult(1, 0,
             fixture("system-valid.json").replace('"generation": 7', '"generation": 1'), "", false);
         view.presetAdapter.acceptListResult(0, fixture("presets-valid.json"), "", false);
+        view.presetAdapter.activePresetId = "builtin.sleepy";
         return view;
     }
 
@@ -112,28 +113,31 @@ TestCase {
         compare(view.page, "presets");
     }
 
-    function test_builtin_binding_edit_requires_an_update_safe_copy() {
+    function test_builtin_binding_edit_opens_atomic_cow_editor() {
         const view = fresh();
         verify(view.openPresets());
-        verify(!view.openBindings("builtin.sleepy"));
-        compare(view.page, "presets");
+        findChild(view, "presetRow-builtin.sleepy").editRequested("builtin.sleepy");
+        compare(view.page, "bindings");
+        compare(view.bindingPresetId, "builtin.sleepy");
+        const editor = findChild(view, "bindingEditor");
+        const spy = signalSpy.createObject(editor,
+            {target: editor, signalName: "commandRequested"});
+        editor.editingAction = "app.terminal.open";
+        editor.draftAccelerator = "Mod+T";
+        verify(editor.saveBinding());
+        compare(spy.signalArguments[0][0].join(" "),
+                "sleepyctl keybindings set --preset builtin.sleepy app.terminal.open Mod+T --apply");
     }
 
-    function test_builtin_edit_duplicates_then_opens_confirmed_user_copy() {
+    function test_inactive_builtin_requires_activation_before_atomic_edit() {
         const view = fresh();
-        const spy = signalSpy.createObject(view,
-            {target: view, signalName: "presetCommandRequested"});
+        view.presetAdapter.activePresetId = "42db48b6-70c7-4fca-b36f-90658bdfba41";
         view.openPresets();
-        findChild(view, "presetRow-builtin.sleepy").editRequested("builtin.sleepy");
-        compare(spy.signalArguments[0][0].join(" "),
-                "sleepyctl presets duplicate builtin.sleepy Sleepy copy");
-        const copy = JSON.parse(fixture("presets-valid.json")).presets[1];
-        copy.id = "dd4d415e-5af0-4c12-aaf4-69e5bb893a61";
-        copy.name = "Sleepy copy";
-        verify(view.presetAdapter.acceptCommandResult(spy.signalArguments[0][0], 0,
-            JSON.stringify({preset: copy}), "", false));
-        compare(view.page, "bindings");
-        compare(view.bindingPresetId, copy.id);
+        const manager = findChild(view, "presetManager");
+        const action = findChild(view, "presetAction-builtin.sleepy");
+        compare(action.enabled, false);
+        verify(!manager.editPreset("builtin.sleepy"));
+        compare(view.page, "presets");
     }
 
     function test_inactive_preset_binding_edit_does_not_request_live_apply() {
@@ -167,14 +171,28 @@ TestCase {
         view.openPresets();
         const manager = findChild(view, "presetManager");
         const spy = signalSpy.createObject(manager,
-            {target: manager, signalName: "commandRequested"});
+            {target: manager, signalName: "importRequested"});
         manager.importMode = "replace";
         manager.transferPath = "/tmp/night.json";
         verify(manager.importPath());
-        compare(spy.signalArguments[0][0].join(" "),
-                "sleepyctl presets import --input /tmp/night.json --mode replace");
-        view.presetAdapter.lastExportJson = '{\n  "preset": {}\n}';
+        compare(spy.signalArguments[0][0], "/tmp/night.json");
+        compare(spy.signalArguments[0][1], "replace");
+        view.presetAdapter.lastExportJson = '{\n  "schemaVersion": 1\n}';
         compare(findChild(view, "exportPayload").text, view.presetAdapter.lastExportJson);
+    }
+
+    function test_output_device_busy_blocks_repeat_and_focus() {
+        const view = fresh();
+        const row = findChild(view, "outputDevice-sink.living-room");
+        const spy = signalSpy.createObject(row,
+            {target: row, signalName: "selectedRequested"});
+        compare(row.busy, false);
+        view.systemAdapter.beginMutation("audio.outputDevice", "sink.living-room");
+        compare(row.busy, true);
+        compare(row.activeFocusOnTab, false);
+        compare(row.invoke(), false);
+        compare(spy.count, 0);
+        verify(row.Accessible.description.indexOf("busy") >= 0);
     }
 
     function test_destructive_actions_require_cancel_or_explicit_confirm() {

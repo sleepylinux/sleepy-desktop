@@ -21,6 +21,29 @@ FocusScope {
     signal commandRequested(var command)
     implicitHeight: content.implicitHeight
 
+    function focusBinding(index) {
+        if (!bindingRepeater.count) return false;
+        bindingRepeater.itemAt(Math.max(0, Math.min(bindingRepeater.count - 1, index)))
+            .forceActiveFocus();
+        return true;
+    }
+    function focusedBindingIndex() {
+        for (let i = 0; i < bindingRepeater.count; ++i)
+            if (bindingRepeater.itemAt(i).activeFocus) return i;
+        return 0;
+    }
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Home) {
+            root.focusBinding(0); event.accepted = true;
+        } else if (event.key === Qt.Key_End) {
+            root.focusBinding(bindingRepeater.count - 1); event.accepted = true;
+        } else if (event.key === Qt.Key_Down) {
+            root.focusBinding(root.focusedBindingIndex() + 1); event.accepted = true;
+        } else if (event.key === Qt.Key_Up) {
+            root.focusBinding(root.focusedBindingIndex() - 1); event.accepted = true;
+        }
+    }
+
     Text { id: title; text: "Keybindings"; color: root.colors.textPrimary; font.pixelSize: 18; font.weight: Font.DemiBold }
     Text {
         objectName: "bindingPresetSubtitle"
@@ -51,6 +74,7 @@ FocusScope {
             Widgets.TextButton { label: "Unbind"; colors: root.colors; enabled: root.editingAction.length > 0; onTriggered: root.unsetBinding() }
         }
         Repeater {
+            id: bindingRepeater
             model: root.actions
             delegate: Widgets.BindingRow {
                 required property string modelData
@@ -71,14 +95,16 @@ FocusScope {
     }
 
     function saveBinding() {
-        const applyNow = root.presetId === root.presetAdapter.activePresetId;
+        const applyNow = root.presetId === root.presetAdapter.activePresetId
+            || root.presetId.indexOf("builtin.") === 0;
         const command = root.presetAdapter.setBindingCommand(root.presetId,
             root.editingAction, root.draftAccelerator.trim(), applyNow);
         if (!command) return false;
         root.commandRequested(command); return true;
     }
     function unsetBinding() {
-        const applyNow = root.presetId === root.presetAdapter.activePresetId;
+        const applyNow = root.presetId === root.presetAdapter.activePresetId
+            || root.presetId.indexOf("builtin.") === 0;
         const command = root.presetAdapter.unsetBindingCommand(root.presetId,
             root.editingAction, applyNow);
         if (!command) return false;

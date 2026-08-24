@@ -12,9 +12,13 @@
     sleepy-artwork = {
       url = "github:sleepylinux/sleepy-artwork/bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85";
     };
+
+    sleepy-session = {
+      url = "github:sleepylinux/sleepy-session/818e19f242bf4d67adbf1c2294ad2557e915a458";
+    };
   };
 
-  outputs = { self, nixpkgs, sleepy-sdk, sleepy-artwork }:
+  outputs = { self, nixpkgs, sleepy-sdk, sleepy-artwork, sleepy-session }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
@@ -24,6 +28,7 @@
           pkgs = import nixpkgs { inherit system; };
           installRoot = "share/sleepy-desktop";
           artworkPackage = sleepy-artwork.packages.${system}.sleepy-artwork;
+          sessionPackage = sleepy-session.packages.${system}.sleepy-session;
           artworkRoot = "${artworkPackage}/share/sleepy-artwork";
           artworkManifest = "${artworkRoot}/branding/manifest.json";
 
@@ -84,6 +89,7 @@
 
                 makeWrapper "${runner}" "$out/bin/${pname}" \
                   --set QML_XHR_ALLOW_FILE_READ 1 \
+                  --prefix PATH : "${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
                 runHook postInstall
@@ -92,6 +98,7 @@
               passthru = {
                 sdkRevision = "5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
                 artworkRevision = "bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85";
+                sessionRevision = "818e19f242bf4d67adbf1c2294ad2557e915a458";
                 inherit artworkRoot artworkManifest;
               };
 
@@ -126,6 +133,7 @@
           pkgs = import nixpkgs { inherit system; };
           componentPackages = packagesFor system;
           artworkPackage = sleepy-artwork.packages.${system}.sleepy-artwork;
+          sessionPackage = sleepy-session.packages.${system}.sleepy-session;
           artworkRoot = "${artworkPackage}/share/sleepy-artwork";
           artworkManifest = "${artworkRoot}/branding/manifest.json";
         in
@@ -165,6 +173,7 @@
               "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
             rg -F '${artworkManifest}' \
               "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
+            rg -F '${sessionPackage}/bin' "$shell_package/bin/sleepy-shell"
             if rg '@sleepy[A-Za-z]+@' "$shell_package/share/sleepy-desktop"; then
               exit 1
             fi

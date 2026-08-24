@@ -96,6 +96,8 @@ Scope {
                     root.systemAdapter.mutate(capability, value);
                 }
                 onPresetCommandRequested: command => root.presetAdapter.run(command)
+                onPresetImportRequested: (path, mode) =>
+                    root.presetAdapter.importPreset(path, mode)
 
                 Behavior on x {
                     NumberAnimation {

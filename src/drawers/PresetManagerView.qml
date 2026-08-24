@@ -12,13 +12,13 @@ FocusScope {
     property string draftName: "My Sleepy preset"
     property string transferPath: ""
     property string importMode: "copy"
-    property bool pendingEditCopy: false
     readonly property int rowCount: repeater.count
     readonly property var selectedPresetValue: selectedPreset()
     signal bindingEditorRequested(string presetId)
     signal backRequested
     signal commandRequested(var command)
     signal exportRequested(var command)
+    signal importRequested(string path, string mode)
 
     implicitHeight: content.implicitHeight + 126
 
@@ -52,14 +52,12 @@ FocusScope {
             return item.id === id;
         });
         if (!preset) return false;
-        if (root.presetAdapter.canEdit(preset)) {
-            root.bindingEditorRequested(id);
-            return true;
+        if (!root.presetAdapter.canEdit(preset)
+                && preset.id !== root.activePresetId) {
+            root.presetAdapter.fail("Activate the built-in preset before Copy & edit");
+            return false;
         }
-        const command = root.presetAdapter.duplicateCommand(id, preset.name + " copy");
-        if (!command) return false;
-        root.pendingEditCopy = true;
-        root.commandRequested(command);
+        root.bindingEditorRequested(id);
         return true;
     }
     function deleteSelected() {
@@ -69,10 +67,10 @@ FocusScope {
         root.commandRequested(root.presetAdapter.deleteCommand(selected.id)); return true;
     }
     function importPath() {
-        const command = root.presetAdapter.importCommand(
-            root.transferPath.trim(), root.importMode, false);
-        if (!command) return false;
-        root.commandRequested(command); return true;
+        const path = root.transferPath.trim();
+        if (!path.length) return false;
+        root.importRequested(path, root.importMode);
+        return true;
     }
     function focusFirst() {
         if (!repeater.count) return false;
@@ -188,6 +186,8 @@ FocusScope {
                 label: root.presetAdapter.displayName(modelData)
                 active: modelData.id === root.activePresetId
                 editable: root.presetAdapter.canEdit(modelData)
+                actionEnabled: root.presetAdapter.canEdit(modelData)
+                    || modelData.id === root.activePresetId
                 colors: root.colors
                 onActivated: id => root.selectedPresetId = id
                 onEditRequested: id => root.editPreset(id)
@@ -195,12 +195,4 @@ FocusScope {
         }
     }
 
-    Connections {
-        target: root.presetAdapter
-        function onCopyCreated(presetId) {
-            if (!root.pendingEditCopy) return;
-            root.pendingEditCopy = false;
-            root.bindingEditorRequested(presetId);
-        }
-    }
 }

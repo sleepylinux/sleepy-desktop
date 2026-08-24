@@ -11,6 +11,10 @@ FocusScope {
     required property var iconRegistry
     required property var tokens
     required property var colors
+    property Item leftTarget: null
+    property Item rightTarget: null
+    property Item homeTarget: null
+    property Item endTarget: null
     signal toggled(bool checked)
 
     activeFocusOnTab: capabilityEnabled && !busy
@@ -23,6 +27,18 @@ FocusScope {
     }
     Keys.onReturnPressed: event => { root.invoke(); event.accepted = true; }
     Keys.onSpacePressed: event => { root.invoke(); event.accepted = true; }
+    Keys.onLeftPressed: event => { root.focusTarget(root.leftTarget, event); }
+    Keys.onRightPressed: event => { root.focusTarget(root.rightTarget, event); }
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Home) root.focusTarget(root.homeTarget, event);
+        else if (event.key === Qt.Key_End) root.focusTarget(root.endTarget, event);
+    }
+
+    function focusTarget(target, event) {
+        if (target && target.capabilityEnabled && !target.busy) {
+            target.forceActiveFocus(); event.accepted = true;
+        } else event.accepted = false;
+    }
 
     Rectangle {
         anchors.fill: parent

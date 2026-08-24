@@ -31,8 +31,10 @@ session service. `SystemAdapter.qml` sends client-generated positive request
 generations to the typed `sleepyctl system`/`session` facade, preserves the
 last valid snapshot, and applies no optimistic mutation. `PresetAdapter.qml`
 owns preset and keybinding transport; editing a built-in first creates an
-update-safe user copy. Preset selection and activation are separate operations,
-and the binding editor exposes every SDK semantic action, including unbound ones.
+update-safe user copy through Task 3's atomic COW apply operation when that
+built-in is active; an inactive built-in asks to be activated first. Preset
+selection and activation are separate operations, and the binding editor
+exposes every SDK semantic action, including unbound ones.
 
 Artwork is requested only by reviewed logical manifest names. At runtime the
 icon registry safely loads the pinned installed manifest; there is no second
@@ -102,4 +104,6 @@ The flake pins `sleepy-sdk` at
 `sleepy-artwork` flake at
 `bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
-checks for root integration.
+checks for root integration. The runtime also pins `sleepy-session` at
+`818e19f242bf4d67adbf1c2294ad2557e915a458` and prefixes its exact package
+`bin` directory so every packaged runner resolves the reviewed `sleepyctl`.

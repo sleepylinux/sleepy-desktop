@@ -12,6 +12,8 @@ QtObject {
     property string conflictMessage: ""
     property var conflictActions: Object.freeze([])
     property string lastExportJson: ""
+    property bool refreshRequired: false
+    property bool applyDiagnosticSticky: false
 
     signal presetsAccepted
     signal mutationAccepted
@@ -105,6 +107,19 @@ QtObject {
         return command;
     }
 
+    function importCommandForDocument(path, mode, jsonText) {
+        try {
+            const document = JSON.parse(jsonText);
+            if (!root.validPreset(document))
+                throw new Error("preset document contract mismatch");
+            return root.importCommand(path, mode,
+                mode === "replace" && document.id === root.activePresetId);
+        } catch (error) {
+            root.fail("Cannot import preset (" + error.message + ")");
+            return null;
+        }
+    }
+
     function bindingListCommand(id) {
         return root.validString(id)
             ? [root.executable, "keybindings", "list", "--preset", id] : null;
@@ -150,8 +165,10 @@ QtObject {
             }
             root.presets = Object.freeze(document.presets);
             root.available = true;
-            root.diagnostic = "";
+            if (!root.applyDiagnosticSticky)
+                root.diagnostic = "";
             root.conflictMessage = "";
+            root.refreshRequired = false;
             root.presetsAccepted();
             return true;
         } catch (error) {
@@ -217,13 +234,44 @@ QtObject {
             const document = JSON.parse(stdoutText);
             if (!document || typeof document !== "object" || Array.isArray(document))
                 throw new Error("expected JSON object");
-            root.diagnostic = "";
+            if (!root.applyDiagnosticSticky)
+                root.diagnostic = "";
             root.mutationAccepted();
             return true;
         } catch (error) {
             return root.fail("sleepyctl mutation returned malformed output ("
                              + error.message + ")");
         }
+    }
+
+    function isApplyCommand(command) {
+        return command && command.length > 0
+            && command[command.length - 1] === "--apply";
+    }
+
+    function acceptApplyReport(command, document) {
+        if (!root.exactKeys(document, ["status", "activePresetId"], [])
+                || ["committed", "rolledBackConfirmed", "commitStateUnknown",
+                    "reloadPending"].indexOf(document.status) < 0
+                || !root.validString(document.activePresetId))
+            throw new Error("apply report contract mismatch");
+        if (document.status !== "committed") {
+            root.refreshRequired = false;
+            root.applyDiagnosticSticky = true;
+            return root.fail("sleepyctl apply status " + document.status
+                + "; keeping the last confirmed active preset");
+        }
+        if (command && command.length === 5
+                && command[1] === "presets" && command[2] === "activate"
+                && command[4] === "--apply"
+                && document.activePresetId !== command[3])
+            throw new Error("activation report target mismatch");
+        root.activePresetId = document.activePresetId;
+        root.refreshRequired = true;
+        root.applyDiagnosticSticky = false;
+        root.diagnostic = "";
+        root.mutationAccepted();
+        return true;
     }
 
     function acceptCommandResult(command, exitCode, stdoutText, stderrText, timedOut) {
@@ -244,12 +292,21 @@ QtObject {
                                  + error.message + ")");
             }
         }
-        const accepted = root.acceptMutationResult(
-            exitCode, stdoutText, stderrText, timedOut);
-        if (accepted && command && command.length === 5
-                && command[1] === "presets" && command[2] === "activate"
-                && command[4] === "--apply")
-            root.activePresetId = command[3];
+        let accepted = false;
+        if (root.isApplyCommand(command) && !timedOut && exitCode === 0) {
+            root.busy = false;
+            root.conflictMessage = "";
+            root.conflictActions = Object.freeze([]);
+            try {
+                accepted = root.acceptApplyReport(command, JSON.parse(stdoutText));
+            } catch (error) {
+                return root.fail("sleepyctl apply returned malformed output ("
+                                 + error.message + ")");
+            }
+        } else {
+            accepted = root.acceptMutationResult(
+                exitCode, stdoutText, stderrText, timedOut);
+        }
         if (accepted && duplicatePreset) {
             const nextPresets = root.presets.slice();
             nextPresets.push(duplicatePreset);
@@ -267,12 +324,12 @@ QtObject {
                              + root.stderrDetail(stderrText));
         try {
             const document = JSON.parse(stdoutText);
-            if (!root.exactKeys(document, ["preset"], [])
-                    || !root.validPreset(document.preset))
+            if (!root.validPreset(document))
                 throw new Error("export contract mismatch");
             root.lastExportJson = JSON.stringify(document, null, 2);
             root.busy = false;
-            root.diagnostic = "";
+            if (!root.applyDiagnosticSticky)
+                root.diagnostic = "";
             root.exportReady(root.lastExportJson);
             return true;
         } catch (error) {
