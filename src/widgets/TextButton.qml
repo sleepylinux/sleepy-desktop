@@ -6,6 +6,8 @@ FocusScope {
     required property var colors
     property bool destructive: false
     property bool emphasized: false
+    property Item tabTarget: null
+    property Item backtabTarget: null
     signal triggered
     activeFocusOnTab: enabled
     implicitWidth: Math.max(72, text.implicitWidth + 24)
@@ -13,6 +15,16 @@ FocusScope {
     opacity: enabled ? 1 : 0.45
     Keys.onReturnPressed: event => { if (root.enabled) root.triggered(); event.accepted = true; }
     Keys.onSpacePressed: event => { if (root.enabled) root.triggered(); event.accepted = true; }
+    Keys.onTabPressed: event => {
+        if (root.tabTarget) {
+            root.tabTarget.forceActiveFocus(); event.accepted = true;
+        } else event.accepted = false;
+    }
+    Keys.onBacktabPressed: event => {
+        if (root.backtabTarget) {
+            root.backtabTarget.forceActiveFocus(); event.accepted = true;
+        } else event.accepted = false;
+    }
     Rectangle {
         anchors.fill: parent; radius: 11
         color: root.emphasized ? root.colors.accentSoft : root.colors.surfaceRaised

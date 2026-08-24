@@ -125,5 +125,31 @@ TestCase {
         tryCompare(firstBinding, "activeFocus", true);
     }
 
+    function test_preset_action_tab_backtab_and_disabled_skip_do_not_trap() {
+        const view = loadedView();
+        view.openPresets();
+        const builtin = findChild(view, "presetRow-builtin.sleepy");
+        const builtinAction = findChild(view, "presetAction-builtin.sleepy");
+        const user = findChild(view,
+            "presetRow-42db48b6-70c7-4fca-b36f-90658bdfba41");
+        builtin.forceActiveFocus();
+        keyClick(Qt.Key_Tab);
+        tryCompare(builtinAction, "activeFocus", true);
+        keyClick(Qt.Key_Tab);
+        tryCompare(user, "activeFocus", true);
+        keyClick(Qt.Key_Backtab);
+        tryCompare(builtinAction, "activeFocus", true);
+
+        view.presetAdapter.activePresetId = user.presetId;
+        builtin.forceActiveFocus();
+        compare(builtinAction.enabled, false);
+        keyClick(Qt.Key_Tab);
+        tryCompare(user, "activeFocus", true);
+        compare(builtinAction.activeFocus, false);
+        keyClick(Qt.Key_Backtab);
+        tryCompare(builtin, "activeFocus", true);
+        compare(builtinAction.activeFocus, false);
+    }
+
     Component { id: signalSpy; SignalSpy {} }
 }

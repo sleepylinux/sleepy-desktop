@@ -180,6 +180,7 @@ FocusScope {
             model: root.presetAdapter.presets
             delegate: Widgets.PresetRow {
                 required property var modelData
+                required property int index
                 objectName: "presetRow-" + modelData.id
                 width: content.width
                 presetId: modelData.id
@@ -188,6 +189,9 @@ FocusScope {
                 editable: root.presetAdapter.canEdit(modelData)
                 actionEnabled: root.presetAdapter.canEdit(modelData)
                     || modelData.id === root.activePresetId
+                previousTabTarget: index > 0 ? repeater.itemAt(index - 1) : null
+                nextTabTarget: index + 1 < repeater.count
+                    ? repeater.itemAt(index + 1) : null
                 colors: root.colors
                 onActivated: id => root.selectedPresetId = id
                 onEditRequested: id => root.editPreset(id)
