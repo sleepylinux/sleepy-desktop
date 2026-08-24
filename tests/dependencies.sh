@@ -108,6 +108,10 @@ fi
 qml_check_block="$(
   sed -n '/^          qml = pkgs.runCommand /,/^          package = pkgs.runCommand /p' "$flake"
 )"
+if ! rg -Fq 'bash "$repo_root/tests/dependencies.sh"' "$repository_root/tests/run.sh"; then
+  printf 'FAIL: QML runner must invoke dependency checks through the pinned Bash on PATH\n' >&2
+  exit 1
+fi
 if ! rg -Fq 'pkgs.glibc.bin' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must provide glibc.bin so tests/run.sh can verify the generic Qt 6 runner with ldd\n' >&2
   exit 1
