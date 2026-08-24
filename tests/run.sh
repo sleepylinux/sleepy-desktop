@@ -23,3 +23,15 @@ export QML_XHR_ALLOW_FILE_READ=1
 export QML2_IMPORT_PATH="$repo_root/src${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
 
 "$qml_test_runner" -input "$repo_root/tests/qml" -import "$repo_root/src" -v1
+
+# Qt Quick's painter-style software backend intentionally does not execute
+# MultiEffect shaders. Re-run the icon contract with the RHI scenegraph and
+# Mesa software rendering so the mask/colorization path receives a real pixel
+# assertion even on headless builders.
+QT_QUICK_BACKEND=rhi \
+QSG_RHI_BACKEND=opengl \
+LIBGL_ALWAYS_SOFTWARE=1 \
+"$qml_test_runner" \
+  -input "$repo_root/tests/qml/tst_icons.qml" \
+  -import "$repo_root/src" \
+  -v1

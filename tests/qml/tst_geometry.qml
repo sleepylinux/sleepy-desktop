@@ -13,7 +13,35 @@ TestCase {
 
         Panels.ShellGeometry {
             viewportHeight: 900
+            viewportWidth: 1000
         }
+    }
+
+    function test_right_edge_geometry_and_variable_widths() {
+        const geometry = createTemporaryObject(geometryFactory, testCase);
+        geometry.surfaceEdge = "right";
+        geometry.drawerWidth = 408;
+
+        compare(geometry.drawerX, 580);
+        compare(geometry.drawerMarginRight, 12);
+        compare(geometry.drawerRight, 988);
+        compare(geometry.drawerAnchorLeft, false);
+        compare(geometry.drawerAnchorRight, true);
+
+        geometry.drawerWidth = 336;
+        compare(geometry.drawerX, 652);
+        compare(geometry.drawerRight, 988);
+    }
+
+    function test_left_edge_variable_width_preserves_rail_gap() {
+        const geometry = createTemporaryObject(geometryFactory, testCase);
+        geometry.surfaceEdge = "left";
+        geometry.drawerWidth = 408;
+
+        compare(geometry.drawerX, 96);
+        compare(geometry.drawerRight, 504);
+        compare(geometry.drawerAnchorLeft, true);
+        compare(geometry.drawerAnchorRight, false);
     }
 
     Component {

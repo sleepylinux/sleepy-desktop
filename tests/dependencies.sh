@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sdk_revision=2edbe8310eee69c40e4f75924da67a57942bd1c3
-artwork_revision=0dd59cc9d8a77700f7a415997e3dcde396f55e99
+artwork_revision=bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85
 flake="$repository_root/flake.nix"
 metadata_and_docs=("$flake" "$repository_root/README.md")
 
@@ -54,5 +54,26 @@ done
 
 rg -Fq "$sdk_revision" "$repository_root/README.md"
 rg -Fq "$artwork_revision" "$repository_root/README.md"
+
+if ! rg -Fq 'sleepy-artwork.checks.${system}.assets' "$flake"; then
+  printf 'FAIL: desktop checks must consume exact sleepy-artwork checks.<system>.assets\n' >&2
+  exit 1
+fi
+
+checks_attrset="$(
+  sed -n '/^      checks = forAllSystems (system:/,/^        });$/p' "$flake" |
+    sed -n '/^        {$/,/^        });$/p'
+)"
+mapfile -t check_names < <(
+  sed -nE \
+    -e 's/^          ([A-Za-z_][A-Za-z0-9_-]*)[[:space:]]*=.*/\1/p' \
+    -e 's/^          "([^"]+)"[[:space:]]*=.*/\1/p' \
+    <<< "$checks_attrset"
+)
+if [[ "${check_names[*]:-}" != "qml package preview" ]]; then
+  printf 'FAIL: per-system desktop checks must expose exactly qml package preview, found: %s\n' \
+    "${check_names[*]:-(none)}" >&2
+  exit 1
+fi
 
 printf 'PASS: desktop dependency metadata pins reviewed GPL revisions\n'

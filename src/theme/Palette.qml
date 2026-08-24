@@ -17,4 +17,8 @@ QtObject {
     readonly property color textSecondary: light ? "#6f667c" : "#b8afc4"
     readonly property color success: light ? "#337d64" : "#76c7aa"
     readonly property color warning: light ? "#9c6929" : "#ddb87d"
+    readonly property color contrastLayer: light ? "#ffffff" : "#100c18"
+    readonly property color highlight: light ? "#ffffff" : "#d9cdff"
+    readonly property color shadow: light ? "#463b5c" : "#050309"
+    readonly property color glow: light ? "#9c82ed" : "#a98fff"
 }

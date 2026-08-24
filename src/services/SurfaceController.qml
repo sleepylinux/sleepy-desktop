@@ -4,6 +4,7 @@ QtObject {
     id: root
 
     property var registry: ({})
+    property var surfaceRegistry: null
     property string openSurfaceId: ""
     property string openScreenKey: ""
 
@@ -16,19 +17,52 @@ QtObject {
         return screenKey.trim();
     }
 
-    function registerSurface(id, edge) {
-        if (typeof id !== "string" || id.length === 0 || typeof edge !== "string"
-                || edge.length === 0)
+    function registerDescriptor(descriptor) {
+        if (root.surfaceRegistry
+                && typeof root.surfaceRegistry.registerDescriptor === "function")
+            return root.surfaceRegistry.registerDescriptor(descriptor);
+
+        if (!descriptor || typeof descriptor.id !== "string"
+                || descriptor.id.trim().length === 0
+                || (descriptor.edge !== "left" && descriptor.edge !== "right"))
+            return false;
+        const id = descriptor.id.trim();
+        if (Object.prototype.hasOwnProperty.call(root.registry, id))
             return false;
 
         const nextRegistry = Object.assign({}, root.registry);
-        nextRegistry[id] = Object.freeze({"id": id, "edge": edge});
+        nextRegistry[id] = Object.freeze(Object.assign({}, descriptor, {"id": id}));
         root.registry = Object.freeze(nextRegistry);
         return true;
     }
 
-    function open(id, screenKey) {
+    function registerSurface(id, edge) {
+        if (typeof id !== "string" || id.length === 0 || typeof edge !== "string"
+                || edge.length === 0)
+            return false;
+        return root.registerDescriptor({
+            "id": id,
+            "edge": edge,
+            "width": 360,
+            "triggerIcon": "icons.control-center",
+            "triggerLabel": id,
+            "availability": true,
+            "initialFocusKey": "close"
+        });
+    }
+
+    function descriptorFor(id) {
+        if (root.surfaceRegistry
+                && typeof root.surfaceRegistry.descriptorFor === "function")
+            return root.surfaceRegistry.descriptorFor(id);
         if (!Object.prototype.hasOwnProperty.call(root.registry, id))
+            return null;
+        return root.registry[id];
+    }
+
+    function open(id, screenKey) {
+        const descriptor = root.descriptorFor(id);
+        if (!descriptor || descriptor.availability === false)
             return false;
         const targetScreenKey = root.normalizedScreenKey(screenKey);
         if (root.openSurfaceId === id && root.openScreenKey === targetScreenKey)

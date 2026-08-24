@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.0
 import QtTest 1.0
 import "../../src/drawers" as Drawers
@@ -13,6 +15,8 @@ TestCase {
     visible: true
     width: 640
     height: 800
+
+    readonly property url tintFixture: Qt.resolvedUrl("../fixtures/current-color.svg")
 
     Component {
         id: controllerFactory
@@ -35,9 +39,14 @@ TestCase {
             surfaceController: Services.SurfaceController {
                 Component.onCompleted: registerSurface("quickSettings", "left")
             }
+            surfaceId: "quickSettings"
             quickSettingsState: Services.QuickSettingsState {}
             tokens: Theme.ThemeTokens {}
             colors: Theme.Palette {}
+            effects: Theme.EffectsPolicy { effectsProfile: "none" }
+            iconRegistry: QtObject {
+                function sourceFor(name) { return testCase.tintFixture; }
+            }
         }
     }
 
@@ -47,7 +56,10 @@ TestCase {
         Widgets.SliderRow {
             width: 300
             label: "Volume"
-            iconText: "♪"
+            iconName: "icons.volume"
+            iconRegistry: QtObject {
+                function sourceFor(name) { return testCase.tintFixture; }
+            }
             value: 0.2
             capabilityEnabled: false
             tokens: Theme.ThemeTokens {}

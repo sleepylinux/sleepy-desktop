@@ -12,7 +12,7 @@ QtObject {
     readonly property int outerInset: gridUnit
     readonly property int railWidth: gridUnit * 6
     readonly property int drawerGap: gridUnit
-    readonly property int drawerWidth: gridUnit * 30
+    readonly property int drawerWidth: gridUnit * 34
     readonly property int touchTarget: gridUnit * 4
     readonly property int contentPadding: gridUnit * 2
 

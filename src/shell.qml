@@ -1,3 +1,5 @@
+//@ pragma ShellId sleepy
+
 import QtQuick 6.0
 import Quickshell
 import "drawers" as Drawers
@@ -12,14 +14,27 @@ ShellRoot {
     Services.WorkspaceService { id: workspaceService }
     Services.ClockService { id: clockService }
     Services.QuickSettingsState { id: quickSettingsState }
+    Services.SurfaceRegistry {
+        id: surfaceRegistry
+        Component.onCompleted: registerDescriptor({
+            "id": "controlCenter",
+            "edge": "left",
+            "width": tokens.drawerWidth,
+            "triggerIcon": "icons.control-center",
+            "triggerLabel": "Control center",
+            "availability": true,
+            "initialFocusKey": "network"
+        })
+    }
     Services.SurfaceController {
         id: surfaces
-        Component.onCompleted: registerSurface("quickSettings", "left")
+        surfaceRegistry: surfaceRegistry
     }
     Services.ArtworkRegistry {
         id: artwork
         primaryMarkSource: "@sleepyPrimaryMark@"
     }
+    Services.IconRegistry { id: icons }
     Theme.ThemeTokens {
         id: tokens
         reducedMotion: sessionAdapter.settings.reducedMotion
@@ -29,20 +44,31 @@ ShellRoot {
         appearanceMode: sessionAdapter.settings.appearanceMode === "system"
                         ? "dark" : sessionAdapter.settings.appearanceMode
     }
+    Theme.EffectsPolicy {
+        id: effects
+        effectsProfile: sessionAdapter.settings.effectsProfile
+        reducedMotion: sessionAdapter.settings.reducedMotion
+    }
 
     Panels.LeftRail {
         tokens: tokens
         colors: colors
         artworkRegistry: artwork
+        iconRegistry: icons
+        surfaceRegistry: surfaceRegistry
         surfaceController: surfaces
         workspaceService: workspaceService
         clockService: clockService
+        effects: effects
     }
 
     Drawers.QuickSettingsDrawer {
         tokens: tokens
         colors: colors
         surfaceController: surfaces
+        surfaceRegistry: surfaceRegistry
+        iconRegistry: icons
+        effects: effects
         quickSettingsState: quickSettingsState
         sessionAdapter: sessionAdapter
     }

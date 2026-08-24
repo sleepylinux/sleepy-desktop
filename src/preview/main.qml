@@ -26,11 +26,24 @@ Window {
         id: colors
         appearanceMode: previewState.appearanceMode
     }
+    Theme.EffectsPolicy {
+        id: effects
+        effectsProfile: previewState.effectsProfile
+        reducedMotion: previewState.reducedMotion
+    }
+    Services.SurfaceRegistry {
+        id: surfaceRegistry
+        Component.onCompleted: registerDescriptor({
+            "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
+            "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
+            "availability": true, "initialFocusKey": "network"
+        })
+    }
     Services.SurfaceController {
         id: surfaces
+        surfaceRegistry: surfaceRegistry
         Component.onCompleted: {
-            registerSurface("quickSettings", "left");
-            open("quickSettings");
+            open("controlCenter");
         }
     }
     Services.QuickSettingsState { id: quickSettings }
@@ -38,6 +51,7 @@ Window {
         id: artwork
         primaryMarkSource: "@sleepyPrimaryMark@"
     }
+    Services.IconRegistry { id: icons }
 
     Rectangle {
         anchors.fill: parent
@@ -145,7 +159,10 @@ Window {
             tokens: tokens
             colors: colors
             artworkRegistry: artwork
+            iconRegistry: icons
+            surfaceRegistry: surfaceRegistry
             surfaceController: surfaces
+            effects: effects
             workspaceModel: [
                 {"index": 1, "name": "web", "active": false},
                 {"index": 2, "name": "work", "active": true},
@@ -168,6 +185,9 @@ Window {
             quickSettingsState: quickSettings
             tokens: tokens
             colors: colors
+            effects: effects
+            iconRegistry: icons
+            surfaceId: "controlCenter"
         }
 
         Rectangle {

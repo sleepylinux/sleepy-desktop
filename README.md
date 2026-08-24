@@ -4,15 +4,17 @@
 
 Licensed under GPL-3.0-only. See [LICENSE](LICENSE).
 
-The first polished Sleepy desktop slice: a permanently visible inset rail, an
-aligned quick-settings drawer, and a non-persistent settings preview. The QML
-is split into focused theme, service, panel, drawer, widget, and preview
-modules so future left or right surfaces can register with the same
-single-open-surface controller.
+The Sleepy desktop material and surface foundation: a permanently visible
+inset rail, descriptor-driven left or right drawers, and a non-persistent
+settings preview. The QML is split into focused theme, service, surface,
+panel, drawer, widget, and preview modules so later surfaces share one
+screen-scoped, single-open-surface controller.
 
-The default look is a matte cozy-night lavender palette built on a 12 px grid,
-22 px shell radii, and 16 px inner radii. All controls are keyboard reachable.
-Reduced motion changes non-essential transition duration to zero. Network,
+The default look is a layered cozy-night lavender glass palette built on a
+12 px grid, 22 px shell radii, and 16 px inner radii. Full, reduced, and none
+effects profiles keep a high-opacity contrast floor; none is opaque and has no
+decorative motion. All controls are keyboard reachable. Reduced motion changes
+non-essential transition duration to zero. Network,
 Bluetooth, night light, focus, volume, and brightness controls remain view-only
 until a capability adapter explicitly reports support.
 
@@ -25,10 +27,11 @@ immutable default snapshot on timeout, nonzero exit, or malformed output. The
 shell starts immediately and logs the diagnostic instead of waiting for the
 session service.
 
-Artwork is requested by the logical name `branding.primaryMark`. The Nix build
-resolves that name from the pinned `sleepy-artwork` manifest and substitutes the
-resulting store path; QML never refers to a source checkout or workstation
-path. The pinned `sleepy-sdk` settings schema is installed alongside the QML.
+Artwork is requested only by reviewed logical manifest names. The Nix build
+substitutes the pinned artwork root and manifest store paths; QML never refers
+to a source checkout or workstation path. Functional SVGs are tinted through
+Qt 6 `MultiEffect`, with a visible geometric fallback when resolution fails.
+The pinned `sleepy-sdk` settings schema is installed alongside the QML.
 
 ## Validate
 
@@ -50,6 +53,8 @@ bash -n tests/run.sh tests/dependencies.sh tests/validate-qml-paths.sh scripts/v
 
 The behavior tests use Qt's real QML test runner; they do not inspect QML source
 text. Their negative fixtures cover unknown settings keys and malformed JSON.
+The main suite uses the Qt Quick software backend, then performs a focused RHI
+pass with Mesa software rendering for the real `MultiEffect` pixel assertion.
 
 ## Preview
 
@@ -79,5 +84,8 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`2edbe8310eee69c40e4f75924da67a57942bd1c3` and `sleepy-artwork` at
-`0dd59cc9d8a77700f7a415997e3dcde396f55e99`.
+`2edbe8310eee69c40e4f75924da67a57942bd1c3` and the reviewed public
+`sleepy-artwork` flake at
+`bd0d9ac2261b4dc2c3ad41e6d3d898b22cda2a85`. Desktop checks consume its exact
+`checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
+checks for root integration.

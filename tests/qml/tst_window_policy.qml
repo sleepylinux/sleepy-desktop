@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.0
 import QtTest 1.0
 import "../../src/drawers" as Drawers
@@ -13,6 +15,8 @@ TestCase {
     visible: true
     width: 1000
     height: 800
+
+    readonly property url tintFixture: Qt.resolvedUrl("../fixtures/current-color.svg")
 
     Component {
         id: policyFixtureFactory
@@ -51,6 +55,20 @@ TestCase {
                 primaryMarkSource: ""
             }
             readonly property Services.QuickSettingsState quickSettings: Services.QuickSettingsState {}
+            readonly property QtObject icons: QtObject {
+                function sourceFor(name) { return testCase.tintFixture; }
+            }
+            readonly property Services.SurfaceRegistry registry: Services.SurfaceRegistry {
+                Component.onCompleted: registerDescriptor({
+                    "id": "quickSettings", "edge": "left", "width": 360,
+                    "triggerIcon": "icons.control-center",
+                    "triggerLabel": "Quick settings", "availability": true,
+                    "initialFocusKey": "close"
+                })
+            }
+            readonly property Theme.EffectsPolicy effects: Theme.EffectsPolicy {
+                effectsProfile: "none"
+            }
 
             readonly property alias firstRail: firstRail
             readonly property alias secondRail: secondRail
@@ -65,8 +83,11 @@ TestCase {
                 tokens: fixture.tokens
                 colors: fixture.colors
                 artworkRegistry: fixture.artwork
+                iconRegistry: fixture.icons
+                surfaceRegistry: fixture.registry
                 surfaceController: fixture.controller
                 workspaceModel: []
+                effects: fixture.effects
             }
 
             Panels.RailView {
@@ -78,8 +99,11 @@ TestCase {
                 tokens: fixture.tokens
                 colors: fixture.colors
                 artworkRegistry: fixture.artwork
+                iconRegistry: fixture.icons
+                surfaceRegistry: fixture.registry
                 surfaceController: fixture.controller
                 workspaceModel: []
+                effects: fixture.effects
             }
 
             Drawers.QuickSettingsView {
@@ -92,6 +116,9 @@ TestCase {
                 quickSettingsState: fixture.quickSettings
                 tokens: fixture.tokens
                 colors: fixture.colors
+                effects: fixture.effects
+                iconRegistry: fixture.icons
+                surfaceId: "quickSettings"
             }
         }
     }
@@ -119,6 +146,21 @@ TestCase {
         fixture.controller.close("quickSettings", "HDMI-A-1");
         compare(fixture.second.drawerVisible, false);
         compare(fixture.second.drawerFocusable, false);
+    }
+
+    function test_descriptor_focus_key_remains_data_not_a_shared_item() {
+        const fixture = createTemporaryObject(policyFixtureFactory, testCase);
+        const descriptor = Object.freeze({
+            "id": "quickSettings", "edge": "left", "width": 408,
+            "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
+            "availability": true, "initialFocusKey": "network"
+        });
+        fixture.first.descriptor = descriptor;
+        fixture.second.descriptor = descriptor;
+
+        compare(fixture.first.initialFocusKey, "network");
+        compare(fixture.second.initialFocusKey, "network");
+        verify(descriptor.initialFocusItem === undefined);
     }
 
     function test_escape_returns_focus_to_the_invoking_screen_button() {

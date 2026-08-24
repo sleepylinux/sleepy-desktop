@@ -10,17 +10,27 @@ FocusScope {
     required property var tokens
     required property var colors
     required property var artworkRegistry
+    required property var iconRegistry
+    required property var surfaceRegistry
     required property var surfaceController
     required property var workspaceModel
+    required property var effects
     property string timeText: "22\n24"
     property string screenKey: "default"
 
     readonly property int workspaceCount: workspaceRepeater.count
+    readonly property var controlCenterDescriptor:
+        surfaceRegistry.descriptorFor("controlCenter")
+        || surfaceRegistry.descriptorFor("quickSettings")
+    readonly property string controlCenterId:
+        controlCenterDescriptor ? controlCenterDescriptor.id : "quickSettings"
+    readonly property int triggerCount: surfaceTriggerRepeater.count
     readonly property Services.SurfaceWindowPolicy windowPolicy:
         Services.SurfaceWindowPolicy {
             surfaceController: root.surfaceController
-            surfaceId: "quickSettings"
+            surfaceId: root.controlCenterId
             screenKey: root.screenKey
+            descriptor: root.controlCenterDescriptor
         }
 
     signal workspaceActivated(int index)
@@ -28,12 +38,11 @@ FocusScope {
     implicitWidth: tokens.railWidth
     implicitHeight: 720
 
-    Rectangle {
+    Widgets.GlassSurface {
         anchors.fill: parent
         radius: root.tokens.shellRadius
-        color: root.colors.surface
-        border.width: 1
-        border.color: root.colors.border
+        colors: root.colors
+        effects: root.effects
     }
 
     Widgets.BrandMark {
@@ -90,21 +99,39 @@ FocusScope {
             font.features: {"tnum": 1}
         }
 
-        Widgets.StatusButton {
-            id: quickSettingsButton
-            objectName: "quickSettingsButton"
-            active: root.windowPolicy.drawerVisible
-            tokens: root.tokens
-            colors: root.colors
-            onTriggered: root.windowPolicy.toggleFromRail()
-        }
-    }
+        Repeater {
+            id: surfaceTriggerRepeater
+            model: root.surfaceRegistry.availableDescriptors()
 
-    Connections {
-        target: root.windowPolicy
+            delegate: Widgets.StatusButton {
+                id: surfaceButton
 
-        function onFocusReturnRequested() {
-            Qt.callLater(quickSettingsButton.forceActiveFocus);
+                required property var modelData
+                objectName: modelData.id + "Button"
+                active: triggerPolicy.drawerVisible
+                tokens: root.tokens
+                colors: root.colors
+                iconRegistry: root.iconRegistry
+                iconName: modelData.triggerIcon
+                accessibleName: modelData.triggerLabel
+                onTriggered: triggerPolicy.toggleFromRail()
+
+                readonly property Services.SurfaceWindowPolicy triggerPolicy:
+                    Services.SurfaceWindowPolicy {
+                        surfaceController: root.surfaceController
+                        surfaceId: surfaceButton.modelData.id
+                        screenKey: root.screenKey
+                        descriptor: surfaceButton.modelData
+                    }
+
+                Connections {
+                    target: surfaceButton.triggerPolicy
+
+                    function onFocusReturnRequested() {
+                        Qt.callLater(surfaceButton.forceActiveFocus);
+                    }
+                }
+            }
         }
     }
 }
