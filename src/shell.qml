@@ -38,6 +38,7 @@ ShellRoot {
     Theme.ThemeTokens {
         id: tokens
         reducedMotion: sessionAdapter.settings.reducedMotion
+        effectsPolicy: effects
     }
     Theme.Palette {
         id: colors

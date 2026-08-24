@@ -77,6 +77,7 @@
                 fi
 
                 makeWrapper "${runner}" "$out/bin/${pname}" \
+                  --set QML_XHR_ALLOW_FILE_READ 1 \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
                 runHook postInstall
@@ -139,6 +140,7 @@
             export QT_QPA_PLATFORM=offscreen
             export QT_QUICK_BACKEND=software
             export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
+            export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             bash tests/run.sh
             bash scripts/validate-qml.sh
             test -e "$artworkAssets"

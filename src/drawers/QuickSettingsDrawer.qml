@@ -16,6 +16,7 @@ Scope {
     required property var surfaceRegistry
     required property var iconRegistry
     required property var effects
+    readonly property int transitionDuration: tokens.motionDuration
 
     Variants {
         model: Quickshell.screens
@@ -85,7 +86,7 @@ Scope {
 
                 Behavior on x {
                     NumberAnimation {
-                        duration: root.tokens.motionDuration
+                        duration: root.transitionDuration
                         easing.type: Easing.OutCubic
                     }
                 }

@@ -9,6 +9,13 @@ import "." as Preview
 Window {
     id: root
 
+    readonly property alias surfaceController: surfaces
+    readonly property alias surfaceRegistry: previewSurfaceRegistry
+    readonly property alias iconRegistry: icons
+    property string primaryMarkSource: "@sleepyPrimaryMark@"
+    property string artworkRoot: "@sleepyArtworkRoot@"
+    property string manifestSource: "@sleepyArtworkManifest@"
+
     width: 1180
     height: 780
     minimumWidth: 980
@@ -21,6 +28,7 @@ Window {
     Theme.ThemeTokens {
         id: tokens
         reducedMotion: previewState.reducedMotion
+        effectsPolicy: effects
     }
     Theme.Palette {
         id: colors
@@ -32,26 +40,22 @@ Window {
         reducedMotion: previewState.reducedMotion
     }
     Services.SurfaceRegistry {
-        id: surfaceRegistry
-        Component.onCompleted: registerDescriptor({
-            "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
-            "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
-            "availability": true, "initialFocusKey": "network"
-        })
+        id: previewSurfaceRegistry
     }
     Services.SurfaceController {
         id: surfaces
-        surfaceRegistry: surfaceRegistry
-        Component.onCompleted: {
-            open("controlCenter");
-        }
+        surfaceRegistry: previewSurfaceRegistry
     }
     Services.QuickSettingsState { id: quickSettings }
     Services.ArtworkRegistry {
         id: artwork
-        primaryMarkSource: "@sleepyPrimaryMark@"
+        primaryMarkSource: root.primaryMarkSource
     }
-    Services.IconRegistry { id: icons }
+    Services.IconRegistry {
+        id: icons
+        artworkRoot: root.artworkRoot
+        manifestSource: root.manifestSource
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -160,7 +164,7 @@ Window {
             colors: colors
             artworkRegistry: artwork
             iconRegistry: icons
-            surfaceRegistry: surfaceRegistry
+            surfaceRegistry: previewSurfaceRegistry
             surfaceController: surfaces
             effects: effects
             workspaceModel: [
@@ -260,5 +264,15 @@ Window {
                 }
             }
         }
+    }
+
+    Component.onCompleted: {
+        const registered = previewSurfaceRegistry.registerDescriptor({
+            "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
+            "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
+            "availability": true, "initialFocusKey": "network"
+        });
+        if (!registered || !surfaces.open("controlCenter"))
+            console.warn("Sleepy preview: failed to open the default control center");
     }
 }

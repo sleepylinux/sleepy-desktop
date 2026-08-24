@@ -4,6 +4,7 @@ QtObject {
     id: root
 
     property bool reducedMotion: false
+    property var effectsPolicy: null
 
     readonly property int gridUnit: 12
     readonly property int shellRadius: 22
@@ -29,6 +30,8 @@ QtObject {
     readonly property int sliderRowHeight: 64
     readonly property int sliderTrackHeight: 4
 
-    readonly property int motionDuration: reducedMotion ? 0 : 180
-    readonly property int slowMotionDuration: reducedMotion ? 0 : 260
+    readonly property int motionDuration: effectsPolicy
+        ? effectsPolicy.motionDuration : reducedMotion ? 0 : 180
+    readonly property int slowMotionDuration: effectsPolicy
+        ? effectsPolicy.slowMotionDuration : reducedMotion ? 0 : 260
 }

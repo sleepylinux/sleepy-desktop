@@ -18,13 +18,41 @@ TestCase {
     height: 240
 
     readonly property url tintFixture: Qt.resolvedUrl("../fixtures/current-color.svg")
+    readonly property url fixtureRoot: Qt.resolvedUrl("../fixtures")
+    readonly property url validManifest:
+        Qt.resolvedUrl("../fixtures/manifest-valid.json")
+    readonly property url traversalManifest:
+        Qt.resolvedUrl("../fixtures/manifest-traversal.json")
+    readonly property url malformedManifest:
+        Qt.resolvedUrl("../fixtures/manifest-malformed.json")
 
     Component {
         id: registryFactory
 
         Services.IconRegistry {
-            artworkRoot: "file:///package/share/sleepy-artwork"
-            manifestSource: "file:///package/share/sleepy-artwork/branding/manifest.json"
+            artworkRoot: testCase.fixtureRoot
+            manifestSource: testCase.validManifest
+        }
+    }
+
+    Component {
+        id: reactiveResolutionFactory
+
+        QtObject {
+            required property var registry
+            readonly property url networkSource:
+                registry.sourceFor("icons.network")
+        }
+    }
+
+    Component {
+        id: existenceImageFactory
+
+        Image {
+            required property string logicalName
+            required property var registry
+            source: registry.sourceFor(logicalName)
+            asynchronous: false
         }
     }
 
@@ -95,24 +123,52 @@ TestCase {
         }
     }
 
-    function test_registry_resolves_complete_reviewed_manifest() {
+    function test_registry_loads_manifest_values_reactively_and_files_exist() {
         const registry = createTemporaryObject(registryFactory, testCase);
-        const logicalNames = [
-            "icons.control-center", "icons.network", "icons.bluetooth",
-            "icons.volume", "icons.microphone", "icons.brightness",
-            "icons.night-light", "icons.focus", "icons.battery",
-            "icons.power-profile", "icons.media-play", "icons.media-pause",
-            "icons.media-next", "icons.media-previous", "icons.lock",
-            "icons.logout", "icons.power", "icons.preset", "icons.keybinding"
-        ];
+        const reactive = createTemporaryObject(reactiveResolutionFactory,
+                                               testCase, {"registry": registry});
+        verify(registry !== null);
+        verify(reactive !== null);
+        compare(reactive.networkSource.toString(), "");
+        tryCompare(registry, "status", "ready");
 
-        compare(registry.assetCount, 20);
-        verify(registry.sourceFor("branding.primaryMark").endsWith("/branding/logo.svg"));
-        for (const name of logicalNames)
-            verify(registry.sourceFor(name).startsWith(registry.artworkRoot + "/"), name);
+        compare(registry.assetCount, 3);
+        compare(registry.assets["branding.primaryMark"], "current-color.svg");
+        compare(registry.assets["icons.control-center"], "current-color.svg");
+        compare(registry.assets["icons.network"], "current-color.svg");
+        compare(reactive.networkSource.toString(), testCase.tintFixture.toString());
+
+        for (const logicalName of Object.keys(registry.assets)) {
+            const image = createTemporaryObject(existenceImageFactory, testCase, {
+                "registry": registry, "logicalName": logicalName
+            });
+            verify(image !== null);
+            tryCompare(image, "status", Image.Ready);
+        }
         compare(registry.sourceFor("icons.unknown"), "");
         compare(registry.sourceFor("../icons/power"), "");
         compare(registry.sourceFor(""), "");
+    }
+
+    function test_manifest_failures_clear_assets_and_report_error_data() {
+        return [
+            {"tag": "missing", "source": Qt.resolvedUrl(
+                "../fixtures/manifest-missing.json")},
+            {"tag": "malformed", "source": malformedManifest},
+            {"tag": "traversal", "source": traversalManifest}
+        ];
+    }
+
+    function test_manifest_failures_clear_assets_and_report_error(data) {
+        const registry = createTemporaryObject(registryFactory, testCase, {
+            "manifestSource": data.source
+        });
+        verify(registry !== null);
+        tryCompare(registry, "status", "error");
+        compare(registry.ready, false);
+        verify(registry.errorString.length > 0);
+        compare(registry.assetCount, 0);
+        compare(registry.sourceFor("icons.power"), "");
     }
 
     function test_multieffect_mask_colorizes_current_color_svg_pixels() {

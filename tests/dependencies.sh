@@ -60,6 +60,16 @@ if ! rg -Fq 'sleepy-artwork.checks.${system}.assets' "$flake"; then
   exit 1
 fi
 
+if ! rg -Fq "export SLEEPY_ARTWORK_ROOT='\${artworkRoot}'" "$flake"; then
+  printf 'FAIL: qml check must test the exact installed artwork root\n' >&2
+  exit 1
+fi
+
+if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
+  printf 'FAIL: packaged QML runners must allow their pinned local manifest read\n' >&2
+  exit 1
+fi
+
 checks_attrset="$(
   sed -n '/^      checks = forAllSystems (system:/,/^        });$/p' "$flake" |
     sed -n '/^        {$/,/^        });$/p'

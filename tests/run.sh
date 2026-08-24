@@ -4,6 +4,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
 "$repo_root/tests/dependencies.sh"
+bash "$repo_root/tests/artwork-manifest.sh"
+bash "$repo_root/tests/motion-contracts.sh"
 
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner

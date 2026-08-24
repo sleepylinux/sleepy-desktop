@@ -11,6 +11,7 @@ FocusScope {
     required property bool capabilityEnabled
     required property var tokens
     required property var colors
+    readonly property int transitionDuration: tokens.motionDuration
 
     signal triggered
 
@@ -38,7 +39,10 @@ FocusScope {
         border.color: root.activeFocus ? root.colors.accent : root.colors.border
 
         Behavior on color {
-            ColorAnimation { duration: root.tokens.motionDuration }
+            ColorAnimation {
+                objectName: "controlTileColorAnimation"
+                duration: root.transitionDuration
+            }
         }
     }
 
