@@ -26,6 +26,10 @@ TestCase {
     readonly property url malformedManifest:
         Qt.resolvedUrl("../fixtures/manifest-malformed.json")
 
+    function fixtureManifest(fileName) {
+        return Qt.resolvedUrl("../fixtures/" + fileName);
+    }
+
     Component {
         id: registryFactory
 
@@ -155,7 +159,19 @@ TestCase {
             {"tag": "missing", "source": Qt.resolvedUrl(
                 "../fixtures/manifest-missing.json")},
             {"tag": "malformed", "source": malformedManifest},
-            {"tag": "traversal", "source": traversalManifest}
+            {"tag": "traversal", "source": traversalManifest},
+            {"tag": "encoded-dot-lower", "source": fixtureManifest(
+                "manifest-encoded-dot-lower.json")},
+            {"tag": "encoded-dot-upper", "source": fixtureManifest(
+                "manifest-encoded-dot-upper.json")},
+            {"tag": "encoded-slash", "source": fixtureManifest(
+                "manifest-encoded-slash.json")},
+            {"tag": "encoded-backslash", "source": fixtureManifest(
+                "manifest-encoded-backslash.json")},
+            {"tag": "query", "source": fixtureManifest(
+                "manifest-query.json")},
+            {"tag": "fragment", "source": fixtureManifest(
+                "manifest-fragment.json")}
         ];
     }
 
@@ -164,11 +180,32 @@ TestCase {
             "manifestSource": data.source
         });
         verify(registry !== null);
-        tryCompare(registry, "status", "error");
+        tryVerify(function() { return registry.status !== "loading"; });
+        compare(registry.status, "error");
         compare(registry.ready, false);
         verify(registry.errorString.length > 0);
         compare(registry.assetCount, 0);
         compare(registry.sourceFor("icons.power"), "");
+    }
+
+    function test_path_validator_rejects_encoded_or_url_syntax_data() {
+        return [
+            {"tag": "encoded-dot-lower", "path": "icons/%2e%2e/power.svg"},
+            {"tag": "encoded-dot-upper", "path": "icons/%2E%2E/power.svg"},
+            {"tag": "encoded-slash-lower", "path": "icons%2f..%2fpower.svg"},
+            {"tag": "encoded-slash-upper", "path": "icons%2F..%2Fpower.svg"},
+            {"tag": "encoded-backslash-lower", "path": "icons%5c..%5cpower.svg"},
+            {"tag": "encoded-backslash-upper", "path": "icons%5C..%5Cpower.svg"},
+            {"tag": "query", "path": "icons/power.svg?outside=1"},
+            {"tag": "fragment", "path": "icons/power.svg#outside"},
+            {"tag": "invalid-escape", "path": "icons/%ZZ/power.svg"}
+        ];
+    }
+
+    function test_path_validator_rejects_encoded_or_url_syntax(data) {
+        const registry = createTemporaryObject(registryFactory, testCase);
+        verify(registry !== null);
+        compare(registry.safeRelativePath(data.path), false);
     }
 
     function test_multieffect_mask_colorizes_current_color_svg_pixels() {

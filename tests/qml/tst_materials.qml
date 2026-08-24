@@ -262,6 +262,51 @@ TestCase {
         }
     }
 
+    function test_every_semantic_normal_text_pair_meets_wcag_contrast() {
+        for (const appearance of ["light", "dark"]) {
+            const colors = createTemporaryObject(Qt.createComponent(
+                "../../src/theme/Palette.qml"), testCase,
+                {"appearanceMode": appearance});
+            verify(colors !== null);
+            const pairs = [
+                {"usage": "diagnostic warning", "foreground": colors.warning,
+                 "background": colors.surfaceQuiet},
+                {"usage": "success message", "foreground": colors.success,
+                 "background": colors.surfaceQuiet},
+                {"usage": "error message", "foreground": colors.error,
+                 "background": colors.surfaceQuiet},
+                {"usage": "selected preview choice", "foreground": colors.accent,
+                 "background": colors.accentSoft},
+                {"usage": "preview accent", "foreground": colors.accent,
+                 "background": colors.surface},
+                {"usage": "active workspace", "foreground": colors.shellBackground,
+                 "background": colors.accent},
+                {"usage": "shell heading", "foreground": colors.textPrimary,
+                 "background": colors.shellBackground},
+                {"usage": "shell secondary", "foreground": colors.textSecondary,
+                 "background": colors.shellBackground},
+                {"usage": "solid heading", "foreground": colors.textPrimary,
+                 "background": colors.surface},
+                {"usage": "solid secondary", "foreground": colors.textSecondary,
+                 "background": colors.surface},
+                {"usage": "raised heading", "foreground": colors.textPrimary,
+                 "background": colors.surfaceRaised},
+                {"usage": "raised secondary", "foreground": colors.textSecondary,
+                 "background": colors.surfaceRaised},
+                {"usage": "active tile heading", "foreground": colors.textPrimary,
+                 "background": colors.accentSoft},
+                {"usage": "active tile secondary", "foreground": colors.textSecondary,
+                 "background": colors.accentSoft}
+            ];
+
+            for (const pair of pairs) {
+                const ratio = contrastRatio(pair.foreground, pair.background);
+                verify(ratio >= 4.5, appearance + " " + pair.usage
+                       + " contrast=" + ratio);
+            }
+        }
+    }
+
     function test_full_material_really_composites_over_wallpaper_pixels() {
         const black = createTemporaryObject(contrastSurfaceFactory, testCase, {
             "wallpaperColor": "black", "appearanceMode": "dark",

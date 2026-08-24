@@ -24,12 +24,22 @@ QtObject {
     }
 
     function safeRelativePath(value) {
-        if (typeof value !== "string" || value.length === 0
-                || value.startsWith("/") || value.includes("\\")
-                || value.includes(":"))
+        if (typeof value !== "string" || value.length === 0)
             return false;
+
+        let decoded;
+        try {
+            decoded = decodeURIComponent(value);
+        } catch (error) {
+            return false;
+        }
+        if (decoded !== value || value.includes("%") || value.includes("?")
+                || value.includes("#") || value.startsWith("/")
+                || value.includes("\\") || value.includes(":"))
+            return false;
+
         const segments = value.split("/");
-        return segments.every(function(segment) {
+        return segments.join("/") === value && segments.every(function(segment) {
             return segment.length > 0 && segment !== "." && segment !== "..";
         });
     }
