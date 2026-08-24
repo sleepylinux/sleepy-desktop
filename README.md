@@ -30,10 +30,12 @@ session service.
 Artwork is requested only by reviewed logical manifest names. At runtime the
 icon registry safely loads the pinned installed manifest; there is no second
 hardcoded asset table. The Nix build substitutes its artwork root and manifest
-store paths, and packaged runners permit only this local manifest read. QML
-never refers to a source checkout or workstation path. Functional SVGs are
-tinted through Qt 6 `MultiEffect`, with a visible geometric fallback when
-resolution or manifest validation fails.
+store paths. Packaged Sleepy code reads that substituted manifest and validates
+every entry before resolution. The runner's `QML_XHR_ALLOW_FILE_READ=1` setting
+enables local-file XHR process-wide for QML in that process; it is not an OS
+sandbox or a path allowlist. Sleepy QML never refers to a source checkout or
+workstation path. Functional SVGs are tinted through Qt 6 `MultiEffect`, with a
+visible geometric fallback when resolution or manifest validation fails.
 The pinned `sleepy-sdk` settings schema is installed alongside the QML.
 
 ## Validate
