@@ -182,7 +182,9 @@ TestCase {
             {"x":380,"appearance":"system","portalDark":true,"effectsProfile":"none","customColors":darkDocument});
         waitForRendering(light); waitForRendering(dark);
         compare(light.colors.shellBackground.toString(), "#f1eef8");
+        compare(light.colors.accent.toString(), "#6a50aa");
         compare(dark.colors.shellBackground.toString(), "#17131f");
+        compare(dark.colors.accent.toString(), "#b9a7ff");
         verify(grabImage(light).red(20, 20) > grabImage(dark).red(20, 20));
     }
 }

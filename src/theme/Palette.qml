@@ -17,7 +17,7 @@ QtObject {
     readonly property color surfaceRaised: light ? "#ffffff" : "#2b2438"
     readonly property color surfaceQuiet: light ? "#e9e4f3" : "#1c1825"
     readonly property color border: light ? "#d8d0e6" : "#3b3249"
-    readonly property color accent: customColors && customColors.accent
+    readonly property color accent: customBaseColors && customColors.accent
         ? customColors.accent : light ? "#6a50aa" : "#b9a7ff"
     readonly property color accentSoft: light ? "#e4dcfb" : "#3a3152"
     readonly property color textPrimary: customBaseColors && customColors.textPrimary

@@ -513,11 +513,32 @@ TestCase {
         compare(palette.shellBackground.toString(), "#f1eef8");
         compare(palette.surface.toString(), "#fbf9ff");
         compare(palette.textPrimary.toString(), "#251f2e");
+        verify(contrastRatio(palette.accent, palette.shellBackground) >= 4.5,
+            "system-light accent text contrast must be at least 4.5:1");
+        verify(contrastRatio(palette.accent, palette.surface) >= 4.5,
+            "system-light accent surface contrast must be at least 4.5:1");
         palette.portalDark = true;
         compare(palette.light, false);
         compare(palette.shellBackground.toString(), "#17131f");
         compare(palette.surface.toString(), "#211c2b");
         compare(palette.textPrimary.toString(), "#f7f3ff");
+        verify(contrastRatio(palette.accent, palette.shellBackground) >= 4.5);
+        verify(contrastRatio(palette.accent, palette.surface) >= 4.5);
+    }
+
+    function contrastRatio(first, second) {
+        function linear(channel) {
+            return channel <= 0.04045 ? channel / 12.92
+                                      : Math.pow((channel + 0.055) / 1.055, 2.4);
+        }
+        function luminance(color) {
+            return 0.2126 * linear(color.r) + 0.7152 * linear(color.g)
+                + 0.0722 * linear(color.b);
+        }
+        const firstLuminance = luminance(first);
+        const secondLuminance = luminance(second);
+        return (Math.max(firstLuminance, secondLuminance) + 0.05)
+            / (Math.min(firstLuminance, secondLuminance) + 0.05);
     }
 
     function test_daily_state_routes_only_typed_indexed_and_niri_actions() {
