@@ -11,6 +11,18 @@ QtObject {
     property string errorString: ""
     readonly property bool ready: status === "ready"
     readonly property int assetCount: Object.keys(assets).length
+    readonly property var m3LogicalIcons: Object.freeze([
+        "icons.notification", "icons.notification-critical", "icons.dnd",
+        "icons.dismiss", "icons.archive", "icons.launcher", "icons.overview",
+        "icons.window-close", "icons.workspace", "icons.calendar", "icons.weather",
+        "icons.cpu", "icons.memory", "icons.disk", "icons.audio-output", "icons.media",
+        "icons.theme", "icons.palette", "icons.wallpaper", "icons.effects-full",
+        "icons.effects-reduced", "icons.effects-none", "icons.search", "icons.refresh",
+        "icons.location", "icons.error", "icons.offline", "icons.unread"
+    ])
+    readonly property var missingM3LogicalIcons: m3LogicalIcons.filter(function(name) {
+        return !Object.prototype.hasOwnProperty.call(root.assets, name);
+    })
 
     property bool componentComplete: false
     property int loadGeneration: 0

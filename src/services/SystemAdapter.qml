@@ -13,6 +13,7 @@ SystemAdapterCore {
     property bool mutationTimedOut: false
     property bool sessionTimedOut: false
     property bool refreshAfterCurrent: false
+    property var eventSource: null
 
     function refresh() {
         if (snapshotProcess.running) return false;
@@ -51,13 +52,35 @@ SystemAdapterCore {
         return true;
     }
 
-    Component.onCompleted: { if (root.loadOnStartup) Qt.callLater(root.refresh); }
+    Component.onCompleted: {
+        root.runtimeStreamRequired = root.eventSource !== null;
+        root.runtimeStreamReady = !root.runtimeStreamRequired
+            || root.eventSource.connectionState === "ready";
+        if (root.loadOnStartup && !root.eventSource) Qt.callLater(root.refresh);
+    }
+    onEventSourceChanged: {
+        root.runtimeStreamRequired = root.eventSource !== null;
+        root.runtimeStreamReady = !root.runtimeStreamRequired
+            || root.eventSource.connectionState === "ready";
+    }
+    readonly property Connections eventConnections: Connections {
+        target: root.eventSource
+        enabled: root.eventSource !== null
+        function onEventAccepted(envelope) { root.acceptRuntimeEvents(root.eventSource); }
+        function onConnectionStateChanged() {
+            root.runtimeStreamReady = root.eventSource.connectionState === "ready";
+            if (!root.runtimeStreamReady) {
+                root.available = false;
+                root.diagnostic = root.eventSource.diagnostic || "Session event stream unavailable";
+            }
+        }
+    }
     onImmediateRefreshRequested: Qt.callLater(root.requestImmediateRefresh)
 
     readonly property Timer pollTimer: Timer {
         interval: Math.max(3000, root.pollIntervalMs)
         repeat: true
-        running: root.loadOnStartup
+        running: root.loadOnStartup && root.eventSource === null
         onTriggered: root.refresh()
     }
     readonly property Process snapshotProcess: Process {
@@ -65,6 +88,7 @@ SystemAdapterCore {
         stderr: StdioCollector { id: snapshotErr }
         onExited: exitCode => {
             root.snapshotTimeout.stop();
+            root.snapshotKillTimeout.stop();
             if (!root.snapshotTimedOut)
                 root.acceptSnapshotResult(root.snapshotGeneration, exitCode,
                     snapshotOut.text, snapshotErr.text, false);
@@ -79,14 +103,20 @@ SystemAdapterCore {
         onTriggered: {
             root.snapshotTimedOut = true;
             root.snapshotProcess.signal(15);
+            root.snapshotKillTimeout.restart();
             root.acceptSnapshotResult(root.snapshotGeneration, -1, "", "", true);
         }
+    }
+    readonly property Timer snapshotKillTimeout: Timer {
+        interval: 1000
+        onTriggered: if (root.snapshotProcess.running) root.snapshotProcess.signal(9)
     }
     readonly property Process mutationProcess: Process {
         stdout: StdioCollector { id: mutationOut }
         stderr: StdioCollector { id: mutationErr }
         onExited: exitCode => {
             root.mutationTimeout.stop();
+            root.mutationKillTimeout.stop();
             if (!root.mutationTimedOut)
                 root.acceptMutationResult(root.mutationGeneration, exitCode,
                     mutationOut.text, mutationErr.text, false);
@@ -97,14 +127,20 @@ SystemAdapterCore {
         onTriggered: {
             root.mutationTimedOut = true;
             root.mutationProcess.signal(15);
+            root.mutationKillTimeout.restart();
             root.acceptMutationResult(root.mutationGeneration, -1, "", "", true);
         }
+    }
+    readonly property Timer mutationKillTimeout: Timer {
+        interval: 1000
+        onTriggered: if (root.mutationProcess.running) root.mutationProcess.signal(9)
     }
     readonly property Process sessionProcess: Process {
         stdout: StdioCollector { id: sessionOut }
         stderr: StdioCollector { id: sessionErr }
         onExited: exitCode => {
             root.sessionTimeout.stop();
+            root.sessionKillTimeout.stop();
             if (!root.sessionTimedOut)
                 root.acceptSessionResult(root.sessionGeneration, exitCode,
                     sessionOut.text, sessionErr.text, false);
@@ -115,7 +151,12 @@ SystemAdapterCore {
         onTriggered: {
             root.sessionTimedOut = true;
             root.sessionProcess.signal(15);
+            root.sessionKillTimeout.restart();
             root.acceptSessionResult(root.sessionGeneration, -1, "", "", true);
         }
+    }
+    readonly property Timer sessionKillTimeout: Timer {
+        interval: 1000
+        onTriggered: if (root.sessionProcess.running) root.sessionProcess.signal(9)
     }
 }

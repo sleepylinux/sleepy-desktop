@@ -1,18 +1,16 @@
 import QtQuick 6.0
 import Quickshell
-import Quickshell.Io
 
 Scope {
     id: root
     required property var shortcutRouter
     required property var surfaceController
+    required property var eventSource
     property string pendingMethod: ""
     property string pendingArgument: ""
-    property int queryGeneration: 0
-    property bool queryTimedOut: false
-    property int queryTimeoutMs: 900
     property var requestQueue: ([])
     property bool queryActive: false
+    property string diagnostic: ""
 
     function request(method, argument) {
         const queue = root.requestQueue.slice();
@@ -22,7 +20,7 @@ Scope {
         return true;
     }
     function startNext() {
-        if (root.queryActive || focusedOutputProcess.running || !root.requestQueue.length)
+        if (root.queryActive || !root.requestQueue.length)
             return false;
         const queue = root.requestQueue.slice();
         const next = queue.shift();
@@ -30,17 +28,19 @@ Scope {
         root.pendingMethod = next.method;
         root.pendingArgument = next.argument;
         root.queryActive = true;
-        root.queryTimedOut = false;
-        const command = root.shortcutRouter.beginFocusedOutputQuery();
-        root.queryGeneration = root.shortcutRouter.activeQueryGeneration;
-        focusedOutputProcess.exec(command);
-        focusedOutputTimeout.restart();
+        const output = root.eventSource.focusedOutputId;
+        if (!output || root.eventSource.connectionState !== "ready") {
+            root.diagnostic = "Focused output unavailable from session event stream";
+            root.queryActive = false;
+            Qt.callLater(root.startNext);
+            return false;
+        }
+        root.finishQuery(output);
+        root.queryActive = false;
+        Qt.callLater(root.startNext);
         return true;
     }
-    function finishQuery(exitCode, stdoutText, timedOut) {
-        const output = root.shortcutRouter.acceptFocusedOutputResult(
-            root.queryGeneration, exitCode, stdoutText, timedOut);
-        if (!output) return false;
+    function finishQuery(output) {
         if (root.pendingMethod === "toggle")
             return root.surfaceController.toggle("controlCenter", output);
         if (root.pendingMethod === "open")
@@ -64,25 +64,6 @@ Scope {
         function requestSessionAction(action: string): void {
             if (["lock", "logout", "reboot", "powerOff"].indexOf(action) >= 0)
                 root.request("session", action);
-        }
-    }
-    Process {
-        id: focusedOutputProcess
-        stdout: StdioCollector { id: focusedOutput }
-        onExited: exitCode => {
-            focusedOutputTimeout.stop();
-            if (!root.queryTimedOut) root.finishQuery(exitCode, focusedOutput.text, false);
-            root.queryActive = false;
-            Qt.callLater(root.startNext);
-        }
-    }
-    Timer {
-        id: focusedOutputTimeout
-        interval: root.queryTimeoutMs
-        onTriggered: {
-            root.queryTimedOut = true;
-            focusedOutputProcess.signal(15);
-            root.finishQuery(-1, "", true);
         }
     }
 }

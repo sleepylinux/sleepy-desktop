@@ -13,7 +13,7 @@ QtObject {
     function setAppearanceMode(mode) {
         if (["dark", "light", "system"].indexOf(mode) === -1)
             return false;
-        root.appearanceMode = mode === "system" ? "dark" : mode;
+        root.appearanceMode = mode;
         root.previewChanged();
         return true;
     }

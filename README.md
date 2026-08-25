@@ -22,6 +22,30 @@ affected control.
 
 ## Runtime contract
 
+M3 adds a reconnectable snapshot-first v2 event client. It runs the fixed argv
+`sleepyctl events watch --format ndjson`, rejects unknown versions and payloads,
+requires monotonic daemon generations, and keeps capability failures local.
+The active shell no longer polls Niri or system state: workspace/focus routing
+and Control Center readback are derived from daemon events. Mutating M2
+controls retain their one-release compatibility client and never update the UI
+until confirmed readback arrives.
+
+Quickshell's native local `Socket` type connects directly to the private
+`daily.sock`, `osd.sock`, and `theme.sock` boundaries. Daily requests are UUID
+correlated and expose only launcher index actions, typed Niri commands,
+calendar, weather, and explicit geocoding submit; arbitrary command text is
+not executable. OSD replay/live publications remain ordered per output. Theme
+candidates are applied to memory first and acknowledged with the matching
+typed request; failures never replace durable theme state from QML.
+
+Notifications, launcher, overview, widgets, and personalization are registered
+through the same per-screen surface registry. Lists implement keyboard
+navigation, Home/End, Escape, accessible names/roles, and output-local focus
+restoration. Loading, empty, offline, stale, error, unsupported and other
+capability states are not collapsed into success. A deterministic two-output
+gallery fixture covers DND/grouping, OSD overflow, palettes, provider states,
+and every effects mode.
+
 `SessionAdapter.qml` remains the appearance-settings boundary. It runs
 `sleepyctl settings show` on startup and `sleepyctl presets activate <id> --apply` when
 requested, validates the complete schema-v1 document, and falls back to a new
@@ -107,3 +131,9 @@ The flake pins `sleepy-sdk` at
 checks for root integration. The runtime also pins `sleepy-session` at
 `b88f5b993ae449acf176d8fc6f0d6542776d06bd` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
+
+These revisions intentionally remain the last reviewed public component pins
+during local M3 development. Publication must first merge the SDK theme
+follow-up, session M3 service, and artwork M3 registry; only then may the
+desktop inputs be updated to those exact reviewed public commits and every
+component check rerun.

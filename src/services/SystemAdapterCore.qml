@@ -15,6 +15,8 @@ QtObject {
     property var pendingKinds: ({})
     property int pendingCount: 0
     property string mutationCapabilityBusy: ""
+    property bool runtimeStreamRequired: false
+    property bool runtimeStreamReady: true
 
     readonly property var capabilityKeys: [
         "network.enabled", "bluetooth.enabled", "audio.volume", "audio.muted",
@@ -274,7 +276,8 @@ QtObject {
     }
 
     function beginMutation(capability, value) {
-        if (!root.mutationValueValid(capability, value))
+        if ((root.runtimeStreamRequired && !root.runtimeStreamReady)
+                || !root.mutationValueValid(capability, value))
             return null;
         const generation = root.allocate("mutation");
         root.mutationCapabilityBusy = capability;
@@ -376,6 +379,8 @@ QtObject {
     }
 
     function capabilityState(capability) {
+        if (root.runtimeStreamRequired && !root.runtimeStreamReady)
+            return "unavailable";
         return root.snapshot && root.own(root.snapshot.capabilities, capability)
             ? root.snapshot.capabilities[capability] : "unavailable";
     }
@@ -388,5 +393,82 @@ QtObject {
     function sessionActionAvailable(action) {
         return root.snapshot && root.own(root.snapshot.sessionActions, action)
             && root.snapshot.sessionActions[action] === "available";
+    }
+
+    function runtimeValue(events, id) {
+        const capability = events.capability(id);
+        if (!capability.available || !capability.value) return null;
+        return capability.value.data !== undefined ? capability.value.data : capability.value;
+    }
+
+    function runtimeState(events, id) {
+        const capability = events.capability(id);
+        if (capability.status === "available") return "available";
+        return capability.status === "timeout" || capability.status === "parse"
+             || capability.status === "error" ? "error" : "unavailable";
+    }
+
+    function acceptRuntimeEvents(events) {
+        if (!events || !events.snapshotReceived) return false;
+        const network = root.runtimeValue(events, "network");
+        const bluetooth = root.runtimeValue(events, "bluetooth");
+        const audio = root.runtimeValue(events, "audio");
+        const brightness = root.runtimeValue(events, "brightness");
+        const nightLight = root.runtimeValue(events, "nightLight");
+        const battery = root.runtimeValue(events, "battery");
+        const powerProfile = root.runtimeValue(events, "powerProfile");
+        const media = root.runtimeValue(events, "media");
+        const capabilities = {
+            "network.enabled": root.runtimeState(events, "network"),
+            "bluetooth.enabled": root.runtimeState(events, "bluetooth"),
+            "audio.volume": root.runtimeState(events, "audio"),
+            "audio.muted": root.runtimeState(events, "audio"),
+            "audio.microphoneLevel": root.runtimeState(events, "audio"),
+            "audio.microphoneMuted": root.runtimeState(events, "audio"),
+            "audio.outputDevice": root.runtimeState(events, "audio"),
+            "display.brightness": root.runtimeState(events, "brightness"),
+            "display.nightLightEnabled": root.runtimeState(events, "nightLight"),
+            "power.profile": root.runtimeState(events, "powerProfile"),
+            "battery.status": root.runtimeState(events, "battery"),
+            "media.transport": root.runtimeState(events, "media")
+        };
+        const diagnostics = {};
+        Object.keys(capabilities).forEach(function(key) {
+            if (capabilities[key] === "available") return;
+            const domain = key.split(".")[0] === "display"
+                         ? (key.indexOf("brightness") >= 0 ? "brightness" : "nightLight")
+                         : key.split(".")[0] === "power" ? "powerProfile"
+                         : key.split(".")[0] === "battery" ? "battery"
+                         : key.split(".")[0] === "media" ? "media" : key.split(".")[0];
+            const cap = events.capability(domain);
+            diagnostics[key] = {"kind": cap.status === "timeout" ? "timeout"
+                : cap.status === "parse" ? "parse" : "unsupported",
+                "message": cap.diagnostic || cap.status};
+        });
+        const outputDevices = audio && audio.defaultOutputId ? [{"id": audio.defaultOutputId,
+            "label": audio.defaultOutputId, "isDefault": true}] : [];
+        const document = {
+            "schemaVersion": 1, "generation": Math.max(1, Math.floor(events.generation)),
+            "capabilities": capabilities, "diagnostics": diagnostics,
+            "sessionActions": {"lock": "unavailable", "logout": "unavailable",
+                               "reboot": "unavailable", "powerOff": "unavailable"},
+            "network": network ? {"enabled": network.wifiEnabled,
+                "connectedName": network.activeConnectionId || null, "signalLevel": null} : null,
+            "bluetooth": bluetooth ? {"enabled": bluetooth.powered,
+                "connectedDevice": bluetooth.connectedDeviceIds && bluetooth.connectedDeviceIds.length
+                    ? bluetooth.connectedDeviceIds[0] : null} : null,
+            "audio": audio ? {"volume": audio.outputLevel, "muted": audio.outputMuted,
+                "microphoneLevel": audio.inputLevel, "microphoneMuted": audio.inputMuted,
+                "outputDeviceId": audio.defaultOutputId || null, "outputDevices": outputDevices} : null,
+            "display": brightness || nightLight ? {"brightness": brightness ? brightness.level : null,
+                "nightLightEnabled": nightLight ? nightLight.enabled : false} : null,
+            "power": battery || powerProfile ? {"batteryLevel": battery ? battery.percentage / 100 : null,
+                "charging": battery ? battery.charging : null,
+                "currentProfile": powerProfile ? powerProfile.active : null,
+                "availableProfiles": powerProfile ? powerProfile.available : []} : null,
+            "media": media ? {"title": media.title, "artist": media.artist || null,
+                "playing": Boolean(media.playing)} : null
+        };
+        return root.commitSnapshot(document);
     }
 }

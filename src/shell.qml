@@ -11,24 +11,50 @@ ShellRoot {
     id: root
 
     Services.SessionAdapter { id: sessionAdapter }
-    Services.SystemAdapter { id: systemAdapter }
+    Services.SessionEventClient { id: sessionEvents }
+    Services.DailyClient { id: dailyClient }
+    Services.OsdClient { id: osdClient }
+    Services.ThemeClient {
+        id: themeClient
+        onApplyCandidateToUi: theme => {
+            colors.customColors = theme.colors;
+            colors.appearanceMode = theme.appearance;
+            effects.effectsProfile = theme.effects;
+            effects.reducedMotion = theme.reducedMotion;
+            effects.opaqueFallback = theme.opaqueFallback;
+        }
+    }
+    Services.DailyDesktopState {
+        id: dailyState
+        events: sessionEvents
+        daily: dailyClient
+        themeClient: themeClient
+    }
+    Services.SystemAdapter {
+        id: systemAdapter
+        eventSource: sessionEvents
+        loadOnStartup: false
+    }
     Services.PresetAdapter {
         id: presetAdapter
         activePresetId: sessionAdapter.settings.activePresetId
     }
-    Services.WorkspaceService { id: workspaceService }
+    Services.WorkspaceEventService {
+        id: workspaceService
+        events: sessionEvents
+        daily: dailyClient
+    }
     Services.ClockService { id: clockService }
     Services.SurfaceRegistry {
         id: surfaceRegistry
-        Component.onCompleted: registerDescriptor({
-            "id": "controlCenter",
-            "edge": "left",
-            "width": tokens.drawerWidth,
-            "triggerIcon": "icons.control-center",
-            "triggerLabel": "Control center",
-            "availability": true,
-            "initialFocusKey": "lock"
-        })
+        Component.onCompleted: {
+            registerDescriptor({
+                "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
+                "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
+                "availability": true, "initialFocusKey": "lock"
+            });
+            registerDailyDesktop();
+        }
     }
     Services.SurfaceController {
         id: surfaces
@@ -49,6 +75,7 @@ ShellRoot {
     Services.ShellIpc {
         shortcutRouter: shortcutRouter
         surfaceController: surfaces
+        eventSource: sessionEvents
     }
     Services.ArtworkRegistry {
         id: artwork
@@ -62,8 +89,8 @@ ShellRoot {
     }
     Theme.Palette {
         id: colors
-        appearanceMode: sessionAdapter.settings.appearanceMode === "system"
-                        ? "dark" : sessionAdapter.settings.appearanceMode
+        appearanceMode: sessionAdapter.settings.appearanceMode
+        portalDark: Application.styleHints.colorScheme !== Qt.Light
     }
     Theme.EffectsPolicy {
         id: effects
@@ -93,5 +120,12 @@ ShellRoot {
         effects: effects
         systemAdapter: systemAdapter
         presetAdapter: presetAdapter
+    }
+    Drawers.DailyDesktopDrawer {
+        tokens: tokens; colors: colors; effects: effects; iconRegistry: icons
+        surfaceRegistry: surfaceRegistry; surfaceController: surfaces; dailyState: dailyState
+    }
+    Panels.OsdLayer {
+        osdModel: osdClient; tokens: tokens; colors: colors; effects: effects
     }
 }

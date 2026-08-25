@@ -35,6 +35,7 @@ Window {
     Theme.Palette {
         id: colors
         appearanceMode: previewState.appearanceMode
+        portalDark: Application.styleHints.colorScheme !== Qt.Light
     }
     Theme.EffectsPolicy {
         id: effects

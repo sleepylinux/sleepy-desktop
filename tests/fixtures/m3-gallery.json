@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "outputs": [
+    {"id": "DP-1", "width": 1280, "height": 800, "focused": true},
+    {"id": "HDMI-A-1", "width": 1920, "height": 1080, "focused": false}
+  ],
+  "effects": [
+    {"profile": "full", "reducedMotion": false, "opaqueFallback": false},
+    {"profile": "reduced", "reducedMotion": true, "opaqueFallback": false},
+    {"profile": "none", "reducedMotion": true, "opaqueFallback": true}
+  ],
+  "palettes": ["dark", "light", "wallpaper"],
+  "providerStates": ["loading", "offline", "stale", "error", "empty", "ready"],
+  "notification": {
+    "dnd": true,
+    "groups": [
+      {"application": "Calendar", "count": 2},
+      {"application": "Music", "count": 1}
+    ]
+  },
+  "osd": {
+    "sequence": 8,
+    "visible": [
+      {"schemaVersion": 2, "outputId": "DP-1", "kind": "volume", "level": 0.42, "muted": false, "label": "42%"},
+      {"schemaVersion": 2, "outputId": "HDMI-A-1", "kind": "brightness", "level": 0.76, "label": "76%"}
+    ],
+    "overflowByOutput": {"DP-1": 2, "HDMI-A-1": 0}
+  }
+}

@@ -5,6 +5,7 @@ QtObject {
 
     property var descriptors: Object.freeze({})
     property var descriptorList: Object.freeze([])
+    property var instances: Object.freeze({})
     readonly property int descriptorCount: descriptorList.length
 
     function validNonEmptyString(value) {
@@ -59,5 +60,43 @@ QtObject {
             return descriptor.availability
                 && (edge === undefined || edge === "" || descriptor.edge === edge);
         });
+    }
+
+    function registerInstance(surfaceId, screenKey, instance) {
+        if (!root.descriptorFor(surfaceId) || !root.validNonEmptyString(screenKey)
+                || !instance)
+            return false;
+        const key = surfaceId + "\u0000" + screenKey.trim();
+        if (Object.prototype.hasOwnProperty.call(root.instances, key))
+            return false;
+        const next = Object.assign({}, root.instances);
+        next[key] = instance;
+        root.instances = Object.freeze(next);
+        return true;
+    }
+
+    function instanceFor(surfaceId, screenKey) {
+        const key = surfaceId + "\u0000" + String(screenKey).trim();
+        return Object.prototype.hasOwnProperty.call(root.instances, key)
+             ? root.instances[key] : null;
+    }
+
+    function registerDailyDesktop() {
+        const definitions = [
+            ["notifications", "right", 408, "icons.notification", "Notifications", "notifications"],
+            ["launcher", "left", 520, "icons.launcher", "Launcher", "search"],
+            ["overview", "left", 640, "icons.overview", "Overview", "workspaces"],
+            ["widgets", "right", 420, "icons.calendar", "Daily widgets", "calendar"],
+            ["personalization", "right", 440, "icons.theme", "Personalization", "themes"]
+        ];
+        let changed = false;
+        definitions.forEach(function(entry) {
+            changed = root.registerDescriptor({
+                "id": entry[0], "edge": entry[1], "width": entry[2],
+                "triggerIcon": entry[3], "triggerLabel": entry[4],
+                "availability": true, "initialFocusKey": entry[5]
+            }) || changed;
+        });
+        return changed;
     }
 }

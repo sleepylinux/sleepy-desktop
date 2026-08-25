@@ -158,16 +158,27 @@
             ];
           } ''
             cd ${self}
-            Xvfb :99 -screen 0 1280x800x24 >/tmp/sleepy-xvfb.log 2>&1 &
+            display_number=100
+            while [[ -e /tmp/.X''${display_number}-lock \
+                || -S /tmp/.X11-unix/X''${display_number} ]]; do
+              display_number=$((display_number + 1))
+            done
+            Xvfb ":$display_number" -screen 0 1280x800x24 \
+              >"$TMPDIR/sleepy-xvfb.log" 2>&1 &
             xvfb_pid=$!
-            trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
+            cleanup_xvfb() {
+              kill "$xvfb_pid" 2>/dev/null || true
+              wait "$xvfb_pid" 2>/dev/null || true
+            }
+            trap cleanup_xvfb EXIT
             for _ in $(seq 1 50); do
-              [[ -S /tmp/.X11-unix/X99 ]] && break
+              [[ -S "/tmp/.X11-unix/X$display_number" ]] && break
               sleep 0.1
             done
-            test -S /tmp/.X11-unix/X99
-            export DISPLAY=:99
+            test -S "/tmp/.X11-unix/X$display_number"
+            export DISPLAY=":$display_number"
             export SLEEPY_TEST_QPA_PLATFORM=xcb
+            export SLEEPY_QML_TIMEOUT_SECONDS=120
             export QT_QUICK_BACKEND=software
             export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins
             export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri

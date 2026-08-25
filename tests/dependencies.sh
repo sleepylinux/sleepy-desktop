@@ -131,7 +131,7 @@ if ! rg -Fq 'export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6
 fi
 if ! rg -Fq 'pkgs.vulkan-loader' <<< "$qml_check_block" ||
     ! rg -Fq 'pkgs.xorg.xorgserver' <<< "$qml_check_block" ||
-    ! rg -Fq 'Xvfb :99 -screen 0 1280x800x24' <<< "$qml_check_block" ||
+    ! rg -Fq 'Xvfb ":$display_number" -screen 0 1280x800x24' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_QPA_PLATFORM=xcb' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_RHI_BACKEND=vulkan' <<< "$qml_check_block" ||
     ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json' <<< "$qml_check_block" ||

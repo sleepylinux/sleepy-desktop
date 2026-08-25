@@ -40,6 +40,7 @@ PresetAdapterCore {
         stderr: StdioCollector { id: errorOutput }
         onExited: exitCode => {
             root.timeout.stop();
+            root.killTimeout.stop();
             if (root.timedOut) return;
             const isList = root.activeCommand && root.activeCommand.length >= 3
                 && root.activeCommand[1] === "presets" && root.activeCommand[2] === "list";
@@ -66,11 +67,16 @@ PresetAdapterCore {
         onTriggered: {
             root.timedOut = true;
             root.process.signal(15);
+            root.killTimeout.restart();
             const isList = root.activeCommand && root.activeCommand[2] === "list";
             const isExport = root.activeCommand && root.activeCommand[2] === "export";
             if (isList) root.acceptListResult(-1, "", "", true);
             else if (isExport) root.acceptExportResult(-1, "", "", true);
             else root.acceptMutationResult(-1, "", "", true);
         }
+    }
+    readonly property Timer killTimeout: Timer {
+        interval: 1000
+        onTriggered: if (root.process.running) root.process.signal(9)
     }
 }
