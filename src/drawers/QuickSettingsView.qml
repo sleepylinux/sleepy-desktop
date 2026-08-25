@@ -9,13 +9,16 @@ FocusScope {
     required property var quickSettingsState
     required property var tokens
     required property var colors
+    required property var effects
+    required property var iconRegistry
     property string diagnostic: ""
     property string screenKey: "default"
+    property string surfaceId: "controlCenter"
 
     readonly property Services.SurfaceWindowPolicy windowPolicy:
         Services.SurfaceWindowPolicy {
             surfaceController: root.surfaceController
-            surfaceId: "quickSettings"
+            surfaceId: root.surfaceId
             screenKey: root.screenKey
         }
 
@@ -26,7 +29,7 @@ FocusScope {
     focus: visible
 
     Keys.onEscapePressed: event => {
-        root.surfaceController.close("quickSettings", root.screenKey);
+        root.surfaceController.close(root.surfaceId, root.screenKey);
         event.accepted = true;
     }
 
@@ -37,12 +40,11 @@ FocusScope {
         }
     }
 
-    Rectangle {
+    Widgets.GlassSurface {
         anchors.fill: parent
         radius: root.tokens.shellRadius
-        color: root.colors.surface
-        border.width: 1
-        border.color: root.colors.border
+        colors: root.colors
+        effects: root.effects
     }
 
     Column {
@@ -94,21 +96,37 @@ FocusScope {
                     border.width: 1
                     border.color: closeButton.activeFocus ? root.colors.accent : root.colors.border
                 }
-                Text {
+                Item {
                     anchors.centerIn: parent
-                    text: "×"
-                    color: root.colors.textSecondary
-                    font.pixelSize: 21
+                    width: 14
+                    height: 14
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width
+                        height: 2
+                        radius: 1
+                        rotation: 45
+                        color: root.colors.textSecondary
+                    }
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width
+                        height: 2
+                        radius: 1
+                        rotation: -45
+                        color: root.colors.textSecondary
+                    }
                 }
                 Keys.onReturnPressed:
-                    root.surfaceController.close("quickSettings", root.screenKey)
+                    root.surfaceController.close(root.surfaceId, root.screenKey)
                 Keys.onSpacePressed:
-                    root.surfaceController.close("quickSettings", root.screenKey)
+                    root.surfaceController.close(root.surfaceId, root.screenKey)
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked:
-                        root.surfaceController.close("quickSettings", root.screenKey)
+                        root.surfaceController.close(root.surfaceId, root.screenKey)
                 }
             }
         }
@@ -134,7 +152,8 @@ FocusScope {
                 width: (parent.width - root.tokens.gridUnit) / 2
                 label: "Network"
                 detail: root.quickSettingsState.networkEnabled ? "Connected" : "Offline"
-                iconText: "⌁"
+                iconName: "icons.network"
+                iconRegistry: root.iconRegistry
                 active: root.quickSettingsState.networkEnabled
                 capabilityEnabled: root.quickSettingsState.supports("network")
                 tokens: root.tokens
@@ -148,7 +167,8 @@ FocusScope {
                 width: (parent.width - root.tokens.gridUnit) / 2
                 label: "Bluetooth"
                 detail: root.quickSettingsState.bluetoothEnabled ? "On" : "Off"
-                iconText: "ᛒ"
+                iconName: "icons.bluetooth"
+                iconRegistry: root.iconRegistry
                 active: root.quickSettingsState.bluetoothEnabled
                 capabilityEnabled: root.quickSettingsState.supports("bluetooth")
                 tokens: root.tokens
@@ -162,7 +182,8 @@ FocusScope {
                 width: (parent.width - root.tokens.gridUnit) / 2
                 label: "Night light"
                 detail: root.quickSettingsState.nightLightEnabled ? "Warm" : "Neutral"
-                iconText: "☾"
+                iconName: "icons.night-light"
+                iconRegistry: root.iconRegistry
                 active: root.quickSettingsState.nightLightEnabled
                 capabilityEnabled: root.quickSettingsState.supports("nightLight")
                 tokens: root.tokens
@@ -177,7 +198,8 @@ FocusScope {
                 width: (parent.width - root.tokens.gridUnit) / 2
                 label: "Focus"
                 detail: root.quickSettingsState.focusEnabled ? "Quiet" : "Available"
-                iconText: "◌"
+                iconName: "icons.focus"
+                iconRegistry: root.iconRegistry
                 active: root.quickSettingsState.focusEnabled
                 capabilityEnabled: root.quickSettingsState.supports("focus")
                 tokens: root.tokens
@@ -201,7 +223,8 @@ FocusScope {
             id: volumeRow
             width: parent.width
             label: "Volume"
-            iconText: "♪"
+            iconName: "icons.volume"
+            iconRegistry: root.iconRegistry
             value: root.quickSettingsState.volume
             capabilityEnabled: root.quickSettingsState.supports("volume")
             tokens: root.tokens
@@ -215,7 +238,8 @@ FocusScope {
             id: brightnessRow
             width: parent.width
             label: "Brightness"
-            iconText: "☼"
+            iconName: "icons.brightness"
+            iconRegistry: root.iconRegistry
             value: root.quickSettingsState.brightness
             capabilityEnabled: root.quickSettingsState.supports("brightness")
             tokens: root.tokens

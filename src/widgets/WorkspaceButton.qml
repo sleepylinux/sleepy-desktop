@@ -8,6 +8,7 @@ FocusScope {
     required property bool active
     required property var tokens
     required property var colors
+    readonly property int transitionDuration: tokens.motionDuration
 
     signal activated(int workspaceIndex)
 
@@ -32,7 +33,10 @@ FocusScope {
         border.color: root.colors.accent
 
         Behavior on color {
-            ColorAnimation { duration: root.tokens.motionDuration }
+            ColorAnimation {
+                objectName: "workspaceColorAnimation"
+                duration: root.transitionDuration
+            }
         }
     }
 
@@ -43,8 +47,18 @@ FocusScope {
         radius: root.active ? 10 : 4
         color: root.active ? root.colors.accent : root.colors.textSecondary
 
-        Behavior on width { NumberAnimation { duration: root.tokens.motionDuration } }
-        Behavior on height { NumberAnimation { duration: root.tokens.motionDuration } }
+        Behavior on width {
+            NumberAnimation {
+                objectName: "workspaceWidthAnimation"
+                duration: root.transitionDuration
+            }
+        }
+        Behavior on height {
+            NumberAnimation {
+                objectName: "workspaceHeightAnimation"
+                duration: root.transitionDuration
+            }
+        }
 
         Text {
             anchors.centerIn: parent

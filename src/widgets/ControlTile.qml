@@ -5,11 +5,13 @@ FocusScope {
 
     required property string label
     required property string detail
-    required property string iconText
+    required property string iconName
+    required property var iconRegistry
     required property bool active
     required property bool capabilityEnabled
     required property var tokens
     required property var colors
+    readonly property int transitionDuration: tokens.motionDuration
 
     signal triggered
 
@@ -37,7 +39,10 @@ FocusScope {
         border.color: root.activeFocus ? root.colors.accent : root.colors.border
 
         Behavior on color {
-            ColorAnimation { duration: root.tokens.motionDuration }
+            ColorAnimation {
+                objectName: "controlTileColorAnimation"
+                duration: root.transitionDuration
+            }
         }
     }
 
@@ -49,12 +54,14 @@ FocusScope {
         radius: 12
         color: root.active ? root.colors.accent : root.colors.surfaceQuiet
 
-        Text {
+        SleepyIcon {
             anchors.centerIn: parent
-            text: root.iconText
-            color: root.active ? root.colors.shellBackground : root.colors.textSecondary
-            font.pixelSize: 16
-            font.weight: Font.DemiBold
+            iconRegistry: root.iconRegistry
+            name: root.iconName
+            iconColor: root.active ? root.colors.shellBackground
+                                   : root.colors.textSecondary
+            iconSize: 18
+            accessibleName: root.label
         }
     }
 

@@ -8,6 +8,9 @@ FocusScope {
     required property bool active
     required property var tokens
     required property var colors
+    required property var iconRegistry
+    required property string iconName
+    required property string accessibleName
 
     signal triggered
 
@@ -32,28 +35,13 @@ FocusScope {
         border.color: root.activeFocus ? root.colors.accent : root.colors.border
     }
 
-    Item {
+    SleepyIcon {
         anchors.centerIn: parent
-        width: 22
-        height: 18
-
-        Row {
-            anchors.centerIn: parent
-            spacing: 3
-
-            Repeater {
-                model: [8, 14, 10]
-
-                delegate: Rectangle {
-                    required property int modelData
-                    width: 3
-                    height: modelData
-                    radius: 2
-                    color: root.active ? root.colors.accent : root.colors.textSecondary
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
+        iconRegistry: root.iconRegistry
+        name: root.iconName
+        iconColor: root.active ? root.colors.accent : root.colors.textSecondary
+        iconSize: 20
+        accessibleName: root.accessibleName
     }
 
     MouseArea {
@@ -62,6 +50,6 @@ FocusScope {
         onClicked: root.triggered()
     }
 
-    Accessible.name: "Quick settings"
+    Accessible.name: accessibleName
     Accessible.role: Accessible.Button
 }
