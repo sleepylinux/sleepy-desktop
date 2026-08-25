@@ -12,13 +12,17 @@ NotificationCenterModel {
     property string queuedLine: ""
     property string status: "offline"
     property string errorString: ""
+    readonly property ClientRequestLifecycle lifecycle: ClientRequestLifecycle {
+        onTimedOut: root.fail("Notification request timed out")
+        onRetryRequested: Qt.callLater(root.refresh)
+    }
     function uuid() { return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) { const v = Math.floor(Math.random() * 16); return (c === "x" ? v : (v & 3) | 8).toString(16); }); }
     function request(type, data) {
-        if (root.pendingRequestId) return false;
+        if (root.pendingRequestId || !root.lifecycle.begin()) return false;
         root.pendingRequestId = root.uuid(); root.status = "loading";
         root.queuedLine = JSON.stringify({"schemaVersion":2,"requestId":root.pendingRequestId,
             "operation":data === undefined ? {"type":type} : {"type":type,"data":data}}) + "\n";
-        socket.connected = true; if (socket.connected) flush(); timeout.restart(); return true;
+        socket.connected = true; if (socket.connected) flush(); return true;
     }
     function refresh() { return root.request("snapshot"); }
     function dismiss(id) { return root.request("dismiss", {"id":id}); }
@@ -51,11 +55,12 @@ NotificationCenterModel {
         root.status = "ready"; root.errorString = ""; root.pendingRequestId = ""; socket.connected = false; return true;
     }
     function fail(message) { root.status = "error"; root.errorString = message; root.pendingRequestId = ""; socket.connected = false; return false; }
+    onStatusChanged: if (status === "ready" || status === "error") root.lifecycle.finish()
     readonly property Connections eventConnection: Connections {
         target: root.events; enabled: root.events !== null
         function onEventAccepted(envelope) {
-            if (envelope.payload.type === "notification" && root.acceptEvent(envelope.payload.data)) Qt.callLater(root.refresh);
-            if (envelope.payload.type === "provider" && envelope.payload.data.providerId.indexOf("org.freedesktop.Notifications") === 0) Qt.callLater(root.refresh);
+            if (envelope.payload.type === "notification" && root.acceptEvent(envelope.payload.data)) root.lifecycle.markDirty();
+            if (envelope.payload.type === "provider" && envelope.payload.data.providerId.indexOf("org.freedesktop.Notifications") === 0) root.lifecycle.markDirty();
         }
         function onConnectionStateChanged() { if (root.events.connectionState === "ready") Qt.callLater(root.refresh); }
     }
@@ -66,5 +71,4 @@ NotificationCenterModel {
         onConnectionStateChanged: if (connected) root.flush()
         onError: root.fail("Notification service unavailable")
     }
-    readonly property Timer timeout: Timer { interval: 2500; onTriggered: root.fail("Notification request timed out") }
 }

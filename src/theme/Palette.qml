@@ -9,9 +9,10 @@ QtObject {
 
     readonly property bool light: appearanceMode === "light"
         || (appearanceMode === "system" && !portalDark)
-    readonly property color shellBackground: customColors && customColors.background
+    readonly property bool customBaseColors: customColors !== null && appearanceMode !== "system"
+    readonly property color shellBackground: customBaseColors && customColors.background
         ? customColors.background : light ? "#f1eef8" : "#17131f"
-    readonly property color surface: customColors && customColors.surface
+    readonly property color surface: customBaseColors && customColors.surface
         ? customColors.surface : light ? "#fbf9ff" : "#211c2b"
     readonly property color surfaceRaised: light ? "#ffffff" : "#2b2438"
     readonly property color surfaceQuiet: light ? "#e9e4f3" : "#1c1825"
@@ -19,9 +20,9 @@ QtObject {
     readonly property color accent: customColors && customColors.accent
         ? customColors.accent : light ? "#6a50aa" : "#b9a7ff"
     readonly property color accentSoft: light ? "#e4dcfb" : "#3a3152"
-    readonly property color textPrimary: customColors && customColors.textPrimary
+    readonly property color textPrimary: customBaseColors && customColors.textPrimary
         ? customColors.textPrimary : light ? "#251f2e" : "#f7f3ff"
-    readonly property color textSecondary: customColors && customColors.textSecondary
+    readonly property color textSecondary: customBaseColors && customColors.textSecondary
         ? customColors.textSecondary : light ? "#584f65" : "#d0c7dc"
     readonly property color success: light ? "#2b6e58" : "#76c7aa"
     readonly property color warning: light ? "#8c5720" : "#ddb87d"

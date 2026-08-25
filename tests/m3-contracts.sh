@@ -9,6 +9,7 @@ for file in \
   src/services/DailyClient.qml \
   src/services/OsdClient.qml \
   src/services/ThemeClient.qml \
+  src/services/ClientRequestLifecycle.qml \
   src/services/ControlClient.qml \
   src/services/NotificationClient.qml \
   src/drawers/DailyDesktopDrawer.qml \
@@ -24,6 +25,14 @@ rg -Fq '/sleepy/osd.sock' "$repo_root/src/services/OsdClient.qml"
 rg -Fq '/sleepy/theme.sock' "$repo_root/src/services/ThemeClient.qml"
 rg -Fq '/sleepy/control.sock' "$repo_root/src/services/ControlClient.qml"
 rg -Fq '/sleepy/notification.sock' "$repo_root/src/services/NotificationClient.qml"
+for client in ControlClient NotificationClient; do
+  rg -Fq 'ClientRequestLifecycle {' "$repo_root/src/services/$client.qml"
+  rg -Fq 'root.lifecycle.finish()' "$repo_root/src/services/$client.qml"
+done
+rg -Fq 'if (root.pending) root.dirty = true' \
+  "$repo_root/src/services/ClientRequestLifecycle.qml"
+rg -Fq 'id: actionLabel; anchors.centerIn: parent; textFormat: Text.PlainText' \
+  "$repo_root/src/drawers/DailySurfaceView.qml"
 rg -Fq 'themeSocket.write(JSON.stringify(ack) + "\n")' \
   "$repo_root/src/services/ThemeClient.qml"
 rg -Fq 'SLEEPY_QML_TIMEOUT_SECONDS' "$repo_root/tests/run.sh"

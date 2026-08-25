@@ -11,13 +11,17 @@ ControlProtocol {
     property string queuedLine: ""
     property var observed: ({})
     signal mutationCompleted
+    readonly property ClientRequestLifecycle lifecycle: ClientRequestLifecycle {
+        onTimedOut: root.fail("Control request timed out")
+    }
 
     function sendMutation(capability, value) {
         if (!root.events || root.events.connectionState !== "ready") return false;
         const request = root.mutation(capability, value, root.events.generation);
         if (!request) return false;
+        if (!root.lifecycle.begin()) return false;
         root.queuedLine = JSON.stringify(request) + "\n"; socket.connected = true;
-        if (socket.connected) flush(); timeout.restart(); return true;
+        if (socket.connected) flush(); return true;
     }
     function flush() { if (socket.connected && root.queuedLine) { socket.write(root.queuedLine); socket.flush(); root.queuedLine = ""; } }
     function maybeComplete(requestId, generation) {
@@ -27,6 +31,7 @@ ControlProtocol {
         }
     }
     onConfirmed: (requestId, generation) => root.maybeComplete(requestId, generation)
+    onStatusChanged: if (status === "confirmed" || status === "error") root.lifecycle.finish()
     readonly property Connections eventConnection: Connections {
         target: root.events
         enabled: root.events !== null
@@ -42,5 +47,4 @@ ControlProtocol {
         onConnectionStateChanged: if (connected) root.flush()
         onError: root.fail("Control service unavailable")
     }
-    readonly property Timer timeout: Timer { interval: 2500; onTriggered: root.fail("Control request timed out") }
 }

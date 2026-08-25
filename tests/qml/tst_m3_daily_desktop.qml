@@ -12,6 +12,7 @@ TestCase {
     Component { id: eventFactory; Services.SessionEventModel {} }
     Component { id: dailyFactory; Services.DailyProtocol {} }
     Component { id: controlFactory; Services.ControlProtocol {} }
+    Component { id: lifecycleFactory; Services.ClientRequestLifecycle { timeoutInterval: 40 } }
     Component { id: osdFactory; Services.OsdStreamModel {} }
     Component { id: themeFactory; Services.ThemeProtocol {} }
     Component { id: notificationFactory; Services.NotificationCenterModel {} }
@@ -20,6 +21,8 @@ TestCase {
     Component { id: effectsFactory; Theme.EffectsPolicy {} }
     Component { id: paletteFactory; Theme.Palette {} }
     SignalSpy { id: rollbackSpy; signalName: "rollbackRequested" }
+    SignalSpy { id: timeoutSpy; signalName: "timedOut" }
+    SignalSpy { id: retrySpy; signalName: "retryRequested" }
     Component {
         id: stateFixtureFactory
         QtObject {
@@ -62,6 +65,36 @@ TestCase {
             readonly property Services.DailyDesktopState state: Services.DailyDesktopState {
                 events: fixture.events
                 daily: fixture.daily
+            }
+        }
+    }
+    Component {
+        id: sdkWidgetStateFactory
+        QtObject {
+            id: sdkFixture
+            readonly property QtObject events: QtObject {
+                property string connectionState: "ready"
+                property double generation: 4
+                function capability(id) {
+                    const values = {
+                        "resources":{"cpuUsage":0.25,"memoryUsage":0.5,"loadOne":1.2},
+                        "network":{"wifiEnabled":true,"ethernetConnected":false,"connectivity":"full","activeConnectionId":"Sleepy Wi-Fi"},
+                        "battery":{"percentage":87,"charging":true,"secondsRemaining":3600},
+                        "media":{"playerId":"player","title":"Dreams","artist":"Sleepy","playing":true},
+                        "bluetooth":{"powered":true,"connectedDeviceIds":["headset"]},
+                        "audio":{"outputLevel":0.4,"outputMuted":false,"inputLevel":0.2,"inputMuted":true}
+                    };
+                    return values[id] ? {"id":id,"status":"available","available":true,
+                        "value":{"type":id,"data":values[id]}} : {"id":id,"status":"unsupported",
+                        "available":false,"value":null};
+                }
+            }
+            readonly property QtObject daily: QtObject {
+                property string status: "idle"; property string errorString: ""
+                signal responseAccepted(var data)
+            }
+            readonly property Services.DailyDesktopState state: Services.DailyDesktopState {
+                events: sdkFixture.events; daily: sdkFixture.daily
             }
         }
     }
@@ -214,6 +247,63 @@ TestCase {
         compare(protocol.result, null);
     }
 
+    function test_daily_calendar_and_weather_semantics_match_sdk_matrix() {
+        const protocol = createTemporaryObject(dailyFactory, testCase);
+        function respond(request, data) { return protocol.acceptResponse(JSON.stringify({
+            "schemaVersion":2,"requestId":request.requestId,"status":"confirmed","data":data})); }
+        function calendar(start, end, eventStart, eventEnd) { return {"schemaVersion":2,
+            "providerId":"local-ics","windowStart":start,"windowEnd":end,
+            "events":[{"id":"one","summary":"Meeting","startsAt":eventStart,"endsAt":eventEnd,
+                "allDay":false,"sourceId":"work"}],"sourceErrors":[]}; }
+        let request = protocol.calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e72");
+        compare(respond(request, calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "2026-08-25T10:30:00Z","2026-08-25T11:00:00Z")), true);
+        request = protocol.calendar("2026-02-31T10:00:00Z","2026-08-25T12:00:00Z",
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e73");
+        compare(respond(request, calendar("2026-02-31T10:00:00Z","2026-08-25T12:00:00Z",
+            "2026-08-25T10:30:00Z","2026-08-25T11:00:00Z")), false);
+        request = protocol.calendar("2026-08-25T12:00:00Z","2026-08-25T10:00:00Z",
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e74");
+        compare(respond(request, calendar("2026-08-25T12:00:00Z","2026-08-25T10:00:00Z",
+            "2026-08-25T10:30:00Z","2026-08-25T11:00:00Z")), false);
+        request = protocol.calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e75");
+        compare(respond(request, calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "2026-08-25T11:30:00Z","2026-08-25T11:00:00Z")), false);
+        request = protocol.calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e7a");
+        const paddedCalendar = calendar("2026-08-25T10:00:00Z","2026-08-25T12:00:00Z",
+            "2026-08-25T11:00:00Z","2026-08-25T11:30:00Z");
+        paddedCalendar.events[0].summary = " padded ";
+        compare(respond(request, paddedCalendar), false);
+        function weather(status, diagnostic, at) {
+            const value = {"schemaVersion":2,"providerId":"met-no",
+                "location":{"displayName":"Prague","latitude":50,"longitude":14},
+                "status":status,"cache":status === "online" ? "fresh" : "stale",
+                "attribution":"MET Norway","forecast":[{"at":at || "2026-08-25T11:00:00Z",
+                    "temperatureC":20,"symbol":"clearsky_day"}]};
+            if (diagnostic !== undefined) value.diagnostic = diagnostic;
+            return value;
+        }
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e76");
+        compare(respond(request, weather("online", {"message":"contradiction"})), false);
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e77");
+        compare(respond(request, weather("offline")), false);
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e78");
+        compare(respond(request, weather("offline", {"message":"network unavailable"})), true);
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e79");
+        compare(respond(request, weather("online", undefined, "not-a-time")), false);
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e7b");
+        const paddedWeather = weather("online"); paddedWeather.attribution = " MET Norway ";
+        compare(respond(request, paddedWeather), false);
+    }
+
     function test_daily_protocol_rejects_invalid_ids_and_status_field_pairs() {
         const protocol = createTemporaryObject(dailyFactory, testCase);
         compare(protocol.launcherSearch("term", "not-a-uuid"), null);
@@ -239,6 +329,36 @@ TestCase {
         result.confirmedEvent.generation = 11;
         protocol.pendingRequestId = request.requestId;
         compare(protocol.acceptResponse(JSON.stringify(result)), false);
+    }
+
+    function test_client_terminal_success_stops_timeout_and_burst_refresh_coalesces_once() {
+        const lifecycle = createTemporaryObject(lifecycleFactory, testCase);
+        timeoutSpy.target = lifecycle; retrySpy.target = lifecycle;
+        timeoutSpy.clear(); retrySpy.clear();
+        verify(lifecycle.begin());
+        lifecycle.markDirty(); lifecycle.markDirty();
+        lifecycle.finish();
+        tryCompare(retrySpy, "count", 1);
+        wait(80);
+        compare(timeoutSpy.count, 0);
+        compare(lifecycle.pending, false);
+        compare(lifecycle.dirty, false);
+    }
+
+    function test_notification_snapshot_failure_preserves_every_previous_field() {
+        const model = createTemporaryObject(notificationFactory, testCase);
+        const document = {"schemaVersion":2,"id":7,"applicationId":"Mail","summary":"One",
+            "body":"Body","urgency":"normal","createdAt":"2026-08-25T10:00:00Z",
+            "read":false,"archived":false,"actions":[]};
+        const valid = {"active":[document],"archive":[],"unreadCount":1,
+            "groups":[{"applicationId":"Mail","notificationIds":[7]}],"dnd":true,"popupIds":[7]};
+        verify(model.acceptSnapshot(valid));
+        const before = JSON.stringify({"items":model.items,"archive":model.archive,
+            "groups":model.serverGroups,"popups":model.popupIds,"dnd":model.dnd});
+        const malformed = JSON.parse(JSON.stringify(valid)); malformed.unreadCount = 0;
+        compare(model.acceptSnapshot(malformed), false);
+        compare(JSON.stringify({"items":model.items,"archive":model.archive,
+            "groups":model.serverGroups,"popups":model.popupIds,"dnd":model.dnd}), before);
     }
 
     function test_osd_replay_is_per_output_and_rejects_regression() {
@@ -370,13 +490,34 @@ TestCase {
         compare(effects.shadowEnabled, false);
     }
 
+    function test_widget_cards_use_exact_sdk_fields_and_human_primary_values() {
+        const fixture = createTemporaryObject(sdkWidgetStateFactory, testCase);
+        const cards = fixture.state.systemCards();
+        compare(cards.find(function(item) { return item.id === "resources"; }).summary,
+            "CPU 25% · RAM 50% · load 1.2");
+        compare(cards.find(function(item) { return item.id === "battery"; }).summary,
+            "87% · charging");
+        compare(cards.find(function(item) { return item.id === "bluetooth"; }).summary,
+            "Powered · 1 connected");
+        compare(cards.find(function(item) { return item.id === "audio"; }).summary,
+            "Output 40% · input 20% · muted");
+    }
+
     function test_system_palette_tracks_portal_scheme() {
         const palette = createTemporaryObject(paletteFactory, testCase);
         palette.appearanceMode = "system";
+        palette.customColors = {"background":"#111111","surface":"#222222",
+            "textPrimary":"#eeeeee","textSecondary":"#cccccc","accent":"#b9a7ff","control":"#76c7aa"};
         palette.portalDark = false;
         compare(palette.light, true);
+        compare(palette.shellBackground.toString(), "#f1eef8");
+        compare(palette.surface.toString(), "#fbf9ff");
+        compare(palette.textPrimary.toString(), "#251f2e");
         palette.portalDark = true;
         compare(palette.light, false);
+        compare(palette.shellBackground.toString(), "#17131f");
+        compare(palette.surface.toString(), "#211c2b");
+        compare(palette.textPrimary.toString(), "#f7f3ff");
     }
 
     function test_daily_state_routes_only_typed_indexed_and_niri_actions() {

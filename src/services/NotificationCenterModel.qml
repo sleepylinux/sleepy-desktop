@@ -60,10 +60,12 @@ QtObject {
         const active = [], archived = [];
         for (const item of snapshot.active) { const parsed = root.normalizedDocument(item); if (!parsed || parsed.archived) return false; active.push(parsed); }
         for (const item of snapshot.archive) { const parsed = root.normalizedDocument(item); if (!parsed || !parsed.archived) return false; archived.push(parsed); }
+        const calculatedUnread = active.filter(function(item) { return item.unread; }).length;
+        if (calculatedUnread !== snapshot.unreadCount) return false;
         root.items = Object.freeze(active); root.archive = Object.freeze(archived);
         root.serverGroups = Object.freeze(snapshot.groups.slice());
         root.popupIds = Object.freeze(snapshot.popupIds.slice()); root.dnd = snapshot.dnd;
-        return root.unreadCount === snapshot.unreadCount;
+        return true;
     }
     function acceptEvent(event) {
         if (!event || !Number.isSafeInteger(event.notificationId)) return false;

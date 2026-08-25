@@ -124,7 +124,22 @@ QtObject {
         return actual.length === wanted.length
             && actual.every(function(key, index) { return key === wanted[index]; });
     }
-    function nonEmpty(value) { return typeof value === "string" && value.length > 0; }
+    function nonEmpty(value) {
+        return typeof value === "string" && value.length > 0 && value.trim() === value;
+    }
+    function timestamp(value) {
+        if (typeof value !== "string") return false;
+        const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(value);
+        const milliseconds = Date.parse(value);
+        if (!match || !Number.isFinite(milliseconds)) return false;
+        const parsed = new Date(milliseconds);
+        return parsed.getUTCFullYear() === Number(match[1])
+            && parsed.getUTCMonth() + 1 === Number(match[2])
+            && parsed.getUTCDate() === Number(match[3])
+            && parsed.getUTCHours() === Number(match[4])
+            && parsed.getUTCMinutes() === Number(match[5])
+            && parsed.getUTCSeconds() === Number(match[6]);
+    }
     function validLocation(value) {
         return root.exactKeys(value, ["displayName", "latitude", "longitude"])
             && root.nonEmpty(value.displayName) && Number.isFinite(value.latitude)
@@ -148,7 +163,8 @@ QtObject {
     function validCalendar(value) {
         if (!root.exactKeys(value, ["schemaVersion", "providerId", "windowStart", "windowEnd", "events", "sourceErrors"])
                 || value.schemaVersion !== 2 || !root.nonEmpty(value.providerId)
-                || !root.nonEmpty(value.windowStart) || !root.nonEmpty(value.windowEnd)
+                || !root.timestamp(value.windowStart) || !root.timestamp(value.windowEnd)
+                || Date.parse(value.windowStart) >= Date.parse(value.windowEnd)
                 || !Array.isArray(value.events) || !Array.isArray(value.sourceErrors)) return false;
         return value.events.every(function(event) {
             if (!event || typeof event !== "object" || Array.isArray(event)) return false;
@@ -156,7 +172,8 @@ QtObject {
             return keys.every(function(key) { return ["id", "summary", "startsAt", "endsAt", "allDay", "sourceId", "location"].indexOf(key) >= 0; })
                 && ["id", "summary", "startsAt", "endsAt", "allDay", "sourceId"].every(function(key) { return keys.indexOf(key) >= 0; })
                 && root.nonEmpty(event.id) && root.nonEmpty(event.summary)
-                && root.nonEmpty(event.startsAt) && root.nonEmpty(event.endsAt)
+                && root.timestamp(event.startsAt) && root.timestamp(event.endsAt)
+                && Date.parse(event.startsAt) < Date.parse(event.endsAt)
                 && typeof event.allDay === "boolean" && root.nonEmpty(event.sourceId)
                 && (!Object.prototype.hasOwnProperty.call(event, "location") || event.location === null || typeof event.location === "string");
         }) && value.sourceErrors.every(function(error) {
@@ -174,9 +191,14 @@ QtObject {
                 || ["online", "offline", "error"].indexOf(value.status) < 0
                 || ["fresh", "stale", "missing"].indexOf(value.cache) < 0
                 || !root.nonEmpty(value.attribution) || !Array.isArray(value.forecast)) return false;
+        const hasDiagnostic = Object.prototype.hasOwnProperty.call(value, "diagnostic");
+        if ((value.status === "online" && hasDiagnostic)
+                || (value.status !== "online" && (!hasDiagnostic
+                    || !root.exactKeys(value.diagnostic, ["message"])
+                    || !root.nonEmpty(value.diagnostic.message)))) return false;
         return value.forecast.every(function(point) {
             return root.exactKeys(point, ["at", "temperatureC", "symbol"])
-                && root.nonEmpty(point.at) && Number.isFinite(point.temperatureC)
+                && root.timestamp(point.at) && Number.isFinite(point.temperatureC)
                 && root.nonEmpty(point.symbol);
         });
     }

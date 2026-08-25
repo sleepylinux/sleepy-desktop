@@ -14,6 +14,11 @@ Surfaces.DrawerFrame {
     readonly property var rows: dailyState.itemsFor(surfaceId)
     readonly property alias listView: list
     readonly property alias searchField: search
+    function displayLabel(item) {
+        if (!item || typeof item !== "object") return "Item";
+        return String(item.summary || item.displayName || item.name
+            || item.title || item.id || "Item");
+    }
     focusTargets: ({"search": search, "notifications": list, "workspaces": list,
                     "calendar": list, "themes": list})
 
@@ -59,19 +64,30 @@ Surfaces.DrawerFrame {
             visible: root.surfaceId === "notifications" || root.surfaceId === "widgets"
             spacing: 8
             Rectangle {
+                objectName: "dailyRefreshButton"
                 width: 92; height: 34; radius: 10; color: root.colors.surfaceRaised
+                activeFocusOnTab: visible
                 Accessible.role: Accessible.Button; Accessible.name: "Refresh " + root.descriptor.triggerLabel
                 Text { anchors.centerIn: parent; text: "Refresh"; color: root.colors.textPrimary }
+                Keys.onReturnPressed: event => { root.refreshSurface(); event.accepted = true; }
+                Keys.onEnterPressed: event => { root.refreshSurface(); event.accepted = true; }
+                Keys.onSpacePressed: event => { root.refreshSurface(); event.accepted = true; }
                 MouseArea { anchors.fill: parent; onClicked: root.refreshSurface() }
             }
             Rectangle {
+                objectName: "dailyDndButton"
                 visible: root.surfaceId === "notifications" && root.dailyState.notifications !== null
                 width: 110; height: 34; radius: 10; color: root.colors.surfaceRaised
+                activeFocusOnTab: visible
                 Accessible.role: Accessible.CheckBox
                 Accessible.name: "Do not disturb"
                 Accessible.checked: root.dailyState.notifications ? root.dailyState.notifications.dnd : false
                 Text { anchors.centerIn: parent; text: root.dailyState.notifications && root.dailyState.notifications.dnd ? "DND on" : "DND off"; color: root.colors.textPrimary }
-                MouseArea { anchors.fill: parent; onClicked: root.dailyState.notifications.setDnd(!root.dailyState.notifications.dnd) }
+                function toggleDnd() { root.dailyState.notifications.setDnd(!root.dailyState.notifications.dnd); }
+                Keys.onReturnPressed: event => { toggleDnd(); event.accepted = true; }
+                Keys.onEnterPressed: event => { toggleDnd(); event.accepted = true; }
+                Keys.onSpacePressed: event => { toggleDnd(); event.accepted = true; }
+                MouseArea { anchors.fill: parent; onClicked: parent.toggleDnd() }
             }
         }
 
@@ -133,18 +149,16 @@ Surfaces.DrawerFrame {
                 root.surfaceController.close(root.surfaceId, root.screenKey); event.accepted = true;
             }
             delegate: FocusScope {
+                id: notificationDelegate
                 required property var modelData
                 required property int index
+                readonly property alias actionRepeater: notificationActions
                 width: ListView.view.width; height: 64
                 activeFocusOnTab: true
                 Accessible.role: Accessible.ListItem
-                Accessible.name: String(modelData.name || modelData.summary
-                                        || modelData.title || modelData.id || "Item")
+                Accessible.name: root.displayLabel(modelData)
                 function activate() {
                     if (root.surfaceId === "notifications" && root.dailyState.notifications) {
-                        const actions = Array.isArray(modelData.actions) ? modelData.actions : [];
-                        const action = actions.find(function(candidate) { return candidate.state === "available"; });
-                        if (action) return root.dailyState.notifications.invokeAction(modelData.id, action.id);
                         return root.dailyState.notifications.markRead(modelData.id);
                     }
                     return root.dailyState.activateItem(root.surfaceId, modelData);
@@ -165,14 +179,45 @@ Surfaces.DrawerFrame {
                 }
                 Text {
                     anchors.fill: parent; anchors.margins: 12
+                    anchors.rightMargin: actionRow.visible ? actionRow.width + 16 : 12
                     textFormat: Text.PlainText
-                    text: String(parent.modelData.name || parent.modelData.title
-                                 || parent.modelData.id || "Item")
-                        + (parent.modelData.summary && parent.modelData.name
-                            ? "\n" + String(parent.modelData.summary) : "")
+                    text: root.displayLabel(parent.modelData)
                     color: root.colors.textPrimary; elide: Text.ElideRight
                     wrapMode: Text.NoWrap
                     verticalAlignment: Text.AlignVCenter
+                }
+                Row {
+                    id: actionRow
+                    property var notification: notificationDelegate.modelData
+                    z: 2
+                    visible: root.surfaceId === "notifications"
+                    anchors.right: parent.right; anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+                    Repeater {
+                        id: notificationActions
+                        model: actionRow.notification && actionRow.notification.actions
+                            ? actionRow.notification.actions : []
+                        delegate: Rectangle {
+                            required property var modelData
+                            width: Math.max(58, actionLabel.implicitWidth + 18); height: 32; radius: 9
+                            color: activeFocus ? root.colors.accentSoft : root.colors.surfaceQuiet
+                            activeFocusOnTab: true
+                            objectName: "notificationAction-" + modelData.id
+                            Accessible.role: Accessible.Button
+                            Accessible.name: modelData.label
+                            Accessible.description: modelData.state === "expired" ? "Action expired" : ""
+                            function invoke() {
+                                if (modelData.state === "available")
+                                    root.dailyState.notifications.invokeAction(actionRow.notification.id, modelData.id);
+                            }
+                            Keys.onReturnPressed: event => { invoke(); event.accepted = true; }
+                            Keys.onEnterPressed: event => { invoke(); event.accepted = true; }
+                            Keys.onSpacePressed: event => { invoke(); event.accepted = true; }
+                            Text { id: actionLabel; anchors.centerIn: parent; textFormat: Text.PlainText; text: parent.modelData.label; color: root.colors.textPrimary }
+                            MouseArea { anchors.fill: parent; onClicked: parent.invoke() }
+                        }
+                    }
                 }
                 MouseArea {
                     anchors.fill: parent

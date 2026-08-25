@@ -125,13 +125,18 @@ QtObject {
                 "audio":"Audio input and output"};
             let summary = capability.status;
             if (capability.available && value) {
-                if (id === "resources") summary = "CPU " + Math.round(value.cpuPercent || 0)
-                    + "% · RAM " + Math.round(value.memoryPercent || 0) + "% · load " + String(value.loadOne || 0);
+                if (id === "resources") summary = "CPU " + Math.round((value.cpuUsage || 0) * 100)
+                    + "% · RAM " + Math.round((value.memoryUsage || 0) * 100) + "% · load " + String(value.loadOne || 0);
                 else if (id === "network") summary = value.activeConnectionId || value.connectivity || "Disconnected";
-                else if (id === "battery") summary = Math.round((value.percentage || 0) * (value.percentage > 1 ? 1 : 100)) + "% · " + (value.state || "unknown");
-                else if (id === "media") summary = value.title || value.playbackStatus || "No active player";
-                else if (id === "bluetooth") summary = value.enabled ? "Enabled" : "Disabled";
-                else if (id === "audio") summary = "Output " + Math.round((value.outputLevel || 0) * 100) + "%";
+                else if (id === "battery") summary = String(value.percentage) + "% · " + (value.charging ? "charging" : "on battery");
+                else if (id === "media") summary = value.title
+                    ? value.title + (value.artist ? " · " + value.artist : "") + (value.playing ? " · playing" : " · paused")
+                    : "No active player";
+                else if (id === "bluetooth") summary = (value.powered ? "Powered" : "Off")
+                    + " · " + value.connectedDeviceIds.length + " connected";
+                else if (id === "audio") summary = "Output " + Math.round((value.outputLevel || 0) * 100)
+                    + "%" + (value.outputMuted ? " · muted" : "") + " · input "
+                    + Math.round((value.inputLevel || 0) * 100) + "%" + (value.inputMuted ? " · muted" : "");
             }
             return Object.freeze({"id":id, "name":labels[id], "summary":summary,
                 "status":capability.status, "value":value});
