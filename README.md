@@ -124,16 +124,14 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`5dc792faea9d743fabbb576ae1b25ed7e1f729f9` and the reviewed public
+`152173b470fa7d1e90c6d3d6be103a4a4d3529bc` and the reviewed public
 `sleepy-artwork` flake at
-`108487617077254edb4e3a3b21047f5621eef151`. Desktop checks consume its exact
+`175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`b88f5b993ae449acf176d8fc6f0d6542776d06bd` and prefixes its exact package
+`03eef8fa32595d7887ed36830212f9abc6c01a84` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
-These revisions intentionally remain the last reviewed public component pins
-during local M3 development. Publication must first merge the SDK theme
-follow-up, session M3 service, and artwork M3 registry; only then may the
-desktop inputs be updated to those exact reviewed public commits and every
-component check rerun.
+These revisions are the reviewed public M3 component commits merged to each
+repository's `main` branch. Desktop publication and root integration pin these
+exact immutable commits and rerun every component check.

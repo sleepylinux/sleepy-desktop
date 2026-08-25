@@ -5,16 +5,16 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
+      url = "github:sleepylinux/sleepy-sdk/152173b470fa7d1e90c6d3d6be103a4a4d3529bc";
       flake = false;
     };
 
     sleepy-artwork = {
-      url = "github:sleepylinux/sleepy-artwork/108487617077254edb4e3a3b21047f5621eef151";
+      url = "github:sleepylinux/sleepy-artwork/175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/b88f5b993ae449acf176d8fc6f0d6542776d06bd";
+      url = "github:sleepylinux/sleepy-session/03eef8fa32595d7887ed36830212f9abc6c01a84";
     };
   };
 
@@ -99,9 +99,9 @@
               '';
 
               passthru = {
-                sdkRevision = "5dc792faea9d743fabbb576ae1b25ed7e1f729f9";
-                artworkRevision = "108487617077254edb4e3a3b21047f5621eef151";
-                sessionRevision = "b88f5b993ae449acf176d8fc6f0d6542776d06bd";
+                sdkRevision = "152173b470fa7d1e90c6d3d6be103a4a4d3529bc";
+                artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
+                sessionRevision = "03eef8fa32595d7887ed36830212f9abc6c01a84";
                 inherit artworkRoot artworkManifest;
               };
 
