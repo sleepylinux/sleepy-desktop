@@ -9,6 +9,8 @@ for file in \
   src/services/DailyClient.qml \
   src/services/OsdClient.qml \
   src/services/ThemeClient.qml \
+  src/services/ControlClient.qml \
+  src/services/NotificationClient.qml \
   src/drawers/DailyDesktopDrawer.qml \
   src/panels/OsdLayer.qml; do
   test -f "$repo_root/$file"
@@ -20,15 +22,21 @@ rg -Fq 'Socket {' "$repo_root/src/services/DailyClient.qml"
 rg -Fq '/sleepy/daily.sock' "$repo_root/src/services/DailyClient.qml"
 rg -Fq '/sleepy/osd.sock' "$repo_root/src/services/OsdClient.qml"
 rg -Fq '/sleepy/theme.sock' "$repo_root/src/services/ThemeClient.qml"
+rg -Fq '/sleepy/control.sock' "$repo_root/src/services/ControlClient.qml"
+rg -Fq '/sleepy/notification.sock' "$repo_root/src/services/NotificationClient.qml"
 rg -Fq 'themeSocket.write(JSON.stringify(ack) + "\n")' \
   "$repo_root/src/services/ThemeClient.qml"
 rg -Fq 'SLEEPY_QML_TIMEOUT_SECONDS' "$repo_root/tests/run.sh"
 rg -Fq 'timeout --signal=TERM --kill-after=5s' "$repo_root/tests/run.sh"
 rg -Fq "while [[ -e /tmp/.X''\${display_number}-lock" "$repo_root/flake.nix"
 rg -Fq 'eventProcess.signal(9)' "$repo_root/src/services/SessionEventClient.qml"
-for process in snapshot mutation session; do
+for process in snapshot session; do
   rg -Fq "root.${process}Process.signal(9)" "$repo_root/src/services/SystemAdapter.qml"
 done
+if rg -n 'mutationProcess|sleepyctl.*system.*set' "$repo_root/src/services/SystemAdapter.qml"; then
+  printf 'FAIL: production UI retained local M2 mutation authority\n' >&2
+  exit 1
+fi
 rg -Fq 'root.settingsProcess.signal(9)' "$repo_root/src/services/SessionAdapter.qml"
 rg -Fq 'root.activationProcess.signal(9)' "$repo_root/src/services/SessionAdapter.qml"
 rg -Fq 'root.process.signal(9)' "$repo_root/src/services/PresetAdapter.qml"

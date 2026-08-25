@@ -61,6 +61,18 @@ QtObject {
                 && (edge === undefined || edge === "" || descriptor.edge === edge);
         });
     }
+    function setAvailability(id, available) {
+        const current = root.descriptorFor(id);
+        if (!current || typeof available !== "boolean") return false;
+        if (current.availability === available) return true;
+        const replacement = Object.freeze(Object.assign({}, current, {"availability": available}));
+        const next = Object.assign({}, root.descriptors); next[id] = replacement;
+        root.descriptors = Object.freeze(next);
+        root.descriptorList = Object.freeze(root.descriptorList.map(function(item) {
+            return item.id === id ? replacement : item;
+        }));
+        return true;
+    }
 
     function registerInstance(surfaceId, screenKey, instance) {
         if (!root.descriptorFor(surfaceId) || !root.validNonEmptyString(screenKey)
@@ -94,7 +106,7 @@ QtObject {
             changed = root.registerDescriptor({
                 "id": entry[0], "edge": entry[1], "width": entry[2],
                 "triggerIcon": entry[3], "triggerLabel": entry[4],
-                "availability": true, "initialFocusKey": entry[5]
+                "availability": false, "initialFocusKey": entry[5]
             }) || changed;
         });
         return changed;

@@ -24,19 +24,11 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             anchors.bottom: true
             margins.bottom: 64
-            Rectangle {
+            OsdSurface {
                 anchors.fill: parent; radius: 18
-                color: root.colors.surface
-                opacity: root.effects.raisedSurfaceOpacity
-                border.color: root.colors.border
-                Text {
-                    anchors.centerIn: parent
-                    textFormat: Text.PlainText
-                    text: window.item ? window.item.label : ""
-                    color: root.colors.textPrimary; font.pixelSize: 16
-                    Accessible.role: Accessible.StaticText
-                    Accessible.name: window.item ? window.item.kind + ": " + window.item.label : ""
-                }
+                osdItem: window.item
+                colors: root.colors
+                effects: root.effects
             }
         }
     }

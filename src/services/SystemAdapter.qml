@@ -7,13 +7,12 @@ SystemAdapterCore {
     property int pollIntervalMs: 3000
     property bool loadOnStartup: true
     property int snapshotGeneration: 0
-    property int mutationGeneration: 0
     property int sessionGeneration: 0
     property bool snapshotTimedOut: false
-    property bool mutationTimedOut: false
     property bool sessionTimedOut: false
     property bool refreshAfterCurrent: false
     property var eventSource: null
+    property var controlClient: null
 
     function refresh() {
         if (snapshotProcess.running) return false;
@@ -32,14 +31,10 @@ SystemAdapterCore {
         root.refresh();
     }
     function mutate(capability, value) {
-        if (mutationProcess.running) return false;
-        const command = root.beginMutation(capability, value);
-        if (!command) return false;
-        root.mutationGeneration = root.nextGeneration;
-        root.mutationTimedOut = false;
-        mutationProcess.exec(command);
-        mutationTimeout.restart();
-        return true;
+        if (!root.controlClient) return false;
+        const sent = root.controlClient.sendMutation(capability, value);
+        if (sent) root.mutationCapabilityBusy = capability;
+        return sent;
     }
     function perform(action, confirmation) {
         if (sessionProcess.running) return false;
@@ -72,6 +67,17 @@ SystemAdapterCore {
             if (!root.runtimeStreamReady) {
                 root.available = false;
                 root.diagnostic = root.eventSource.diagnostic || "Session event stream unavailable";
+            }
+        }
+    }
+    readonly property Connections controlConnections: Connections {
+        target: root.controlClient
+        enabled: root.controlClient !== null
+        function onMutationCompleted() { root.mutationCapabilityBusy = ""; }
+        function onStatusChanged() {
+            if (root.controlClient.status === "error") {
+                root.mutationCapabilityBusy = "";
+                root.diagnostic = root.controlClient.errorString;
             }
         }
     }
@@ -110,30 +116,6 @@ SystemAdapterCore {
     readonly property Timer snapshotKillTimeout: Timer {
         interval: 1000
         onTriggered: if (root.snapshotProcess.running) root.snapshotProcess.signal(9)
-    }
-    readonly property Process mutationProcess: Process {
-        stdout: StdioCollector { id: mutationOut }
-        stderr: StdioCollector { id: mutationErr }
-        onExited: exitCode => {
-            root.mutationTimeout.stop();
-            root.mutationKillTimeout.stop();
-            if (!root.mutationTimedOut)
-                root.acceptMutationResult(root.mutationGeneration, exitCode,
-                    mutationOut.text, mutationErr.text, false);
-        }
-    }
-    readonly property Timer mutationTimeout: Timer {
-        interval: root.timeoutMs
-        onTriggered: {
-            root.mutationTimedOut = true;
-            root.mutationProcess.signal(15);
-            root.mutationKillTimeout.restart();
-            root.acceptMutationResult(root.mutationGeneration, -1, "", "", true);
-        }
-    }
-    readonly property Timer mutationKillTimeout: Timer {
-        interval: 1000
-        onTriggered: if (root.mutationProcess.running) root.mutationProcess.signal(9)
     }
     readonly property Process sessionProcess: Process {
         stdout: StdioCollector { id: sessionOut }

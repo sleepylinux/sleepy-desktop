@@ -7,7 +7,8 @@ QtObject {
     required property var events
     required property var daily
     property var themeClient: null
-    readonly property NotificationCenterModel notifications: NotificationCenterModel {}
+    property var notificationClient: null
+    readonly property var notifications: notificationClient
     property var launcherItems: Object.freeze([])
     property var overviewItems: Object.freeze([])
     property var calendarItems: Object.freeze([])
@@ -68,7 +69,10 @@ QtObject {
             if (status !== "available") return status;
         }
         if (surfaceId === "notifications")
-            return root.notifications.items.length ? "ready" : "empty";
+            return !root.notifications ? "unsupported"
+                : root.notifications.status === "loading" ? "loading"
+                : root.notifications.status === "error" ? "error"
+                : root.notifications.items.length ? "ready" : "empty";
         if (root.daily.status === "loading" && root.activeRequestKind === surfaceId) return "loading";
         if (["offline", "error", "busy"].indexOf(root.daily.status) >= 0
                 && root.activeRequestKind === surfaceId) return root.daily.status;
@@ -81,7 +85,7 @@ QtObject {
         return data && data.length ? "ready" : "empty";
     }
     function itemsFor(surfaceId) {
-        if (surfaceId === "notifications") return root.notifications.items;
+        if (surfaceId === "notifications") return root.notifications ? root.notifications.items : [];
         if (surfaceId === "launcher") return root.launcherItems;
         if (surfaceId === "overview") {
             const niri = root.events.capability("niri");
@@ -97,26 +101,41 @@ QtObject {
         }
         if (surfaceId === "widgets") {
             const weatherRows = root.weather ? [Object.freeze({"id": "weather",
-                "name": root.weather.attribution || "Weather"})] : [];
+                "name": root.weather.location ? "Weather · " + root.weather.location.displayName : "Weather",
+                "summary": root.weather.forecast && root.weather.forecast.length
+                    ? Math.round(root.weather.forecast[0].temperatureC) + " °C · " + root.weather.forecast[0].symbol
+                    : root.weather.status + " · " + root.weather.cache,
+                "attribution":root.weather.attribution})] : [];
             return Object.freeze(root.systemCards().concat(weatherRows,
                 root.geocodeItems, root.calendarItems));
         }
-        if (surfaceId === "personalization" && root.themeClient
-                && root.themeClient.confirmedTheme)
-            return Object.freeze([root.themeClient.confirmedTheme]);
+        if (surfaceId === "personalization" && root.themeClient)
+            return root.themeClient.themes && root.themeClient.themes.length
+                ? root.themeClient.themes
+                : root.themeClient.confirmedTheme ? Object.freeze([root.themeClient.confirmedTheme]) : [];
         return [];
     }
     function systemCards() {
         return ["resources", "network", "battery", "media", "bluetooth", "audio"].map(function(id) {
-            return root.events.capability(id);
+            const capability = root.events.capability(id);
+            const value = capability.value && capability.value.data !== undefined
+                ? capability.value.data : capability.value;
+            const labels = {"resources":"CPU, memory and load", "network":"Network",
+                "battery":"Battery", "media":"Media", "bluetooth":"Bluetooth",
+                "audio":"Audio input and output"};
+            let summary = capability.status;
+            if (capability.available && value) {
+                if (id === "resources") summary = "CPU " + Math.round(value.cpuPercent || 0)
+                    + "% · RAM " + Math.round(value.memoryPercent || 0) + "% · load " + String(value.loadOne || 0);
+                else if (id === "network") summary = value.activeConnectionId || value.connectivity || "Disconnected";
+                else if (id === "battery") summary = Math.round((value.percentage || 0) * (value.percentage > 1 ? 1 : 100)) + "% · " + (value.state || "unknown");
+                else if (id === "media") summary = value.title || value.playbackStatus || "No active player";
+                else if (id === "bluetooth") summary = value.enabled ? "Enabled" : "Disabled";
+                else if (id === "audio") summary = "Output " + Math.round((value.outputLevel || 0) * 100) + "%";
+            }
+            return Object.freeze({"id":id, "name":labels[id], "summary":summary,
+                "status":capability.status, "value":value});
         });
-    }
-    readonly property Connections eventConnections: Connections {
-        target: root.events
-        function onEventAccepted(envelope) {
-            if (envelope.payload.type === "notification")
-                root.notifications.acceptEvent(envelope.payload.data);
-        }
     }
     readonly property Connections dailyConnections: Connections {
         target: root.daily

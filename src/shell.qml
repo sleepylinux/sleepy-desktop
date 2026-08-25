@@ -12,16 +12,27 @@ ShellRoot {
 
     Services.SessionAdapter { id: sessionAdapter }
     Services.SessionEventClient { id: sessionEvents }
+    Services.ControlClient { id: controlClient; events: sessionEvents }
+    Services.NotificationClient { id: notificationClient; events: sessionEvents }
     Services.DailyClient { id: dailyClient }
     Services.OsdClient { id: osdClient }
     Services.ThemeClient {
         id: themeClient
-        onApplyCandidateToUi: theme => {
+        candidateApplier: function(theme) {
             colors.customColors = theme.colors;
             colors.appearanceMode = theme.appearance;
             effects.effectsProfile = theme.effects;
             effects.reducedMotion = theme.reducedMotion;
             effects.opaqueFallback = theme.opaqueFallback;
+            const applied = colors.customColors === theme.colors
+                && colors.appearanceMode === theme.appearance
+                && effects.effectsProfile === theme.effects
+                && effects.reducedMotion === theme.reducedMotion
+                && effects.opaqueFallback === theme.opaqueFallback;
+            if (!applied && themeClient.confirmedTheme
+                    && themeClient.confirmedTheme.id !== theme.id)
+                themeClient.candidateApplier(themeClient.confirmedTheme);
+            return applied;
         }
     }
     Services.DailyDesktopState {
@@ -29,10 +40,12 @@ ShellRoot {
         events: sessionEvents
         daily: dailyClient
         themeClient: themeClient
+        notificationClient: notificationClient
     }
     Services.SystemAdapter {
         id: systemAdapter
         eventSource: sessionEvents
+        controlClient: controlClient
         loadOnStartup: false
     }
     Services.PresetAdapter {
@@ -47,6 +60,15 @@ ShellRoot {
     Services.ClockService { id: clockService }
     Services.SurfaceRegistry {
         id: surfaceRegistry
+        function refreshDailyAvailability() {
+            const sessionReady = sessionEvents.connectionState === "ready";
+            setAvailability("notifications", sessionReady && notificationClient.status !== "error");
+            setAvailability("launcher", sessionReady && dailyClient.status !== "offline");
+            setAvailability("overview", sessionReady && sessionEvents.capability("niri").available);
+            setAvailability("widgets", sessionReady && dailyClient.status !== "offline");
+            setAvailability("personalization", themeClient.startupComplete
+                && ["unavailable", "error"].indexOf(themeClient.status) < 0);
+        }
         Component.onCompleted: {
             registerDescriptor({
                 "id": "controlCenter", "edge": "left", "width": tokens.drawerWidth,
@@ -54,7 +76,26 @@ ShellRoot {
                 "availability": true, "initialFocusKey": "lock"
             });
             registerDailyDesktop();
+            refreshDailyAvailability();
         }
+    }
+    Connections {
+        target: sessionEvents
+        function onConnectionStateChanged() { surfaceRegistry.refreshDailyAvailability(); }
+        function onEventAccepted() { surfaceRegistry.refreshDailyAvailability(); }
+    }
+    Connections {
+        target: dailyClient
+        function onStatusChanged() { surfaceRegistry.refreshDailyAvailability(); }
+    }
+    Connections {
+        target: notificationClient
+        function onStatusChanged() { surfaceRegistry.refreshDailyAvailability(); }
+    }
+    Connections {
+        target: themeClient
+        function onStatusChanged() { surfaceRegistry.refreshDailyAvailability(); }
+        function onStartupCompleteChanged() { surfaceRegistry.refreshDailyAvailability(); }
     }
     Services.SurfaceController {
         id: surfaces

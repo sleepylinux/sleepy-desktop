@@ -9,7 +9,8 @@ ThemeProtocol {
     readonly property string socketPath: runtimeDirectory + "/sleepy/theme.sock"
     property string queuedLine: ""
     property bool startupComplete: false
-    signal applyCandidateToUi(var theme)
+    property var candidateApplier: null
+    property bool loadingCatalog: false
 
     function send(request) {
         if (!request) return false;
@@ -30,15 +31,28 @@ ThemeProtocol {
     }
     Component.onCompleted: Qt.callLater(function() { root.send(root.get()); })
     onCandidateReceived: theme => {
-        root.applyCandidateToUi(theme);
-        const ack = root.acknowledgement(true);
+        let accepted = false;
+        try {
+            accepted = typeof root.candidateApplier === "function"
+                && root.candidateApplier(theme) === true;
+        } catch (error) { accepted = false; }
+        const ack = root.acknowledgement(accepted);
         if (!ack) { root.fail("Theme candidate could not be acknowledged"); return; }
         themeSocket.write(JSON.stringify(ack) + "\n"); themeSocket.flush();
     }
-    onRollbackRequested: theme => root.applyCandidateToUi(theme)
+    onRollbackRequested: theme => {
+        if (typeof root.candidateApplier === "function") root.candidateApplier(theme);
+    }
     onResultReceived: resultStatus => {
         responseTimeout.stop();
+        if ((resultStatus === "confirmed" || resultStatus === "reconciled")
+                && root.lastCompletedOperation === "get" && !root.loadingCatalog) {
+            root.loadingCatalog = true;
+            Qt.callLater(function() { root.send(root.list()); });
+            return;
+        }
         root.startupComplete = true;
+        root.loadingCatalog = false;
         if (resultStatus === "confirmed" || resultStatus === "reconciled")
             root.mutationsEnabled = true;
         themeSocket.connected = false;

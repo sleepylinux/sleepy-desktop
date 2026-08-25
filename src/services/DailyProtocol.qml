@@ -5,6 +5,7 @@ import QtQuick 6.0
 QtObject {
     id: root
     property string pendingRequestId: ""
+    property string pendingOperation: ""
     property string status: "idle"
     property string errorString: ""
     property var result: null
@@ -29,6 +30,7 @@ QtObject {
         root.status = "error";
         root.errorString = message;
         root.pendingRequestId = "";
+        root.pendingOperation = "";
         return false;
     }
     function request(type, data, requestId) {
@@ -36,6 +38,7 @@ QtObject {
         const id = requestId || root.uuid();
         if (!root.canonicalUuid(id)) return null;
         root.pendingRequestId = id;
+        root.pendingOperation = type;
         root.status = "loading";
         root.errorString = "";
         return Object.freeze({
@@ -104,11 +107,91 @@ QtObject {
                     || typeof response.error !== "string"
                     || response.error.trim().length === 0)))
             return root.failResponse("Invalid daily response status fields");
+        if (response.status === "confirmed" && !root.validResult(root.pendingOperation, response.data))
+            return root.failResponse("Invalid " + root.pendingOperation + " response data");
         root.status = response.status === "confirmed" ? "ready" : response.status;
         root.errorString = typeof response.error === "string" ? response.error : "";
         root.result = response.data === undefined ? null : response.data;
         root.pendingRequestId = "";
+        root.pendingOperation = "";
         if (root.status === "ready") root.responseAccepted(root.result);
         return root.status === "ready";
+    }
+    function exactKeys(value, expected) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+        const actual = Object.keys(value).sort();
+        const wanted = expected.slice().sort();
+        return actual.length === wanted.length
+            && actual.every(function(key, index) { return key === wanted[index]; });
+    }
+    function nonEmpty(value) { return typeof value === "string" && value.length > 0; }
+    function validLocation(value) {
+        return root.exactKeys(value, ["displayName", "latitude", "longitude"])
+            && root.nonEmpty(value.displayName) && Number.isFinite(value.latitude)
+            && value.latitude >= -90 && value.latitude <= 90
+            && Number.isFinite(value.longitude) && value.longitude >= -180
+            && value.longitude <= 180;
+    }
+    function validLauncherEntry(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+        const keys = Object.keys(value);
+        if (keys.some(function(key) { return ["desktopId", "name", "icon", "actions"].indexOf(key) < 0; })
+                || !["desktopId", "name", "icon", "actions"].every(function(key) { return keys.indexOf(key) >= 0; })
+                || !root.nonEmpty(value.desktopId) || !value.desktopId.endsWith(".desktop")
+                || !root.nonEmpty(value.name) || !(value.icon === null || typeof value.icon === "string")
+                || !Array.isArray(value.actions)) return false;
+        return value.actions.every(function(action) {
+            return root.exactKeys(action, ["id", "name"])
+                && root.nonEmpty(action.id) && root.nonEmpty(action.name);
+        });
+    }
+    function validCalendar(value) {
+        if (!root.exactKeys(value, ["schemaVersion", "providerId", "windowStart", "windowEnd", "events", "sourceErrors"])
+                || value.schemaVersion !== 2 || !root.nonEmpty(value.providerId)
+                || !root.nonEmpty(value.windowStart) || !root.nonEmpty(value.windowEnd)
+                || !Array.isArray(value.events) || !Array.isArray(value.sourceErrors)) return false;
+        return value.events.every(function(event) {
+            if (!event || typeof event !== "object" || Array.isArray(event)) return false;
+            const keys = Object.keys(event);
+            return keys.every(function(key) { return ["id", "summary", "startsAt", "endsAt", "allDay", "sourceId", "location"].indexOf(key) >= 0; })
+                && ["id", "summary", "startsAt", "endsAt", "allDay", "sourceId"].every(function(key) { return keys.indexOf(key) >= 0; })
+                && root.nonEmpty(event.id) && root.nonEmpty(event.summary)
+                && root.nonEmpty(event.startsAt) && root.nonEmpty(event.endsAt)
+                && typeof event.allDay === "boolean" && root.nonEmpty(event.sourceId)
+                && (!Object.prototype.hasOwnProperty.call(event, "location") || event.location === null || typeof event.location === "string");
+        }) && value.sourceErrors.every(function(error) {
+            return root.exactKeys(error, ["sourceId", "message"])
+                && root.nonEmpty(error.sourceId) && root.nonEmpty(error.message);
+        });
+    }
+    function validWeather(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+        const keys = Object.keys(value);
+        if (keys.some(function(key) { return ["schemaVersion", "providerId", "location", "status", "cache", "attribution", "forecast", "diagnostic"].indexOf(key) < 0; })
+                || !["schemaVersion", "providerId", "location", "status", "cache", "attribution", "forecast"].every(function(key) { return keys.indexOf(key) >= 0; })
+                || value.schemaVersion !== 2 || !root.nonEmpty(value.providerId)
+                || !root.validLocation(value.location)
+                || ["online", "offline", "error"].indexOf(value.status) < 0
+                || ["fresh", "stale", "missing"].indexOf(value.cache) < 0
+                || !root.nonEmpty(value.attribution) || !Array.isArray(value.forecast)) return false;
+        return value.forecast.every(function(point) {
+            return root.exactKeys(point, ["at", "temperatureC", "symbol"])
+                && root.nonEmpty(point.at) && Number.isFinite(point.temperatureC)
+                && root.nonEmpty(point.symbol);
+        });
+    }
+    function validResult(operation, data) {
+        if (operation === "launcherSearch")
+            return Array.isArray(data) && data.every(root.validLauncherEntry);
+        if (operation === "launch")
+            return root.exactKeys(data, ["desktopId"]) && root.nonEmpty(data.desktopId)
+                && data.desktopId.endsWith(".desktop");
+        if (operation === "overview")
+            return root.exactKeys(data, ["confirmed"]) && data.confirmed === true;
+        if (operation === "calendar") return root.validCalendar(data);
+        if (operation === "weather") return root.validWeather(data);
+        if (operation === "geocodeSubmit")
+            return Array.isArray(data) && data.every(root.validLocation);
+        return false;
     }
 }

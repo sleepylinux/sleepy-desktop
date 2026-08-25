@@ -35,14 +35,16 @@ timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
   "$qml_test_runner" -input "$repo_root/tests/qml" -import "$repo_root/src" -v1
 
 # Qt Quick's painter-style software backend intentionally does not execute
-# MultiEffect shaders. Re-run the icon contract with the RHI scenegraph and
-# Mesa software rendering so the mask/colorization path receives a real pixel
-# assertion even on headless builders.
-QT_QUICK_BACKEND=rhi \
-QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
-LIBGL_ALWAYS_SOFTWARE=1 \
-timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
-  "$qml_test_runner" \
-  -input "$repo_root/tests/qml/tst_icons.qml" \
-  -import "$repo_root/src" \
-  -v1
+# Re-run real production surfaces and the icon mask path with the RHI
+# scenegraph and Mesa software rendering. Each runner remains independently
+# bounded so a driver or scenegraph hang cannot be hidden.
+for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml; do
+  QT_QUICK_BACKEND=rhi \
+  QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
+  LIBGL_ALWAYS_SOFTWARE=1 \
+  timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
+    "$qml_test_runner" \
+    -input "$repo_root/tests/qml/$rhi_test" \
+    -import "$repo_root/src" \
+    -v1
+done

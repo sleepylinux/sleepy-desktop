@@ -11,6 +11,7 @@ TestCase {
 
     Component { id: eventFactory; Services.SessionEventModel {} }
     Component { id: dailyFactory; Services.DailyProtocol {} }
+    Component { id: controlFactory; Services.ControlProtocol {} }
     Component { id: osdFactory; Services.OsdStreamModel {} }
     Component { id: themeFactory; Services.ThemeProtocol {} }
     Component { id: notificationFactory; Services.NotificationCenterModel {} }
@@ -190,13 +191,27 @@ TestCase {
             "schemaVersion": 2,
             "requestId": launch.requestId,
             "status": "confirmed",
-            "data": []
+            "data": {"desktopId": "org.example.App.desktop"}
         })), true);
         compare(protocol.acceptResponse(JSON.stringify({
             "schemaVersion": 2,
             "requestId": "018f3f4c-8af1-7f6b-bf42-1bd472868e66",
             "status": "confirmed", "data": []
         })), false);
+    }
+
+    function test_daily_protocol_rejects_operation_specific_malformed_success() {
+        const protocol = createTemporaryObject(dailyFactory, testCase);
+        let request = protocol.launcherSearch("term", "018f3f4c-8af1-7f6b-bf42-1bd472868e65");
+        compare(protocol.acceptResponse(JSON.stringify({"schemaVersion":2,
+            "requestId":request.requestId,"status":"confirmed",
+            "data":[{"desktopId":"x.desktop","name":"X","icon":null,"actions":[],"extra":true}]})), false);
+        request = protocol.weather({"displayName":"Prague","latitude":50,"longitude":14},
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e66");
+        compare(protocol.acceptResponse(JSON.stringify({"schemaVersion":2,
+            "requestId":request.requestId,"status":"confirmed",
+            "data":{"status":"online"}})), false);
+        compare(protocol.result, null);
     }
 
     function test_daily_protocol_rejects_invalid_ids_and_status_field_pairs() {
@@ -208,6 +223,22 @@ TestCase {
             "schemaVersion": 2, "requestId": request.requestId,
             "status": "confirmed", "data": [], "error": "contradiction"
         })), false);
+    }
+
+    function test_control_protocol_accepts_only_event_equal_daemon_confirmation() {
+        const protocol = createTemporaryObject(controlFactory, testCase);
+        const request = protocol.mutation("network.enabled", true, 9,
+            "018f3f4c-8af1-7f6b-bf42-1bd472868e65");
+        const result = {"schemaVersion":2,"requestId":request.requestId,"generation":10,
+            "status":"confirmed","confirmedEvent":{"schemaVersion":2,"generation":10,
+                "eventId":"018f3f4c-8af1-7f6b-bf42-1bd472868e66","emittedAt":"2026-08-25T10:00:00Z",
+                "cause":{"kind":"request","requestId":request.requestId},
+                "payload":{"type":"fullSnapshot","data":{"capabilities":[]}}}};
+        verify(protocol.acceptResponse(JSON.stringify(result)));
+        compare(protocol.status, "awaitingEvent");
+        result.confirmedEvent.generation = 11;
+        protocol.pendingRequestId = request.requestId;
+        compare(protocol.acceptResponse(JSON.stringify(result)), false);
     }
 
     function test_osd_replay_is_per_output_and_rejects_regression() {
@@ -276,11 +307,28 @@ TestCase {
         compare(rollbackSpy.signalArguments[0][0].id, "theme.one");
     }
 
+    function test_theme_result_schema_is_operation_specific_and_lists_catalog() {
+        const protocol = createTemporaryObject(themeFactory, testCase);
+        const theme = {"schemaVersion":1,"id":"builtin.dark","name":"Dark","origin":"builtin",
+            "appearance":"dark","effects":"full","reducedMotion":false,"opaqueFallback":false,
+            "colors":{"background":"#17131f","surface":"#211c2b","textPrimary":"#f7f3ff",
+                "textSecondary":"#d0c7dc","accent":"#b9a7ff","control":"#76c7aa"}};
+        let request = protocol.list("018f3f4c-8af1-7f6b-bf42-1bd472868e70");
+        compare(protocol.acceptLine(JSON.stringify({"type":"result","data":{"schemaVersion":2,
+            "requestId":request.requestId,"status":"confirmed","themes":[theme]}})), true);
+        compare(protocol.themes.length, 1);
+        request = protocol.get("018f3f4c-8af1-7f6b-bf42-1bd472868e71");
+        compare(protocol.acceptLine(JSON.stringify({"type":"result","data":{"schemaVersion":2,
+            "requestId":request.requestId,"status":"confirmed","theme":theme,"generation":3}})), false);
+        compare(protocol.confirmedTheme, null);
+    }
+
     function test_notifications_remain_plain_grouped_and_action_expiry_is_visible() {
         const model = createTemporaryObject(notificationFactory, testCase);
         verify(model.acceptDocument({
-            "id": 7, "application": "Mail", "summary": "Literal <b>subject</b>",
-            "body": "<script>inert</script>", "urgency": "normal", "unread": true,
+            "schemaVersion": 2, "id": 7, "applicationId": "Mail", "summary": "Literal <b>subject</b>",
+            "body": "<script>inert</script>", "urgency": "normal", "read": false,
+            "createdAt": "2026-08-25T10:00:00Z", "archived": false,
             "actions": [{"id": "reply", "label": "Reply", "state": "expired"}]
         }));
         compare(model.items[0].summary, "Literal <b>subject</b>");
@@ -300,6 +348,9 @@ TestCase {
         const ids = registry.descriptorList.map(function(item) { return item.id; });
         ["notifications", "launcher", "overview", "widgets", "personalization"]
             .forEach(function(id) { verify(ids.indexOf(id) !== -1); });
+        compare(registry.availableDescriptors().length, 0);
+        verify(registry.setAvailability("launcher", true));
+        compare(registry.availableDescriptors().length, 1);
         compare(registry.registerInstance("launcher", "DP-1", {"name": "one"}), true);
         compare(registry.registerInstance("launcher", "HDMI-A-1", {"name": "two"}), true);
         compare(registry.instanceFor("launcher", "DP-1").name, "one");

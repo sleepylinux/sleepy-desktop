@@ -5,11 +5,14 @@ import QtQuick 6.0
 QtObject {
     id: root
     property string pendingRequestId: ""
+    property string pendingOperation: ""
+    property string lastCompletedOperation: ""
     property var previewTheme: null
     property var confirmedTheme: null
     property string status: "loading"
     property string errorString: ""
     property double confirmedGeneration: 0
+    property var themes: Object.freeze([])
     property bool mutationsEnabled: false
     signal candidateReceived(var theme)
     signal rollbackRequested(var theme)
@@ -26,9 +29,11 @@ QtObject {
         if (root.pendingRequestId.length > 0) return null;
         const id = requestId || root.uuid();
         root.pendingRequestId = id; root.status = "loading";
+        root.pendingOperation = operation.type;
         return Object.freeze({"schemaVersion": 2, "requestId": id, "operation": operation});
     }
     function get(requestId) { return root.request({"type": "get"}, requestId); }
+    function list(requestId) { return root.request({"type": "list"}, requestId); }
     function apply(themeId, expectedGeneration, requestId) {
         if (!root.mutationsEnabled || typeof themeId !== "string" || themeId.length === 0
                 || !Number.isSafeInteger(expectedGeneration) || expectedGeneration <= 0) return null;
@@ -73,6 +78,7 @@ QtObject {
             root.status = "error"; root.errorString = "Invalid theme message"; return false;
         }
         if (message.type === "candidate") {
+            if (root.pendingOperation !== "apply") return false;
             if (!root.exactKeys(message.data, ["schemaVersion", "requestId", "theme"]))
                 return false;
             if (!root.validTheme(message.data.theme)) {
@@ -82,19 +88,39 @@ QtObject {
             root.candidateReceived(root.previewTheme);
             return true;
         }
-        const resultKeys = Object.keys(message.data);
-        if (!["schemaVersion", "requestId", "status"].every(function(key) {
-                return resultKeys.indexOf(key) >= 0;
-            }) || resultKeys.some(function(key) {
-                return ["schemaVersion", "requestId", "status", "generation", "theme", "error"].indexOf(key) < 0;
-            }) || ["confirmed", "reconciled", "unavailable", "error", "busy", "timeout", "cancelled"]
-                .indexOf(message.data.status) < 0) return false;
-        root.status = message.data.status;
-        root.errorString = message.data.error || "";
-        if ((root.status === "confirmed" || root.status === "reconciled") && message.data.theme) {
+        const status = message.data.status;
+        const success = status === "confirmed" || status === "reconciled";
+        const failure = ["unavailable", "error", "busy", "timeout", "cancelled"].indexOf(status) >= 0;
+        let expectedKeys;
+        if (failure) expectedKeys = ["schemaVersion", "requestId", "status", "error"];
+        else if (!success) return false;
+        else if (root.pendingOperation === "list") expectedKeys = ["schemaVersion", "requestId", "status", "themes"];
+        else if (root.pendingOperation === "get") expectedKeys = ["schemaVersion", "requestId", "status", "theme"];
+        else if (root.pendingOperation === "apply") expectedKeys = ["schemaVersion", "requestId", "status", "generation", "theme"];
+        else return false;
+        if (!root.exactKeys(message.data, expectedKeys)
+                || (failure && (typeof message.data.error !== "string" || message.data.error.trim().length === 0))) return false;
+        if (success && root.pendingOperation === "list") {
+            if (!Array.isArray(message.data.themes)
+                    || !message.data.themes.every(root.validTheme)) {
+                root.status = "error"; root.errorString = "Invalid theme catalog"; return false;
+            }
+        } else if (success) {
             if (!root.validTheme(message.data.theme)) {
                 root.status = "error"; root.errorString = "Invalid confirmed theme"; return false;
             }
+            if (root.pendingOperation === "apply"
+                    && (!Number.isSafeInteger(message.data.generation)
+                        || message.data.generation <= 0)) {
+                root.status = "error"; root.errorString = "Invalid theme generation"; return false;
+            }
+        }
+        root.status = message.data.status;
+        root.errorString = message.data.error || "";
+        if (success && root.pendingOperation === "list") {
+            root.themes = Object.freeze(message.data.themes.slice());
+            root.mutationsEnabled = root.confirmedTheme !== null;
+        } else if (success && message.data.theme) {
             root.confirmedTheme = Object.freeze(message.data.theme);
             root.previewTheme = null;
             if (Number.isSafeInteger(message.data.generation))
@@ -104,8 +130,10 @@ QtObject {
             root.previewTheme = null;
             if (root.confirmedTheme) root.rollbackRequested(root.confirmedTheme);
         }
-        root.resultReceived(root.status);
+        root.lastCompletedOperation = root.pendingOperation;
         root.pendingRequestId = "";
+        root.pendingOperation = "";
+        root.resultReceived(root.status);
         return true;
     }
     function acknowledgement(accepted) {
