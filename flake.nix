@@ -197,13 +197,24 @@
             mkdir -p "$production_runtime"
             chmod 0700 "$production_runtime"
             production_log="$TMPDIR/sleepy-production-shell.log"
-            set +e
             XDG_RUNTIME_DIR="$production_runtime" \
-              timeout --signal=TERM --kill-after=5s 5 \
-                "$production_shell/bin/sleepy-shell" \
-                >"$production_log" 2>&1
-            production_status=$?
-            set -e
+              "$production_shell/bin/sleepy-shell" >"$production_log" 2>&1 &
+            production_pid=$!
+            production_ipc_ready=0
+            for _ in $(seq 1 50); do
+              if ! kill -0 "$production_pid" 2>/dev/null; then
+                break
+              fi
+              if XDG_RUNTIME_DIR="$production_runtime" \
+                  ${pkgs.quickshell}/bin/quickshell ipc --config sleepy call \
+                    sleepy closeActiveSurface >/dev/null 2>&1; then
+                production_ipc_ready=1
+                break
+              fi
+              sleep 0.1
+            done
+            kill "$production_pid" 2>/dev/null || true
+            wait "$production_pid" 2>/dev/null || true
             cat "$production_log"
             if grep -Fq 'Failed to load configuration' "$production_log" || \
                 grep -Fq 'is not a type' "$production_log" || \
@@ -215,9 +226,8 @@
               printf 'packaged production shell failed to load its QML graph\n' >&2
               exit 1
             fi
-            if [[ $production_status -ne 124 ]]; then
-              printf 'packaged production shell exited unexpectedly with status %s\n' \
-                "$production_status" >&2
+            if [[ $production_ipc_ready -ne 1 ]]; then
+              printf 'packaged production shell did not expose its typed IPC surface\n' >&2
               exit 1
             fi
 

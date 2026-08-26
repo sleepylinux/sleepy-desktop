@@ -28,7 +28,10 @@ ThemeProtocol {
     function fail(message) {
         responseTimeout.stop(); root.status = "unavailable"; root.errorString = message;
         root.pendingRequestId = ""; root.queuedLine = ""; root.mutationsEnabled = false;
+        root.startupComplete = false;
         themeSocket.connected = false;
+        reconnectBackoff.fail();
+        reconnectTimer.restart();
     }
     Component.onCompleted: Qt.callLater(function() { root.send(root.get()); })
     onCandidateReceived: theme => {
@@ -46,16 +49,24 @@ ThemeProtocol {
     }
     onResultReceived: resultStatus => {
         responseTimeout.stop();
-        if ((resultStatus === "confirmed" || resultStatus === "reconciled")
+        const success = resultStatus === "confirmed" || resultStatus === "reconciled";
+        if (success
                 && root.lastCompletedOperation === "get" && !root.loadingCatalog) {
             root.loadingCatalog = true;
             Qt.callLater(function() { root.send(root.list()); });
             return;
         }
-        root.startupComplete = true;
         root.loadingCatalog = false;
-        if (resultStatus === "confirmed" || resultStatus === "reconciled")
+        if (success) {
+            root.startupComplete = true;
+            reconnectBackoff.succeed();
+            reconnectTimer.stop();
             root.mutationsEnabled = true;
+        } else {
+            root.startupComplete = false;
+            reconnectBackoff.fail();
+            reconnectTimer.restart();
+        }
         themeSocket.connected = false;
     }
     readonly property Socket themeSocket: Socket {
@@ -73,5 +84,11 @@ ThemeProtocol {
     readonly property Timer responseTimeout: Timer {
         interval: 2500
         onTriggered: root.fail("Theme acknowledgement timed out")
+    }
+    readonly property ReconnectBackoff reconnectBackoff: ReconnectBackoff {}
+    readonly property Timer reconnectTimer: Timer {
+        interval: root.reconnectBackoff.delayMs
+        repeat: false
+        onTriggered: if (!root.startupComplete && !root.pendingRequestId) root.send(root.get())
     }
 }

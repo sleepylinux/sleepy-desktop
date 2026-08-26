@@ -52,9 +52,13 @@ NotificationCenterModel {
                     || !Number.isSafeInteger(value.data.data.id) || value.data.data.id <= 0
                     || typeof value.data.data.actionId !== "string" || !value.data.data.actionId.length))
             return fail("Invalid notification action confirmation");
-        root.status = "ready"; root.errorString = ""; root.pendingRequestId = ""; socket.connected = false; return true;
+        root.status = "ready"; root.errorString = ""; root.pendingRequestId = "";
+        reconnectBackoff.succeed(); reconnectTimer.stop(); socket.connected = false; return true;
     }
-    function fail(message) { root.status = "error"; root.errorString = message; root.pendingRequestId = ""; socket.connected = false; return false; }
+    function fail(message) {
+        root.status = "error"; root.errorString = message; root.pendingRequestId = "";
+        socket.connected = false; reconnectBackoff.fail(); reconnectTimer.restart(); return false;
+    }
     onStatusChanged: if (status === "ready" || status === "error") root.lifecycle.finish()
     readonly property Connections eventConnection: Connections {
         target: root.events; enabled: root.events !== null
@@ -70,5 +74,11 @@ NotificationCenterModel {
         parser: SplitParser { splitMarker: "\n"; onRead: data => { if (String(data).trim()) root.acceptLine(data); } }
         onConnectionStateChanged: if (connected) root.flush()
         onError: root.fail("Notification service unavailable")
+    }
+    readonly property ReconnectBackoff reconnectBackoff: ReconnectBackoff {}
+    readonly property Timer reconnectTimer: Timer {
+        interval: root.reconnectBackoff.delayMs
+        repeat: false
+        onTriggered: if (!root.pendingRequestId) root.refresh()
     }
 }
