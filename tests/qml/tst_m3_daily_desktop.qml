@@ -12,6 +12,8 @@ TestCase {
     Component { id: eventFactory; Services.SessionEventModel {} }
     Component { id: dailyFactory; Services.DailyProtocol {} }
     Component { id: controlFactory; Services.ControlProtocol {} }
+    Component { id: observedRequestCacheFactory; Services.ObservedRequestCache {} }
+    Component { id: reconnectBackoffFactory; Services.ReconnectBackoff {} }
     Component { id: lifecycleFactory; Services.ClientRequestLifecycle { timeoutInterval: 40 } }
     Component { id: osdFactory; Services.OsdStreamModel {} }
     Component { id: themeFactory; Services.ThemeProtocol {} }
@@ -329,6 +331,34 @@ TestCase {
         result.confirmedEvent.generation = 11;
         protocol.pendingRequestId = request.requestId;
         compare(protocol.acceptResponse(JSON.stringify(result)), false);
+    }
+
+    function test_control_client_forgets_completed_and_old_observed_requests() {
+        const client = createTemporaryObject(observedRequestCacheFactory, testCase);
+        for (let index = 0; index < 65; ++index)
+            client.remember("request-" + index, index + 1);
+        compare(Object.keys(client.observed).length, 64);
+        compare(client.observed["request-0"], undefined);
+
+        compare(client.take("request-64"), 65);
+        compare(client.observed["request-64"], undefined);
+        compare(client.order.indexOf("request-64"), -1);
+        client.clear();
+        compare(Object.keys(client.observed).length, 0);
+    }
+
+    function test_reconnect_backoff_starts_at_250ms_caps_at_10s_and_resets() {
+        const policy = createTemporaryObject(reconnectBackoffFactory, testCase);
+        compare(policy.delayMs, 250);
+        policy.fail();
+        compare(policy.delayMs, 250);
+        policy.fail();
+        compare(policy.delayMs, 500);
+        for (let index = 0; index < 18; ++index) policy.fail();
+        compare(policy.delayMs, 10000);
+        policy.succeed();
+        compare(policy.attempt, 0);
+        compare(policy.delayMs, 250);
     }
 
     function test_client_terminal_success_stops_timeout_and_burst_refresh_coalesces_once() {

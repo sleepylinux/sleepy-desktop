@@ -9,7 +9,8 @@ ControlProtocol {
     property var events: null
     property string runtimeDirectory: Quickshell.env("XDG_RUNTIME_DIR")
     property string queuedLine: ""
-    property var observed: ({})
+    readonly property alias observed: observedCacheObject.observed
+    readonly property alias observedOrder: observedCacheObject.order
     signal mutationCompleted
     readonly property ClientRequestLifecycle lifecycle: ClientRequestLifecycle {
         onTimedOut: root.fail("Control request timed out")
@@ -26,7 +27,8 @@ ControlProtocol {
     function flush() { if (socket.connected && root.queuedLine) { socket.write(root.queuedLine); socket.flush(); root.queuedLine = ""; } }
     function maybeComplete(requestId, generation) {
         if (root.pendingRequestId === requestId && root.responseGeneration === generation
-                && root.observed[requestId] === generation) {
+                && observedCache.peek(requestId) === generation) {
+            observedCache.take(requestId);
             root.complete(); root.mutationCompleted(); socket.connected = false;
         }
     }
@@ -37,9 +39,15 @@ ControlProtocol {
         enabled: root.events !== null
         function onEventAccepted(envelope) {
             if (envelope.cause.kind !== "request") return;
-            const next = Object.assign({}, root.observed); next[envelope.cause.requestId] = envelope.generation;
-            root.observed = next; root.maybeComplete(envelope.cause.requestId, envelope.generation);
+            observedCache.remember(envelope.cause.requestId, envelope.generation);
+            root.maybeComplete(envelope.cause.requestId, envelope.generation);
         }
+        function onConnectionStateChanged() {
+            if (root.events.connectionState !== "ready") observedCache.clear();
+        }
+    }
+    readonly property ObservedRequestCache observedCache: ObservedRequestCache {
+        id: observedCacheObject
     }
     readonly property Socket socket: Socket {
         path: root.runtimeDirectory + "/sleepy/control.sock"

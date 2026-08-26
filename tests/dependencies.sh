@@ -168,8 +168,9 @@ if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||
     ! rg -Fq "grep -Fq 'ReferenceError:'" <<< "$qml_check_block" ||
     ! rg -Fq "grep -Fq 'TypeError:'" <<< "$qml_check_block" ||
     ! rg -Fq "grep -Fq 'SyntaxError:'" <<< "$qml_check_block" ||
-    ! rg -Fq '[[ $production_status -ne 124 ]]' <<< "$qml_check_block"; then
-  printf 'FAIL: qml check must launch the packaged production shell and reject load failures\n' >&2
+    ! rg -Fq 'quickshell ipc --config sleepy call' <<< "$qml_check_block" ||
+    ! rg -Fq '[[ $production_ipc_ready -ne 1 ]]' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must launch the packaged production shell and prove typed IPC readiness\n' >&2
   exit 1
 fi
 
