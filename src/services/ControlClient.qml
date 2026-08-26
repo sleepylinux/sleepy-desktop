@@ -9,8 +9,8 @@ ControlProtocol {
     property var events: null
     property string runtimeDirectory: Quickshell.env("XDG_RUNTIME_DIR")
     property string queuedLine: ""
-    readonly property alias observed: observedCache.observed
-    readonly property alias observedOrder: observedCache.order
+    readonly property alias observed: observedCacheObject.observed
+    readonly property alias observedOrder: observedCacheObject.order
     signal mutationCompleted
     readonly property ClientRequestLifecycle lifecycle: ClientRequestLifecycle {
         onTimedOut: root.fail("Control request timed out")
@@ -46,7 +46,9 @@ ControlProtocol {
             if (root.events.connectionState !== "ready") observedCache.clear();
         }
     }
-    readonly property ObservedRequestCache observedCache: ObservedRequestCache {}
+    readonly property ObservedRequestCache observedCache: ObservedRequestCache {
+        id: observedCacheObject
+    }
     readonly property Socket socket: Socket {
         path: root.runtimeDirectory + "/sleepy/control.sock"
         parser: SplitParser { splitMarker: "\n"; onRead: data => { if (String(data).trim()) root.acceptResponse(data); } }
