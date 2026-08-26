@@ -10,8 +10,8 @@ workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
 
 if [[ ! -f "$workflow" ]] ||
-    ! rg -Fq 'nix flake check -L' "$workflow" ||
-    ! rg -Fq 'nix flake check --all-systems --no-build' "$workflow" ||
+    ! rg -Fq 'nix flake check --no-write-lock-file -L' "$workflow" ||
+    ! rg -Fq 'nix flake check --no-write-lock-file --all-systems --no-build' "$workflow" ||
     ! rg -Fq 'timeout-minutes:' "$workflow"; then
   printf 'FAIL: component CI must build all checks, evaluate every supported system, and be bounded\n' >&2
   exit 1
