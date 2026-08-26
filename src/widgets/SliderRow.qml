@@ -4,7 +4,8 @@ FocusScope {
     id: root
 
     required property string label
-    required property string iconText
+    required property string iconName
+    required property var iconRegistry
     required property real value
     required property bool capabilityEnabled
     required property var tokens
@@ -38,16 +39,18 @@ FocusScope {
         border.color: root.activeFocus ? root.colors.accent : root.colors.border
     }
 
-    Text {
+    SleepyIcon {
         id: icon
         anchors {
             left: parent.left
             leftMargin: root.tokens.gridUnit
             verticalCenter: parent.verticalCenter
         }
-        text: root.iconText
-        color: root.colors.textSecondary
-        font.pixelSize: 15
+        iconRegistry: root.iconRegistry
+        name: root.iconName
+        iconColor: root.colors.textSecondary
+        iconSize: 16
+        accessibleName: root.label
     }
 
     Column {

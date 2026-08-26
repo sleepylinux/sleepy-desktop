@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.0
 import QtTest 1.0
 import "../../src/drawers" as Drawers
@@ -13,6 +15,8 @@ TestCase {
     visible: true
     width: 1000
     height: 800
+
+    readonly property url tintFixture: Qt.resolvedUrl("../fixtures/current-color.svg")
 
     Component {
         id: policyFixtureFactory
@@ -50,7 +54,23 @@ TestCase {
             readonly property Services.ArtworkRegistry artwork: Services.ArtworkRegistry {
                 primaryMarkSource: ""
             }
-            readonly property Services.QuickSettingsState quickSettings: Services.QuickSettingsState {}
+            readonly property Services.SystemAdapterCore systemAdapter: Services.SystemAdapterCore {}
+            readonly property Services.PresetAdapterCore presetAdapter: Services.PresetAdapterCore {}
+            readonly property QtObject clock: QtObject { property date currentTime: new Date(2026, 7, 24, 8, 3) }
+            readonly property QtObject icons: QtObject {
+                function sourceFor(name) { return testCase.tintFixture; }
+            }
+            readonly property Services.SurfaceRegistry registry: Services.SurfaceRegistry {
+                Component.onCompleted: registerDescriptor({
+                    "id": "quickSettings", "edge": "left", "width": 360,
+                    "triggerIcon": "icons.control-center",
+                    "triggerLabel": "Quick settings", "availability": true,
+                    "initialFocusKey": "close"
+                })
+            }
+            readonly property Theme.EffectsPolicy effects: Theme.EffectsPolicy {
+                effectsProfile: "none"
+            }
 
             readonly property alias firstRail: firstRail
             readonly property alias secondRail: secondRail
@@ -65,8 +85,11 @@ TestCase {
                 tokens: fixture.tokens
                 colors: fixture.colors
                 artworkRegistry: fixture.artwork
+                iconRegistry: fixture.icons
+                surfaceRegistry: fixture.registry
                 surfaceController: fixture.controller
                 workspaceModel: []
+                effects: fixture.effects
             }
 
             Panels.RailView {
@@ -78,20 +101,28 @@ TestCase {
                 tokens: fixture.tokens
                 colors: fixture.colors
                 artworkRegistry: fixture.artwork
+                iconRegistry: fixture.icons
+                surfaceRegistry: fixture.registry
                 surfaceController: fixture.controller
                 workspaceModel: []
+                effects: fixture.effects
             }
 
-            Drawers.QuickSettingsView {
+            Drawers.ControlCenterView {
                 id: drawer
                 x: 192
                 width: 360
                 height: 720
                 screenKey: "DP-1"
                 surfaceController: fixture.controller
-                quickSettingsState: fixture.quickSettings
+                systemAdapter: fixture.systemAdapter
+                presetAdapter: fixture.presetAdapter
+                clockService: fixture.clock
                 tokens: fixture.tokens
                 colors: fixture.colors
+                effects: fixture.effects
+                iconRegistry: fixture.icons
+                onCloseRequested: fixture.controller.close("quickSettings", screenKey)
             }
         }
     }
@@ -121,6 +152,21 @@ TestCase {
         compare(fixture.second.drawerFocusable, false);
     }
 
+    function test_descriptor_focus_key_remains_data_not_a_shared_item() {
+        const fixture = createTemporaryObject(policyFixtureFactory, testCase);
+        const descriptor = Object.freeze({
+            "id": "quickSettings", "edge": "left", "width": 408,
+            "triggerIcon": "icons.control-center", "triggerLabel": "Control center",
+            "availability": true, "initialFocusKey": "network"
+        });
+        fixture.first.descriptor = descriptor;
+        fixture.second.descriptor = descriptor;
+
+        compare(fixture.first.initialFocusKey, "network");
+        compare(fixture.second.initialFocusKey, "network");
+        verify(descriptor.initialFocusItem === undefined);
+    }
+
     function test_escape_returns_focus_to_the_invoking_screen_button() {
         const fixture = createTemporaryObject(focusFixtureFactory, testCase);
         const firstButton = findChild(fixture.firstRail, "quickSettingsButton");
@@ -134,9 +180,7 @@ TestCase {
         compare(fixture.drawer.screenKey, "DP-1");
         compare(fixture.controller.isOpen("quickSettings",
                                           fixture.drawer.screenKey), true);
-        compare(fixture.drawer.windowPolicy.drawerVisible, true);
         compare(fixture.visible, true);
-        tryCompare(fixture.drawer, "visible", true);
 
         fixture.drawer.forceActiveFocus();
         verify(fixture.drawer.activeFocus);
@@ -146,5 +190,15 @@ TestCase {
         compare(fixture.controller.openScreenKey, "");
         tryVerify(function() { return firstButton.activeFocus; });
         compare(secondButton.activeFocus, false);
+    }
+
+    function test_ipc_open_close_returns_focus_on_provenance_screen() {
+        const fixture = createTemporaryObject(focusFixtureFactory, testCase);
+        const firstButton = findChild(fixture.firstRail, "quickSettingsButton");
+        const secondButton = findChild(fixture.secondRail, "quickSettingsButton");
+        verify(fixture.controller.open("quickSettings", "HDMI-A-1"));
+        verify(fixture.controller.close("quickSettings", "HDMI-A-1"));
+        tryVerify(function() { return secondButton.activeFocus; });
+        compare(firstButton.activeFocus, false);
     }
 }

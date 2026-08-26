@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "assets": {
+    "branding.primaryMark": "current-color.svg",
+    "icons.control-center": "current-color.svg",
+    "icons.network": "current-color.svg"
+  }
+}

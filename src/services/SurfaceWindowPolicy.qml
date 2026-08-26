@@ -6,6 +6,7 @@ QtObject {
     required property var surfaceController
     required property string surfaceId
     required property string screenKey
+    property var descriptor: null
 
     property bool invokedFromRail: false
 
@@ -13,6 +14,9 @@ QtObject {
     readonly property bool drawerVisible:
         root.surfaceController.isOpen(root.surfaceId, root.screenKey)
     readonly property bool drawerFocusable: root.drawerVisible
+    readonly property string initialFocusKey:
+        descriptor && typeof descriptor.initialFocusKey === "string"
+        ? descriptor.initialFocusKey : ""
 
     signal focusReturnRequested()
 

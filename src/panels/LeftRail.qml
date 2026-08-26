@@ -10,9 +10,12 @@ Scope {
     required property var tokens
     required property var colors
     required property var artworkRegistry
+    required property var iconRegistry
+    required property var surfaceRegistry
     required property var surfaceController
     required property var workspaceService
     required property var clockService
+    required property var effects
 
     Variants {
         model: Quickshell.screens
@@ -24,6 +27,7 @@ Scope {
             readonly property string screenKey: String(modelData.name)
             readonly property ShellGeometry geometry: ShellGeometry {
                 viewportHeight: railWindow.modelData.height
+                viewportWidth: railWindow.modelData.width
                 inset: root.tokens.outerInset
                 railWidth: root.tokens.railWidth
                 gap: root.tokens.drawerGap
@@ -32,8 +36,9 @@ Scope {
             readonly property Services.SurfaceWindowPolicy windowPolicy:
                 Services.SurfaceWindowPolicy {
                     surfaceController: root.surfaceController
-                    surfaceId: "quickSettings"
+                    surfaceId: "controlCenter"
                     screenKey: railWindow.screenKey
+                    descriptor: root.surfaceRegistry.descriptorFor("controlCenter")
                 }
 
             screen: modelData
@@ -58,10 +63,13 @@ Scope {
                 tokens: root.tokens
                 colors: root.colors
                 artworkRegistry: root.artworkRegistry
+                iconRegistry: root.iconRegistry
+                surfaceRegistry: root.surfaceRegistry
                 surfaceController: root.surfaceController
                 workspaceModel: root.workspaceService.items
                 timeText: root.clockService.railTime
                 screenKey: railWindow.screenKey
+                effects: root.effects
                 onWorkspaceActivated: index => root.workspaceService.focusWorkspace(index)
             }
         }

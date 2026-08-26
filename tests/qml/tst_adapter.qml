@@ -79,7 +79,7 @@ TestCase {
 
         compare(adapter.beginSettingsRead().join(" "), "sleepyctl settings show");
         compare(adapter.activationCommand("builtin.sleepy").join(" "),
-                "sleepyctl presets activate builtin.sleepy");
+                "sleepyctl presets activate builtin.sleepy --apply");
     }
 
     function test_activation_failure_names_the_mutating_command() {
