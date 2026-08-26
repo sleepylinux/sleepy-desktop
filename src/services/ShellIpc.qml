@@ -1,5 +1,6 @@
 import QtQuick 6.0
 import Quickshell
+import Quickshell.Io
 
 Scope {
     id: root
