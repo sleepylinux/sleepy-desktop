@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick 6.0
+import Quickshell
 import Quickshell.Io
 
 ThemeProtocol {

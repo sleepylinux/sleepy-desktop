@@ -6,7 +6,16 @@ sdk_revision=152173b470fa7d1e90c6d3d6be103a4a4d3529bc
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
 session_revision=03eef8fa32595d7887ed36830212f9abc6c01a84
 flake="$repository_root/flake.nix"
+workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
+
+if [[ ! -f "$workflow" ]] ||
+    ! rg -Fq 'nix flake check -L' "$workflow" ||
+    ! rg -Fq 'nix flake check --all-systems --no-build' "$workflow" ||
+    ! rg -Fq 'timeout-minutes:' "$workflow"; then
+  printf 'FAIL: component CI must build all checks, evaluate every supported system, and be bounded\n' >&2
+  exit 1
+fi
 
 read_nix_block_attribute() {
   local block="$1"
@@ -154,6 +163,30 @@ if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qm
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
   exit 1
 fi
+if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||
+    ! rg -Fq "grep -Fq 'Failed to load configuration'" <<< "$qml_check_block" ||
+    ! rg -Fq "grep -Fq 'ReferenceError:'" <<< "$qml_check_block" ||
+    ! rg -Fq "grep -Fq 'TypeError:'" <<< "$qml_check_block" ||
+    ! rg -Fq "grep -Fq 'SyntaxError:'" <<< "$qml_check_block" ||
+    ! rg -Fq '[[ $production_status -ne 124 ]]' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must launch the packaged production shell and reject load failures\n' >&2
+  exit 1
+fi
+
+while IFS= read -r qml_file; do
+  if rg -v '^import ' "$qml_file" | rg -q 'Quickshell\.' &&
+      ! rg -q '^import Quickshell$' "$qml_file"; then
+    printf 'FAIL: %s references the Quickshell namespace without importing Quickshell\n' \
+      "$qml_file" >&2
+    exit 1
+  fi
+  if rg -q '(^|[^A-Za-z])(IpcHandler|Process|Socket|StdioCollector)[[:space:]]*[{:]' "$qml_file" &&
+      ! rg -q '^import Quickshell\.Io$' "$qml_file"; then
+    printf 'FAIL: %s uses a Quickshell.Io type without importing Quickshell.Io\n' \
+      "$qml_file" >&2
+    exit 1
+  fi
+done < <(find "$repository_root/src" -type f -name '*.qml' -print)
 
 preview_check_block="$(
   sed -n '/^          preview = pkgs.runCommand /,/^        });$/p' "$flake"
