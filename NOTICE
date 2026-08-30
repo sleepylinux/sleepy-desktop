@@ -1,0 +1,11 @@
+Sleepy Desktop incorporates source from Caelestia Shell v2.4.0.
+
+Caelestia Shell
+Upstream: https://github.com/caelestia-dots/shell
+Verified annotated tag: v2.4.0 (15c41f3e19818199f653aa7dcec81d49affd7152)
+Verified commit: 24aa15eefdb146350d2548c0a015b04eddbd1008
+License: GNU General Public License, version 3 only (GPL-3.0-only).
+
+Sleepy Desktop modifications are distributed under GPL-3.0-only. Copyright
+notices and the complete corresponding source, including this attribution and
+the upstream LICENSE, are provided with binary distributions.

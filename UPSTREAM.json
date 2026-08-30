@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "repository": "https://github.com/caelestia-dots/shell",
+    "tag": "v2.4.0",
+    "tagObject": "15c41f3e19818199f653aa7dcec81d49affd7152",
+    "commit": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+    "license": "GPL-3.0-only"
+  },
+  "dependencies": {
+    "quickshell": {
+      "rev": "0fed22a2c47d9568ddf13cf61586b3f2ac4378a2",
+      "narHash": "sha256-OZdLL1rMR9kjTFZroOODeyQ0u6nrSxcFHlK6JUi+R/c="
+    },
+    "m3shapes": {
+      "rev": "32ad9ce328bb77ed349b40a3be10ee9ea610b8ab",
+      "narHash": "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns="
+    }
+  },
+  "import": {
+    "destination": "src",
+    "paths": [
+      "components",
+      "modules",
+      "services",
+      "plugin",
+      "extras",
+      "assets",
+      "utils",
+      "shell.qml",
+      "CMakeLists.txt",
+      "LICENSE"
+    ]
+  }
+}

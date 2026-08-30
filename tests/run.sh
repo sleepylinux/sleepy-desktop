@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
+bash "$repo_root/tests/upstream-provenance.sh"
 bash "$repo_root/tests/dependencies.sh"
 bash "$repo_root/tests/artwork-manifest.sh"
 bash "$repo_root/tests/motion-contracts.sh"
