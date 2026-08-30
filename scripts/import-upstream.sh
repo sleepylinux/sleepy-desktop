@@ -3,6 +3,8 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 inventory="$root/UPSTREAM.json"
+# shellcheck source=lib/upstream-import-layout.sh
+source "$root/scripts/lib/upstream-import-layout.sh"
 
 usage() {
   printf 'usage: %s --source VERIFIED_SHELL_CHECKOUT\n' "${0##*/}" >&2
@@ -71,10 +73,10 @@ cleanup() {
 trap cleanup EXIT
 
 for path in "${approved_paths[@]}"; do
-  cp -a "$source_root/$path" "$staging_root/$path"
+  copy_upstream_path "$source_root/$path" "$staging_root"
 done
 
 mkdir -p "$root/$destination"
 for path in "${approved_paths[@]}"; do
-  cp -a "$staging_root/$path" "$root/$destination/$path"
+  copy_upstream_path "$staging_root/$path" "$root/$destination"
 done

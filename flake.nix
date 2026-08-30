@@ -45,6 +45,10 @@
 
                 mkdir -p "$out/${installRoot}" "$out/bin" "$out/${installRoot}/contracts"
                 cp -R src/. "$out/${installRoot}/"
+                install -Dm644 NOTICE "$out/share/doc/sleepy-desktop/NOTICE"
+                if [[ -f src/LICENSE ]]; then
+                  install -Dm644 src/LICENSE "$out/share/doc/sleepy-desktop/LICENSE"
+                fi
                 install -Dm644 \
                   "${sleepy-sdk}/schemas/settings.schema.json" \
                   "$out/${installRoot}/contracts/settings.schema.json"
@@ -231,6 +235,10 @@
             shell_package=${componentPackages.sleepy-shell}
             test -x "$shell_package/bin/sleepy-shell"
             test -f "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
+            test -f "$shell_package/share/doc/sleepy-desktop/NOTICE"
+            if [[ -f "$shell_package/share/sleepy-desktop/LICENSE" ]]; then
+              test -f "$shell_package/share/doc/sleepy-desktop/LICENSE"
+            fi
             test -f '${artworkManifest}'
             test "$(jq -er '.version' '${artworkManifest}')" = 1
             rg -F '${artworkRoot}' \

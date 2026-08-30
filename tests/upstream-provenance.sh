@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 importer="$root/scripts/import-upstream.sh"
+layout_library="$root/scripts/lib/upstream-import-layout.sh"
 
 cleanup() {
   rm -rf "$test_root"
@@ -20,10 +21,66 @@ jq -e '
   .dependencies.quickshell.rev == "0fed22a2c47d9568ddf13cf61586b3f2ac4378a2" and
   .dependencies.quickshell.narHash == "sha256-OZdLL1rMR9kjTFZroOODeyQ0u6nrSxcFHlK6JUi+R/c=" and
   .dependencies.m3shapes.rev == "32ad9ce328bb77ed349b40a3be10ee9ea610b8ab" and
-  .dependencies.m3shapes.narHash == "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns="
+  .dependencies.m3shapes.narHash == "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns=" and
+  .import.destination == "src" and
+  .import.paths == [
+    "components",
+    "modules",
+    "services",
+    "plugin",
+    "extras",
+    "assets",
+    "utils",
+    "shell.qml",
+    "CMakeLists.txt",
+    "LICENSE"
+  ]
 ' "$root/UPSTREAM.json" >/dev/null
 ! rg -n 'caelestia-dots/caelestia' "$root/src" "$root/UPSTREAM.json"
 rg -F 'Caelestia Shell' "$root/NOTICE" >/dev/null
+
+source "$layout_library"
+
+test_copy_upstream_path_merges_directory_contents_without_nesting() {
+  local source="$test_root/layout-directory-source"
+  local destination="$test_root/layout-directory-destination"
+
+  mkdir -p "$source/services" "$destination/services"
+  printf 'upstream service\n' >"$source/services/Power.qml"
+  printf 'Sleepy local service\n' >"$destination/services/Local.qml"
+  copy_upstream_path "$source/services" "$destination"
+
+  [[ "$(<"$destination/services/Power.qml")" == 'upstream service' ]] || {
+    printf 'FAIL: importer did not merge an approved directory at its destination path\n' >&2
+    exit 1
+  }
+  [[ "$(<"$destination/services/Local.qml")" == 'Sleepy local service' ]] || {
+    printf 'FAIL: importer replaced unrelated destination files while merging a directory\n' >&2
+    exit 1
+  }
+  [[ ! -e "$destination/services/services" ]] || {
+    printf 'FAIL: importer nested an approved directory inside itself\n' >&2
+    exit 1
+  }
+}
+
+test_copy_upstream_path_replaces_a_file_at_its_destination_path() {
+  local source="$test_root/layout-file-source"
+  local destination="$test_root/layout-file-destination"
+
+  mkdir -p "$source" "$destination"
+  printf 'upstream shell\n' >"$source/shell.qml"
+  printf 'old shell\n' >"$destination/shell.qml"
+  copy_upstream_path "$source/shell.qml" "$destination"
+
+  [[ "$(<"$destination/shell.qml")" == 'upstream shell' ]] || {
+    printf 'FAIL: importer did not replace an approved file at its destination path\n' >&2
+    exit 1
+  }
+}
+
+test_copy_upstream_path_merges_directory_contents_without_nesting
+test_copy_upstream_path_replaces_a_file_at_its_destination_path
 
 expect_rejection() {
   local label="$1"
