@@ -69,8 +69,15 @@ enables local-file XHR process-wide for QML in that process; it is not an OS
 sandbox or a path allowlist. Sleepy QML never refers to a source checkout or
 workstation path. Functional SVGs are tinted through Qt 6 `MultiEffect`, with a
 visible geometric fallback when resolution or manifest validation fails.
-The pinned `sleepy-sdk` settings, preset, and system schemas are installed
-alongside the QML.
+The pinned `sleepy-sdk` settings, preset, system, desktop-event-v3, and
+desktop-command-v3 schemas are installed alongside the QML.
+
+Task 6 packages intentionally run a minimal daemon-backed shell graph while
+the imported visual modules are audited in later porting tasks. Quarantined
+source remains in the repository for provenance, but the production shell does
+not import `src/modules/**`, native `Sleepy.Services`, or native
+`Sleepy.Models`, and production installs remove `modules/lock` plus
+`assets/pam.d`.
 
 ## Validate
 
@@ -124,12 +131,12 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`152173b470fa7d1e90c6d3d6be103a4a4d3529bc` and the reviewed public
+`d935d3d83ef3c01627cd315230607c4b04554d42` and the reviewed public
 `sleepy-artwork` flake at
 `175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`03eef8fa32595d7887ed36830212f9abc6c01a84` and prefixes its exact package
+`25c83eaa618570681d9e5f442f0c2bff727ae0ce` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
 These revisions are the reviewed public M3 component commits merged to each

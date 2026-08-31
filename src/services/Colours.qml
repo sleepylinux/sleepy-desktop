@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Sleepy.Config
 import qs.services
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -79,10 +80,9 @@ Singleton {
     }
 
     function setMode(mode: string): void {
-        CommandClient.appearance({
-            "type": "applyTheme",
-            "data": {"themeId": mode}
-        });
+        const command = DesktopCommands.appearanceApplyTheme(mode);
+        if (command)
+            CommandClient.appearance(command);
     }
 
     function reloadHyprRules(): void {

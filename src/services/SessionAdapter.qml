@@ -3,6 +3,7 @@
 
 import QtQuick 6.0
 import "SettingsCodec.js" as SettingsCodec
+import "DesktopCommands.js" as DesktopCommands
 
 SessionAdapterCore {
     id: root
@@ -24,10 +25,8 @@ SessionAdapterCore {
         if (typeof presetId !== "string" || presetId.trim().length === 0)
             return false;
         root.busy = true;
-        const sent = CommandClient.appearance({
-            "type": "applyTheme",
-            "data": {"themeId": presetId}
-        });
+        const command = DesktopCommands.appearanceApplyTheme(presetId);
+        const sent = command ? CommandClient.appearance(command) : false;
         root.busy = false;
         return sent;
     }

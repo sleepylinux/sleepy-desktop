@@ -36,8 +36,32 @@ jq -e '
     "LICENSE"
   ]
 ' "$root/UPSTREAM.json" >/dev/null
+jq -e '
+  (.inventory | type == "array" and length >= 10) and
+  any(.inventory[]; .path == "src/shell.qml" and .disposition == "active" and .originRevision == "24aa15eefdb146350d2548c0a015b04eddbd1008") and
+  any(.inventory[]; .path == "src/services/**" and .disposition == "active" and .spdx == "GPL-3.0-only") and
+  any(.inventory[]; .path == "src/plugin/**" and .disposition == "partially-active") and
+  any(.inventory[]; .path == "src/modules/**" and .disposition == "quarantined-source") and
+  any(.inventory[]; .path == "src/assets/google-sans-flex/**" and .spdx == "OFL-1.1" and .disposition == "active") and
+  any(.inventory[]; .spdx == "NOASSERTION" and .disposition == "excluded")
+' "$root/UPSTREAM.json" >/dev/null
 ! rg -n 'caelestia-dots/caelestia' "$root/src" "$root/UPSTREAM.json"
 rg -F 'Caelestia Shell' "$root/NOTICE" >/dev/null
+rg -F 'SIL Open Font License 1.1 (OFL-1.1)' "$root/NOTICE" >/dev/null
+rg -F 'assets/pam.d are not redistributed' "$root/NOTICE" >/dev/null
+for excluded in \
+  src/assets/bongocat.gif \
+  src/assets/dino.png \
+  src/assets/kurukuru.gif \
+  src/assets/wallpaper.webp \
+  src/assets/pam.d/fprint \
+  src/assets/pam.d/howdy \
+  src/assets/pam.d/passwd; do
+  if [[ -e "$root/$excluded" ]]; then
+    printf 'FAIL: unsupported imported asset remains in source tree: %s\n' "$excluded" >&2
+    exit 1
+  fi
+done
 
 source "$layout_library"
 

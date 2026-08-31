@@ -8,16 +8,18 @@ import Quickshell
 import Quickshell.Io
 import Sleepy.Config
 import qs.services
+import "DesktopCommands.js" as DesktopCommands
 
 Searcher {
     id: root
 
     readonly property var appearanceState: DesktopModel.appearance || ({})
-    readonly property string fallback: Quickshell.shellPath("assets/wallpaper.webp")
+    readonly property string fallback: ""
     property bool showPreview: false
-    readonly property string current: showPreview ? previewPath : actualCurrent
-    property string previewPath
-    property string actualCurrent: appearanceState.wallpaperId || appearanceState.wallpaperPath || fallback
+    readonly property string current: showPreview ? pendingPreview : actualCurrent
+    property string pendingPreview: ""
+    readonly property string actualCurrent: appearanceState.wallpaperId || appearanceState.wallpaperPath || fallback
+    property string pendingWallpaper: ""
     property bool previewColourLock: false
     property bool pendingPreviewClear: false
 
@@ -48,26 +50,36 @@ Searcher {
     function setWallpaper(path: string): bool {
         if (!path || path.length === 0)
             return false;
-        root.actualCurrent = path;
-        return CommandClient.appearance({
-            "type": "setWallpaper",
-            "data": {"wallpaperId": path}
-        });
+        const command = DesktopCommands.appearanceSetWallpaper(path);
+        if (!command)
+            return false;
+        const sent = CommandClient.appearance(command);
+        if (sent)
+            root.pendingWallpaper = path;
+        return sent;
     }
 
     function preview(path: string): bool {
-        root.previewPath = path;
+        if (!path || path.length === 0)
+            return false;
+        root.pendingPreview = path;
         root.showPreview = true;
-        return CommandClient.appearance({
-            "type": "previewWallpaper",
-            "data": {"wallpaperId": path}
-        });
+        return true;
     }
 
     function stopPreview(): bool {
         root.showPreview = false;
         Colours.showPreview = false;
-        return CommandClient.appearance({"type": "stopWallpaperPreview"});
+        root.pendingPreview = "";
+        return true;
+    }
+
+    onAppearanceStateChanged: if (root.pendingWallpaper.length)
+        root.pendingWallpaper = ""
+
+    Connections {
+        target: CommandClient
+        function onCommandFailed() { root.pendingWallpaper = ""; }
     }
 
     list: wallpaperRecords()

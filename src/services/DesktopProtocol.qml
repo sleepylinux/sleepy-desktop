@@ -13,7 +13,7 @@ QtObject {
     property int maximumObservedRequests: 64
     property string connectionState: "offline"
     property string diagnostic: "Waiting for sleepy-sessiond"
-    property int generation: 0
+    property var generation: 0
     property var snapshot: Object.freeze({})
     property var observedRequestIds: Object.freeze({})
     property var observedRequestOrder: Object.freeze([])
@@ -23,7 +23,7 @@ QtObject {
     signal eventAccepted(var envelope)
     signal commandResultAccepted(var result)
     signal protocolError(string message)
-    signal daemonGenerationChanged(int generation)
+    signal daemonGenerationChanged(var generation)
 
     readonly property var topics: Object.freeze([
         "system", "compositor", "notifications", "launcher", "calendar",

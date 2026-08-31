@@ -9,6 +9,7 @@ import Quickshell.Io
 import Sleepy
 import Sleepy.Config
 import qs.components.misc
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -46,9 +47,9 @@ Singleton {
             "shuffleSupported": player.shuffleSupported ?? false,
             "loopState": player.loopState ?? 0,
             "loopSupported": player.loopSupported ?? false,
-            "play": function() { root.control(id, "play"); },
-            "pause": function() { root.control(id, "pause"); },
-            "togglePlaying": function() { root.control(id, "toggle"); },
+            "play": function() { return false; },
+            "pause": function() { return false; },
+            "togglePlaying": function() { root.control(id, "playPause"); },
             "previous": function() { root.control(id, "previous"); },
             "next": function() { root.control(id, "next"); },
             "stop": function() { root.control(id, "stop"); },
@@ -78,13 +79,9 @@ Singleton {
     }
 
     function control(playerId: string, type: string, data: var): bool {
-        return CommandClient.system({
-            "domain": "media",
-            "action": {
-                "type": type,
-                "data": Object.assign({"playerId": playerId}, data || {})
-            }
-        });
+        void(data);
+        const command = DesktopCommands.mediaTransport(playerId, type);
+        return command ? CommandClient.system(command) : false;
     }
 
     function maybeToastNowPlaying(): void {

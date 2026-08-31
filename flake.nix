@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/152173b470fa7d1e90c6d3d6be103a4a4d3529bc";
+      url = "github:sleepylinux/sleepy-sdk/d935d3d83ef3c01627cd315230607c4b04554d42";
       flake = false;
     };
 
@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/03eef8fa32595d7887ed36830212f9abc6c01a84";
+      url = "github:sleepylinux/sleepy-session/25c83eaa618570681d9e5f442f0c2bff727ae0ce";
     };
 
     quickshell = {
@@ -93,6 +93,7 @@
 
                 mkdir -p "$out/${installRoot}" "$out/bin" "$out/${installRoot}/contracts"
                 cp -R src/. "$out/${installRoot}/"
+                rm -rf "$out/${installRoot}/modules/lock" "$out/${installRoot}/assets/pam.d"
                 install -Dm644 NOTICE "$out/share/doc/sleepy-desktop/NOTICE"
                 if [[ -f src/LICENSE ]]; then
                   install -Dm644 src/LICENSE "$out/share/doc/sleepy-desktop/LICENSE"
@@ -106,6 +107,12 @@
                 install -Dm644 \
                   "${sleepy-sdk}/schemas/preset.schema.json" \
                   "$out/${installRoot}/contracts/preset.schema.json"
+                install -Dm644 \
+                  "${sleepy-sdk}/schemas/desktop-event-v3.schema.json" \
+                  "$out/${installRoot}/contracts/desktop-event-v3.schema.json"
+                install -Dm644 \
+                  "${sleepy-sdk}/schemas/desktop-command-v3.schema.json" \
+                  "$out/${installRoot}/contracts/desktop-command-v3.schema.json"
 
                 test "$(jq -er '.version' '${artworkManifest}')" = 1
                 primary_mark_relative="$(jq -er '.assets["branding.primaryMark"]' '${artworkManifest}')"
@@ -151,9 +158,9 @@
               '';
 
               passthru = {
-                sdkRevision = "152173b470fa7d1e90c6d3d6be103a4a4d3529bc";
+                sdkRevision = "d935d3d83ef3c01627cd315230607c4b04554d42";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "03eef8fa32595d7887ed36830212f9abc6c01a84";
+                sessionRevision = "25c83eaa618570681d9e5f442f0c2bff727ae0ce";
                 inherit artworkRoot artworkManifest;
               };
 

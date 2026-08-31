@@ -80,10 +80,7 @@ Singleton {
     }
 
     function reload(): bool {
-        return CommandClient.launcher({
-            "type": "refreshWeather",
-            "data": {"location": GlobalConfig.services.weatherLocation || ""}
-        });
+        return false;
     }
 
     function toFahrenheit(celsius: real): real {

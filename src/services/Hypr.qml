@@ -5,6 +5,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -101,10 +102,8 @@ Singleton {
     }
 
     function cycleSpecialWorkspace(direction: int): bool {
-        return CommandClient.compositor({
-            "type": "cycleSpecialWorkspace",
-            "data": {"direction": direction < 0 ? -1 : 1}
-        });
+        void(direction);
+        return false;
     }
 
     function monitorNames(): list<string> {
@@ -129,14 +128,11 @@ Singleton {
     }
 
     function reloadDynamicConfs(): bool {
-        const sent = CommandClient.compositor({"type": "reloadDynamicConfig"});
-        if (sent)
-            root.configReloaded();
-        return sent;
+        return false;
     }
 
     function refreshDevices(): bool {
-        return CommandClient.compositor({"type": "refreshDevices"});
+        return false;
     }
 
     QtObject {
@@ -168,10 +164,8 @@ Singleton {
         }
 
         function message(messageName: string): bool {
-            return CommandClient.compositor({
-                "type": "message",
-                "data": {"name": String(messageName)}
-            });
+            void(messageName);
+            return false;
         }
     }
 }

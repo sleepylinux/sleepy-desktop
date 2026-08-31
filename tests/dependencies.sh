@@ -2,9 +2,9 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-sdk_revision=152173b470fa7d1e90c6d3d6be103a4a4d3529bc
+sdk_revision=d935d3d83ef3c01627cd315230607c4b04554d42
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
-session_revision=03eef8fa32595d7887ed36830212f9abc6c01a84
+session_revision=25c83eaa618570681d9e5f442f0c2bff727ae0ce
 flake="$repository_root/flake.nix"
 workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
@@ -72,6 +72,14 @@ if ! rg -Fq 'sessionPackage = sleepy-session.packages.${system}.sleepy-session;'
   printf 'FAIL: desktop package must consume the exact sleepy-session package\n' >&2
   exit 1
 fi
+
+for contract in desktop-event-v3.schema.json desktop-command-v3.schema.json; do
+  if ! rg -Fq "\"\${sleepy-sdk}/schemas/$contract\"" "$flake" ||
+      ! rg -Fq "\"\$out/\${installRoot}/contracts/$contract\"" "$flake"; then
+    printf 'FAIL: desktop package must install reviewed SDK v3 contract %s\n' "$contract" >&2
+    exit 1
+  fi
+done
 
 if ! rg -Fq -- '--prefix PATH : "${sessionPackage}/bin"' "$flake"; then
   printf 'FAIL: packaged runners must expose pinned sleepyctl on PATH\n' >&2

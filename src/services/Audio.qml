@@ -7,6 +7,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Sleepy.Config
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -72,13 +73,9 @@ Singleton {
     function setVolume(newVolume: real): bool {
         if (!root.sink)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {
-                "type": "setOutputVolume",
-                "data": {"nodeId": root.nodeId(root.sink), "volume": root.clampVolume(newVolume)}
-            }
-        });
+        const command = DesktopCommands.audioSetNodeVolume(
+            root.nodeId(root.sink), root.clampVolume(newVolume));
+        return command ? CommandClient.system(command) : false;
     }
 
     function incrementVolume(amount: real): bool {
@@ -92,13 +89,9 @@ Singleton {
     function setSourceVolume(newVolume: real): bool {
         if (!root.source)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {
-                "type": "setInputVolume",
-                "data": {"nodeId": root.nodeId(root.source), "volume": root.clampVolume(newVolume)}
-            }
-        });
+        const command = DesktopCommands.audioSetNodeVolume(
+            root.nodeId(root.source), root.clampVolume(newVolume));
+        return command ? CommandClient.system(command) : false;
     }
 
     function incrementSourceVolume(amount: real): bool {
@@ -113,20 +106,16 @@ Singleton {
         const id = root.nodeId(newSink);
         if (!id.length)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {"type": "setDefaultOutput", "data": {"nodeId": id}}
-        });
+        const command = DesktopCommands.audioSetDefaultNode(id);
+        return command ? CommandClient.system(command) : false;
     }
 
     function setAudioSource(newSource: var): bool {
         const id = root.nodeId(newSource);
         if (!id.length)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {"type": "setDefaultInput", "data": {"nodeId": id}}
-        });
+        const command = DesktopCommands.audioSetDefaultNode(id);
+        return command ? CommandClient.system(command) : false;
     }
 
     function cycleNextAudioOutput(): bool {
@@ -141,26 +130,16 @@ Singleton {
         const id = root.nodeId(stream);
         if (!id.length)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {
-                "type": "setStreamVolume",
-                "data": {"streamId": id, "volume": root.clampVolume(newVolume)}
-            }
-        });
+        const command = DesktopCommands.audioSetStreamVolume(id, root.clampVolume(newVolume));
+        return command ? CommandClient.system(command) : false;
     }
 
     function setStreamMuted(stream: var, muted: bool): bool {
         const id = root.nodeId(stream);
         if (!id.length)
             return false;
-        return CommandClient.system({
-            "domain": "audio",
-            "action": {
-                "type": "setStreamMuted",
-                "data": {"streamId": id, "muted": Boolean(muted)}
-            }
-        });
+        const command = DesktopCommands.audioSetStreamMuted(id, muted);
+        return command ? CommandClient.system(command) : false;
     }
 
     function getStreamVolume(stream: var): real {

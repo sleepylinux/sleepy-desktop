@@ -5,6 +5,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -17,20 +18,18 @@ Singleton {
 
     function start(extraArgs = []): void {
         const outputId = extraArgs.indexOf("-s") >= 0 ? "selection" : "active";
-        if (CommandClient.utility({
-                "type": "startRecording",
-                "data": {"outputId": outputId}
-            })) {
+        const command = DesktopCommands.utilityStartRecording(outputId);
+        if (command && CommandClient.utility(command)) {
             root.elapsed = 0;
         }
     }
 
     function stop(): void {
-        CommandClient.utility({"type": "stopRecording"});
+        CommandClient.utility(DesktopCommands.utilityStopRecording());
     }
 
     function togglePause(): void {
-        CommandClient.utility({"type": "pauseRecording"});
+        CommandClient.utility(DesktopCommands.utilityPauseRecording());
     }
 
     Connections {

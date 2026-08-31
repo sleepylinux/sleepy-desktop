@@ -5,11 +5,6 @@
 //@ pragma DefaultEnv QSG_RENDER_LOOP=threaded
 //@ pragma DefaultEnv QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 
-import "modules"
-import "modules/drawers"
-import "modules/background"
-import "modules/areapicker"
-import "modules/lock"
 import "theme" as Theme
 import QtQuick
 import Quickshell
@@ -32,25 +27,9 @@ ShellRoot {
         effectsPolicy: effects
     }
 
-    Binding {
-        target: ShellState
-        property: "shellRoot"
-        value: root
-    }
-
-    GSFLoader {}
-    ServiceLoader {}
-
-    Background {}
-    Drawers {}
-    AreaPicker {}
-    Lock {
-        id: lock
-    }
-
-    Shortcuts {}
-    BatteryMonitor {}
-    IdleMonitors {
-        lock: lock
+    Component.onCompleted: {
+        DesktopClient;
+        DesktopModel;
+        CommandClient;
     }
 }

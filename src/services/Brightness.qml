@@ -7,6 +7,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Sleepy.Config
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -14,6 +15,8 @@ Singleton {
     readonly property var brightnessCapability: DesktopModel.capabilityData(
         "system", "brightness", {"level": 0.5})
     readonly property list<Monitor> monitors: variants.instances
+    property string pendingOutputId: ""
+    property var pendingBrightness: null
 
     function getMonitorForScreen(screen: ShellScreen): var {
         return monitors.find(m => m.modelData === screen);
@@ -61,23 +64,32 @@ Singleton {
         id: monitor
 
         required property ShellScreen modelData
-        property real brightness: Math.max(0, Math.min(1, root.brightnessCapability.level ?? 0.5))
+        readonly property real brightness: Math.max(0, Math.min(1, root.brightnessCapability.level ?? 0.5))
+        readonly property string outputId: monitor.modelData.name || "active"
+        readonly property var pendingBrightness: root.pendingOutputId === outputId ? root.pendingBrightness : null
 
         function setBrightness(value: real): void {
             value = Math.max(0, Math.min(1, value));
             if (Math.round(brightness * 100) === Math.round(value * 100))
                 return;
-            brightness = value;
-            CommandClient.system({
-                "domain": "display",
-                "action": {
-                    "type": "setBrightness",
-                    "data": {
-                        "outputId": monitor.modelData.name || "active",
-                        "level": value
-                    }
-                }
-            });
+            const command = DesktopCommands.displaySetBrightness(outputId, value);
+            if (command && CommandClient.system(command)) {
+                root.pendingOutputId = outputId;
+                root.pendingBrightness = value;
+            }
+        }
+    }
+
+    onBrightnessCapabilityChanged: {
+        root.pendingOutputId = "";
+        root.pendingBrightness = null;
+    }
+
+    Connections {
+        target: CommandClient
+        function onCommandFailed() {
+            root.pendingOutputId = "";
+            root.pendingBrightness = null;
         }
     }
 }

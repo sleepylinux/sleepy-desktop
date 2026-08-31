@@ -11,6 +11,7 @@ import Sleepy
 import Sleepy.Config
 import qs.components.misc
 import qs.services
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -45,10 +46,9 @@ Singleton {
             "identifier": identifier,
             "text": action.text || action.label || identifier,
             "invoke": function() {
-                return CommandClient.notification({
-                    "type": "invoke",
-                    "data": {"notificationId": notificationId, "actionId": identifier}
-                });
+                const command = DesktopCommands.notificationInvokeAction(
+                    Number(notificationId), identifier);
+                return command ? CommandClient.notification(command) : false;
             }
         };
     }
@@ -92,11 +92,8 @@ Singleton {
     }
 
     function dismiss(notificationId: string): bool {
-        root.list = root.list.filter(notif => notif.notificationId !== notificationId);
-        return CommandClient.notification({
-            "type": "dismiss",
-            "data": {"notificationId": notificationId}
-        });
+        const command = DesktopCommands.notificationArchive(Number(notificationId));
+        return command ? CommandClient.notification(command) : false;
     }
 
     function clear(): void {
@@ -105,10 +102,7 @@ Singleton {
     }
 
     function setDnd(enabled: bool): bool {
-        return CommandClient.notification({
-            "type": "setDnd",
-            "data": {"enabled": Boolean(enabled)}
-        });
+        return CommandClient.notification(DesktopCommands.notificationSetDnd(enabled));
     }
 
     function toggleDnd(): bool {
@@ -129,8 +123,12 @@ Singleton {
     }
 
     onDndChanged: {
-        if (!root.syncingDnd)
-            root.setDnd(root.dnd);
+        if (!root.syncingDnd) {
+            const desired = root.dnd;
+            root.syncDnd();
+            root.setDnd(desired);
+            return;
+        }
         if (!GlobalConfig.utilities.toasts.dndChanged)
             return;
         if (root.dnd)

@@ -5,6 +5,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -28,10 +29,7 @@ Singleton {
     }
 
     function setEnabled(value: bool): bool {
-        return CommandClient.utility({
-            "type": "setIdleInhibited",
-            "data": {"enabled": Boolean(value)}
-        });
+        return CommandClient.utility(DesktopCommands.utilitySetIdleInhibited(value));
     }
 
     function toggle(): bool {
@@ -51,5 +49,9 @@ Singleton {
     }
 
     onIdleCapabilityChanged: syncFromModel()
-    onEnabledChanged: if (!root.syncing) root.setEnabled(root.enabled)
+    onEnabledChanged: if (!root.syncing) {
+        const desired = root.enabled;
+        root.syncFromModel();
+        root.setEnabled(desired);
+    }
 }

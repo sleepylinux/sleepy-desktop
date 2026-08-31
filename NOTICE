@@ -9,3 +9,15 @@ License: GNU General Public License, version 3 only (GPL-3.0-only).
 Sleepy Desktop modifications are distributed under GPL-3.0-only. Copyright
 notices and the complete corresponding source, including this attribution and
 the upstream LICENSE, are provided with binary distributions.
+
+Google Sans Flex
+Imported path: src/assets/google-sans-flex/
+License: SIL Open Font License 1.1 (OFL-1.1).
+The OFL license text is shipped at src/assets/google-sans-flex/LICENSE.
+
+Excluded imported assets
+The upstream binary media assets bongocat.gif, dino.png, kurukuru.gif,
+wallpaper.webp, and PAM snippets under assets/pam.d are not redistributed in
+the Sleepy Desktop production package for Task 6. The decorative lock module
+is quarantined from the production shell until a dedicated sleepy-locker
+boundary owns authentication.

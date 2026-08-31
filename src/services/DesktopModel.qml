@@ -11,7 +11,7 @@ QtObject {
     readonly property bool available: DesktopClient.connectionState === "ready"
     readonly property string connectionState: DesktopClient.connectionState
     readonly property string diagnostic: DesktopClient.diagnostic
-    readonly property int generation: DesktopClient.generation
+    readonly property var generation: DesktopClient.generation
     readonly property var snapshot: DesktopClient.snapshot || ({})
     readonly property var system: root.snapshot.system || ({})
     readonly property var compositor: root.snapshot.compositor || ({})
@@ -43,7 +43,7 @@ QtObject {
             ? record.data : fallback;
     }
 
-    function command(family, command, requestId) {
-        return CommandClient.send(family, command, requestId || "");
+    function command(_family, _command, _requestId) {
+        return false;
     }
 }

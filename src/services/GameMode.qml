@@ -5,6 +5,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -24,10 +25,7 @@ Singleton {
     }
 
     function setEnabled(value: bool): bool {
-        return CommandClient.utility({
-            "type": "setGameMode",
-            "data": {"enabled": Boolean(value)}
-        });
+        return CommandClient.utility(DesktopCommands.utilitySetGameMode(value));
     }
 
     function toggle(): bool {
@@ -47,5 +45,9 @@ Singleton {
     }
 
     onGameModeCapabilityChanged: syncFromModel()
-    onEnabledChanged: if (!root.syncing) root.setEnabled(root.enabled)
+    onEnabledChanged: if (!root.syncing) {
+        const desired = root.enabled;
+        root.syncFromModel();
+        root.setEnabled(desired);
+    }
 }

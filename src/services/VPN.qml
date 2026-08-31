@@ -6,6 +6,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -52,13 +53,8 @@ Singleton {
         if (!root.selected)
             return false;
         root.disconnecting = true;
-        const sent = CommandClient.system({
-            "domain": "network",
-            "action": {
-                "type": "disconnect",
-                "data": {"connectionId": root.selected.providerId}
-            }
-        });
+        const command = DesktopCommands.networkDisconnect(root.selected.providerId);
+        const sent = command ? CommandClient.system(command) : false;
         root.disconnecting = false;
         return sent;
     }

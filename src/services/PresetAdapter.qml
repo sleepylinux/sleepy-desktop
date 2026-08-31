@@ -2,6 +2,7 @@
 // Modified for Sleepy on 2026-08-31: preset UI facade without local process authority.
 
 import QtQuick 6.0
+import "DesktopCommands.js" as DesktopCommands
 
 PresetAdapterCore {
     id: root
@@ -28,10 +29,8 @@ PresetAdapterCore {
     function activate(id) {
         if (typeof id !== "string" || id.length === 0)
             return false;
-        return CommandClient.appearance({
-            "type": "applyTheme",
-            "data": {"themeId": id}
-        });
+        const command = DesktopCommands.appearanceApplyTheme(id);
+        return command ? CommandClient.appearance(command) : false;
     }
 
     function duplicate(source, name) { return root.run(root.duplicateCommand(source, name)); }

@@ -1,0 +1,94 @@
+[
+  {
+    "name": "audio default node",
+    "family": "system",
+    "command": {
+      "domain": "audio",
+      "action": { "type": "setDefaultNode", "data": { "nodeId": "speaker" } }
+    }
+  },
+  {
+    "name": "audio node volume",
+    "family": "system",
+    "command": {
+      "domain": "audio",
+      "action": { "type": "setNodeVolume", "data": { "nodeId": "speaker", "level": 0.5 } }
+    }
+  },
+  {
+    "name": "audio node muted",
+    "family": "system",
+    "command": {
+      "domain": "audio",
+      "action": { "type": "setNodeMuted", "data": { "nodeId": "speaker", "muted": true } }
+    }
+  },
+  {
+    "name": "audio stream volume",
+    "family": "system",
+    "command": {
+      "domain": "audio",
+      "action": { "type": "setStreamVolume", "data": { "streamId": "player", "level": 0.25 } }
+    }
+  },
+  {
+    "name": "audio stream muted",
+    "family": "system",
+    "command": {
+      "domain": "audio",
+      "action": { "type": "setStreamMuted", "data": { "streamId": "player", "muted": false } }
+    }
+  },
+  {
+    "name": "media play pause",
+    "family": "system",
+    "command": {
+      "domain": "media",
+      "action": { "type": "transport", "data": { "playerId": "player", "transport": "playPause" } }
+    }
+  },
+  {
+    "name": "media next",
+    "family": "system",
+    "command": {
+      "domain": "media",
+      "action": { "type": "transport", "data": { "playerId": "player", "transport": "next" } }
+    }
+  },
+  {
+    "name": "display brightness",
+    "family": "system",
+    "command": {
+      "domain": "display",
+      "action": { "type": "setBrightness", "data": { "outputId": "eDP-1", "level": 0.75 } }
+    }
+  },
+  {
+    "name": "compositor focus workspace",
+    "family": "compositor",
+    "command": { "type": "focusWorkspace", "data": { "workspaceId": "1" } }
+  },
+  {
+    "name": "notification action",
+    "family": "notification",
+    "command": {
+      "type": "invokeAction",
+      "data": { "notificationId": 7, "actionId": "default" }
+    }
+  },
+  {
+    "name": "appearance wallpaper",
+    "family": "appearance",
+    "command": { "type": "setWallpaper", "data": { "wallpaperId": "moon" } }
+  },
+  {
+    "name": "session lock",
+    "family": "session",
+    "command": "lock"
+  },
+  {
+    "name": "utility screenshot",
+    "family": "utility",
+    "command": { "type": "screenshot", "data": { "outputId": "active" } }
+  }
+]

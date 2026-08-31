@@ -17,28 +17,34 @@ DesktopProtocol {
     maximumObservedRequests: 64
 
     property bool enabled: true
-    property int reconnectAttempt: 0
+    property alias reconnectAttempt: reconnectPolicy.reconnectAttempt
+    property alias intentionalDisconnect: reconnectPolicy.intentionalDisconnect
+    property alias reconnectTimer: reconnectPolicy.reconnectTimer
 
     function connectStream() {
         if (!root.enabled || desktopSocket.connected)
             return false;
+        reconnectPolicy.reconnectTimer.stop();
         root.beginConnection();
         desktopSocket.connected = true;
         return true;
     }
 
     function stopStream(message) {
+        reconnectPolicy.intentionalDisconnect = true;
+        reconnectPolicy.reconnectTimer.stop();
         desktopSocket.connected = false;
         root.disconnected(message || "Desktop stream stopped");
+        reconnectPolicy.intentionalDisconnect = false;
         return true;
     }
 
-    function scheduleReconnect(message) {
-        root.disconnected(message);
-        if (root.enabled) {
-            reconnectTimer.interval = root.boundedRetryDelay(root.reconnectAttempt);
-            reconnectTimer.restart();
-        }
+    function scheduleReconnect(message, countAttempt) {
+        return reconnectPolicy.scheduleReconnect(message, countAttempt);
+    }
+
+    function handleSocketDisconnected(message) {
+        return reconnectPolicy.handleSocketDisconnected(message);
     }
 
     Component.onCompleted: if (root.enabled) Qt.callLater(root.connectStream)
@@ -52,6 +58,17 @@ DesktopProtocol {
 
     onEventAccepted: root.reconnectAttempt = 0
 
+    DesktopReconnectPolicy {
+        id: reconnectPolicy
+
+        enabled: root.enabled
+        minimumRetryMs: root.minimumRetryMs
+        maximumRetryMs: root.maximumRetryMs
+
+        onDisconnected: message => root.disconnected(message)
+        onReconnectDue: root.connectStream()
+    }
+
     readonly property Socket desktopSocket: Socket {
         path: root.eventSocketPath
         parser: SplitParser {
@@ -64,18 +81,15 @@ DesktopProtocol {
             }
         }
         onConnectionStateChanged: {
-            if (connected)
+            if (connected) {
                 root.beginConnection();
+            } else {
+                root.handleSocketDisconnected("Desktop stream disconnected");
+            }
         }
         onError: {
-            root.reconnectAttempt = Math.min(16, root.reconnectAttempt + 1);
-            root.scheduleReconnect("Desktop stream unavailable");
+            root.scheduleReconnect("Desktop stream unavailable", true);
         }
     }
 
-    readonly property Timer reconnectTimer: Timer {
-        interval: root.minimumRetryMs
-        repeat: false
-        onTriggered: root.connectStream()
-    }
 }

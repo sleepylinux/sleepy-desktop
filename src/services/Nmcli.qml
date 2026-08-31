@@ -6,6 +6,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import "DesktopCommands.js" as DesktopCommands
 
 Singleton {
     id: root
@@ -98,20 +99,11 @@ Singleton {
     }
 
     function rescanWifi(): bool {
-        return CommandClient.system({
-            "domain": "network",
-            "action": {"type": "scanWifi"}
-        });
+        return CommandClient.system(DesktopCommands.networkScanWifi());
     }
 
     function enableWifi(enabled: bool): bool {
-        return CommandClient.system({
-            "domain": "network",
-            "action": {
-                "type": "setWifiEnabled",
-                "data": {"enabled": Boolean(enabled)}
-            }
-        });
+        return CommandClient.system(DesktopCommands.networkSetWifiEnabled(enabled));
     }
 
     function toggleWifi(): bool {
@@ -128,13 +120,8 @@ Singleton {
             return false;
         }
         root.pendingConnection = {"ssid": ssid, "callback": callback || null};
-        const sent = CommandClient.system({
-            "domain": "network",
-            "action": {
-                "type": "connectWifi",
-                "data": {"accessPointId": network.id || bssid || ssid}
-            }
-        });
+        const command = DesktopCommands.networkConnectWifi(network.id || bssid || ssid);
+        const sent = command ? CommandClient.system(command) : false;
         if (callback)
             callback({"success": sent, "needsPassword": false, "error": sent ? "" : "Request was not sent"});
         if (!sent) {
@@ -154,13 +141,8 @@ Singleton {
             .find(item => item.kind === "wifi" && item.connected);
         if (!connection)
             return false;
-        return CommandClient.system({
-            "domain": "network",
-            "action": {
-                "type": "disconnect",
-                "data": {"connectionId": connection.id}
-            }
-        });
+        const command = DesktopCommands.networkDisconnect(connection.id);
+        return command ? CommandClient.system(command) : false;
     }
 
     function connectEthernet(connectionName: string, ifaceName: string): bool {
@@ -170,13 +152,8 @@ Singleton {
     }
 
     function disconnectEthernet(connectionName: string): bool {
-        return CommandClient.system({
-            "domain": "network",
-            "action": {
-                "type": "disconnect",
-                "data": {"connectionId": connectionName}
-            }
-        });
+        const command = DesktopCommands.networkDisconnect(connectionName);
+        return command ? CommandClient.system(command) : false;
     }
 
     function forgetNetwork(_ssid: string): bool {

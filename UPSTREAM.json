@@ -31,5 +31,117 @@
       "CMakeLists.txt",
       "LICENSE"
     ]
-  }
+  },
+  "inventory": [
+    {
+      "path": "src/shell.qml",
+      "originPath": "shell.qml",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Derived from Caelestia Shell v2.4.0 and modified for Sleepy runtime identity and daemon-owned Task 6 loading.",
+      "modified": "2026-08-31",
+      "disposition": "active"
+    },
+    {
+      "path": "src/services/**",
+      "originPath": "services/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported service paths rewritten as Sleepy desktop v3 daemon facades.",
+      "modified": "2026-08-31",
+      "disposition": "active"
+    },
+    {
+      "path": "src/plugin/**",
+      "originPath": "plugin/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported native plugin sources renamed to Sleepy. Production build enables only Settings, Config, Components, Blobs, and Images.",
+      "modified": "2026-08-31",
+      "disposition": "partially-active"
+    },
+    {
+      "path": "src/components/**",
+      "originPath": "components/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported visual components retained for later audited porting.",
+      "modified": "2026-08-31",
+      "disposition": "quarantined-source"
+    },
+    {
+      "path": "src/modules/**",
+      "originPath": "modules/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported visual modules retained as source for later audited porting. Task 6 production shell does not import this tree; modules/lock is removed from production installs.",
+      "modified": "2026-08-31",
+      "disposition": "quarantined-source"
+    },
+    {
+      "path": "src/utils/**",
+      "originPath": "utils/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported utility code retained for later audited porting.",
+      "modified": "2026-08-31",
+      "disposition": "quarantined-source"
+    },
+    {
+      "path": "src/extras/**",
+      "originPath": "extras/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported helper version source renamed for Sleepy package metadata.",
+      "modified": "2026-08-31",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/logo.svg",
+      "originPath": "assets/logo.svg",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported SVG logo retained in source; packaged branding uses the reviewed sleepy-artwork manifest.",
+      "modified": "2026-08-31",
+      "disposition": "source-retained"
+    },
+    {
+      "path": "src/assets/wrap_term_launch.sh",
+      "originPath": "assets/wrap_term_launch.sh",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported script retained only for quarantined launcher source.",
+      "modified": "2026-08-31",
+      "disposition": "quarantined-source"
+    },
+    {
+      "path": "src/assets/google-sans-flex/**",
+      "originPath": "assets/google-sans-flex/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "OFL-1.1",
+      "copyright": "See src/assets/google-sans-flex/LICENSE; imported license file does not state a separate copyright holder.",
+      "attribution": "Google Sans Flex font software as imported by Caelestia Shell v2.4.0.",
+      "modified": "unmodified",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/bongocat.gif; src/assets/dino.png; src/assets/kurukuru.gif; src/assets/wallpaper.webp; src/assets/pam.d/**",
+      "originPath": "assets/bongocat.gif; assets/dino.png; assets/kurukuru.gif; assets/wallpaper.webp; assets/pam.d/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "NOASSERTION",
+      "copyright": "Not asserted by Sleepy Desktop.",
+      "attribution": "Upstream binary media/PAM snippets were present in the imported source but lacked Task 6 redistribution authority suitable for the production package.",
+      "modified": "2026-08-31",
+      "disposition": "excluded"
+    }
+  ]
 }

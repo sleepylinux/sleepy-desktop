@@ -2,6 +2,7 @@
 // Modified for Sleepy on 2026-08-31: production state comes from desktop.sock.
 
 import QtQuick 6.0
+import "DesktopCommands.js" as DesktopCommands
 
 SystemAdapterCore {
     id: root
@@ -41,10 +42,9 @@ SystemAdapterCore {
     function perform(action, confirmation) {
         if (confirmation !== "confirmed")
             return false;
-        return root.controlClient && root.controlClient.session({
-            "type": action,
-            "data": {"confirmation": confirmation}
-        });
+        const command = DesktopCommands.session(action);
+        return Boolean(root.controlClient && command
+                       && root.controlClient.send("session", command));
     }
 
     Component.onCompleted: {

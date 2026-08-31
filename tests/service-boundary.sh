@@ -4,6 +4,12 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 failed=0
 
+if rg -n '^import "modules|^import "modules/(drawers|background|areapicker|lock)"|\b(Background|Drawers|AreaPicker|Lock|Shortcuts|BatteryMonitor|IdleMonitors)[[:space:]]*\{' \
+    "$repo_root/src/shell.qml"; then
+  printf 'FAIL: production shell must not instantiate or import quarantined visual modules in Task 6\n' >&2
+  failed=1
+fi
+
 while IFS= read -r -d '' file; do
   relative="${file#"$repo_root"/}"
   if rg -n '\bProcess[[:space:]]*[{:]|Quickshell\.execDetached' "$file"; then
@@ -24,6 +30,11 @@ done < <(
     -name '*.qml' \
     -print0
 )
+
+if rg -n 'import Sleepy\.(Services|Models)' "$repo_root/src/shell.qml" "$repo_root/src/services"; then
+  printf 'FAIL: active runtime QML must not import unbuilt Sleepy.Services or Sleepy.Models modules\n' >&2
+  failed=1
+fi
 
 if [[ $failed -ne 0 ]]; then
   exit 1
