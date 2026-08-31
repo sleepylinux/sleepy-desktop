@@ -85,12 +85,17 @@ Rectangle {
         activeFocusOnTab: enabled
         Accessible.role: Accessible.Button
         Accessible.name: root.outputState.osdMuted ? "Unmute" : "Mute"
+        Accessible.ignored: !enabled
         radius: 20
         color: "#3c4043"
         signal clicked
         onClicked: root.outputState.toggleOsdMuted()
         Keys.onReturnPressed: muteButton.clicked()
         Keys.onSpacePressed: muteButton.clicked()
+        Accessible.onPressAction: {
+            if (muteButton.enabled)
+                muteButton.clicked();
+        }
 
         Text {
             anchors.centerIn: parent

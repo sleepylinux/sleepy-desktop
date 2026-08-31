@@ -4,6 +4,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
+import QtQml.Models 2.15
 
 Rectangle {
     id: root
@@ -13,10 +14,45 @@ Rectangle {
     property bool shown: root.outputState.barVisible
 
     clip: true
+    visible: shown
+    enabled: shown
     implicitWidth: root.shown ? 64 : 0
     implicitHeight: 720
     radius: 24
     color: root.outputState.colors.surface || "#202124"
+
+    function workspaceIndex(workspaceId) {
+        for (let index = 0; index < workspaceModel.count; ++index) {
+            if (workspaceModel.get(index).workspaceId === workspaceId)
+                return index;
+        }
+        return -1;
+    }
+
+    function reconcileWorkspaces() {
+        const desired = root.outputState.workspaceRows.map(row => String(row.id));
+        for (let index = workspaceModel.count - 1; index >= 0; --index) {
+            if (desired.indexOf(workspaceModel.get(index).workspaceId) < 0)
+                workspaceModel.remove(index);
+        }
+        for (let target = 0; target < desired.length; ++target) {
+            const workspaceId = desired[target];
+            const current = root.workspaceIndex(workspaceId);
+            if (current < 0)
+                workspaceModel.insert(target, {"workspaceId": workspaceId});
+            else if (current !== target)
+                workspaceModel.move(current, target, 1);
+        }
+    }
+
+    ListModel { id: workspaceModel }
+
+    Connections {
+        target: root.outputState
+        function onWorkspaceRowsChanged() { root.reconcileWorkspaces(); }
+    }
+
+    Component.onCompleted: root.reconcileWorkspaces()
 
     Behavior on implicitWidth {
         NumberAnimation {
@@ -35,10 +71,12 @@ Rectangle {
 
         Repeater {
             id: workspaceRepeater
-            model: root.outputState.workspaceRows
+            model: workspaceModel
             delegate: Rectangle {
                 id: workspaceButton
-                required property var modelData
+                required property string workspaceId
+                readonly property var modelData: root.outputState.workspaceRows.find(
+                    workspace => String(workspace.id) === workspaceButton.workspaceId) || ({})
                 readonly property bool focused: modelData.id === root.outputState.focusedWorkspaceId
                 readonly property bool occupied:
                     root.outputState.occupiedWorkspaceIds.indexOf(modelData.id) >= 0
@@ -48,14 +86,20 @@ Rectangle {
                 objectName: "workspace:" + modelData.id
                 width: 42
                 height: special ? 34 : 42
-                activeFocusOnTab: true
+                enabled: root.outputState.barVisible
+                activeFocusOnTab: enabled
                 Accessible.role: Accessible.Button
                 Accessible.name: "Workspace " + modelData.name
+                Accessible.ignored: !enabled
                 opacity: special ? 0.76 : 1
                 signal clicked
                 onClicked: root.outputState.focusWorkspace(modelData.id)
                 Keys.onReturnPressed: workspaceButton.clicked()
                 Keys.onSpacePressed: workspaceButton.clicked()
+                Accessible.onPressAction: {
+                    if (workspaceButton.enabled)
+                        workspaceButton.clicked();
+                }
 
                 radius: height / 2
                 color: workspaceButton.focused

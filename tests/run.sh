@@ -56,3 +56,6 @@ for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_su
     -import "$repo_root/src" \
     -v1
 done
+
+bash "$repo_root/tests/quickshell-core-host.sh" software
+bash "$repo_root/tests/quickshell-core-host.sh" rhi

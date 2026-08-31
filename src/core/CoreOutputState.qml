@@ -128,7 +128,7 @@ QtObject {
     })
 
     function focusWorkspace(workspaceId) {
-        if (!root.compositorActions.focusWorkspace
+        if (!root.barVisible || !root.compositorActions.focusWorkspace
                 || !root.workspaceRows.some(workspace => workspace.id === workspaceId))
             return false;
         const command = DesktopCommands.compositor(
@@ -189,6 +189,8 @@ QtObject {
     }
 
     function activateMenuNode(itemId, menuId) {
+        if (!root.barVisible || root.expandedTrayItemId !== itemId)
+            return false;
         const node = root.findMenuNode(itemId, menuId);
         if (!node || !node.enabled)
             return false;

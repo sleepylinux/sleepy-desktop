@@ -21,6 +21,10 @@ FORBIDDEN = (
 FORBIDDEN_TASK_PATH = re.compile(
     r"/(?:launcher|dashboard|sidebar|notifications|nexus|lock|session|background|areapicker|utilities|drawers)/"
 )
+HANDWRITTEN_COMMAND_KEY = re.compile(
+    r'(?:^|[,{])\s*(?:["\'](?:family|domain|type)["\']|(?:family|domain|type))\s*:',
+    re.MULTILINE,
+)
 IMPORT = re.compile(
     r'^\s*import\s+(?:"([^"]+)"|(qs(?:\.[A-Za-z_][A-Za-z0-9_]*)+))'
     r'(?:\s+\d+(?:\.\d+)?)?(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?', re.MULTILINE)
@@ -98,7 +102,7 @@ def main() -> int:
             if match:
                 failures.append(f"{display}: forbidden reachable token: {match.group(0)}")
         if "/src/core/" in display or display.endswith("/src/shell.qml"):
-            if re.search(r'["\'](?:family|domain|type)["\']\s*:', text):
+            if HANDWRITTEN_COMMAND_KEY.search(text):
                 failures.append(f"{display}: hand-written command payload in active surface graph")
     if failures:
         print("\n".join(failures), file=sys.stderr)

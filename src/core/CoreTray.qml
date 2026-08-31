@@ -19,13 +19,19 @@ Column {
             objectName: "trayMenuButton:" + modelData.id
             width: 42
             height: 42
-            activeFocusOnTab: true
+            enabled: root.outputState.barVisible
+            activeFocusOnTab: enabled
             Accessible.role: Accessible.Button
             Accessible.name: "Open " + modelData.title + " menu"
+            Accessible.ignored: !enabled
             signal clicked
             onClicked: root.outputState.toggleTrayMenu(modelData.id)
             Keys.onReturnPressed: trayItem.clicked()
             Keys.onSpacePressed: trayItem.clicked()
+            Accessible.onPressAction: {
+                if (trayItem.enabled)
+                    trayItem.clicked();
+            }
 
             radius: 21
             color: trayItem.modelData.id === root.outputState.expandedTrayItemId

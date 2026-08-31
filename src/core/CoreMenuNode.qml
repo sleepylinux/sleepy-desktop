@@ -16,13 +16,20 @@ Rectangle {
     height: 30
     enabled: root.node.enabled && root.outputState
         && root.outputState.menuActivationSupported
+        && root.outputState.barVisible
+        && root.outputState.expandedTrayItemId === root.trayItemId
     activeFocusOnTab: enabled
     Accessible.role: Accessible.Button
     Accessible.name: root.node.label
+    Accessible.ignored: !enabled
     signal clicked
     onClicked: root.outputState.activateMenuNode(root.trayItemId, root.node.id)
     Keys.onReturnPressed: root.clicked()
     Keys.onSpacePressed: root.clicked()
+    Accessible.onPressAction: {
+        if (root.enabled)
+            root.clicked();
+    }
 
     radius: 8
     color: root.enabled ? "#263238" : "#202428"

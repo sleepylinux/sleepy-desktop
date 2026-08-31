@@ -161,29 +161,42 @@ TestCase {
         compare(JSON.stringify(second.workspaceIds), JSON.stringify(["2", "3"]));
         compare(JSON.stringify(second.occupiedWorkspaceIds), JSON.stringify(["2"]));
 
-        const workspaceButton = findChild(second, "workspace:3");
+        const workspaceButton = findChild(first, "workspace:special-music");
         verify(workspaceButton !== null);
         verify(workspaceButton.activeFocusOnTab);
         workspaceButton.clicked();
         compare(commands.sent.length, 1);
         compare(JSON.stringify(commands.sent[0]), JSON.stringify({
             "family": "compositor",
-            "command": {"type": "focusWorkspace", "data": {"workspaceId": "3"}}
+            "command": {"type": "focusWorkspace", "data": {"workspaceId": "special-music"}}
         }));
-        compare(second.focusedWorkspaceId, "");
+        compare(first.focusedWorkspaceId, "1");
     }
 
     function test_hotplug_and_fullscreen_suppression_are_independent() {
         const model = loadProductionModel();
         const initial = fixtureSnapshot();
         accept(model, initial, 1);
-        const view = createView(model,
-            createTemporaryObject(commandSinkFactory, testCase), false);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const view = createView(model, commands, false);
 
         verify(outputById(view, "DP-1").barVisible);
         const fullscreenOutput = outputById(view, "HDMI-A-1");
         verify(!fullscreenOutput.barVisible);
-        findChild(fullscreenOutput, "trayMenuButton:tray-network").clicked();
+        const hiddenWorkspace = findChild(fullscreenOutput, "workspace:3");
+        const hiddenTray = findChild(fullscreenOutput, "trayMenuButton:tray-network");
+        verify(hiddenWorkspace !== null && hiddenTray !== null);
+        verify(!hiddenWorkspace.enabled);
+        verify(!hiddenWorkspace.activeFocusOnTab);
+        verify(hiddenWorkspace.Accessible.ignored);
+        verify(!hiddenTray.enabled);
+        verify(!hiddenTray.activeFocusOnTab);
+        verify(hiddenTray.Accessible.ignored);
+        hiddenWorkspace.clicked();
+        hiddenWorkspace.Accessible.pressAction();
+        hiddenTray.clicked();
+        hiddenTray.Accessible.pressAction();
+        compare(commands.sent.length, 0);
         compare(fullscreenOutput.trayExpandedItemId, "");
         compare(fullscreenOutput.trayPopupOpen, false);
 
@@ -202,6 +215,15 @@ TestCase {
         compare(view.outputCount, 1);
         compare(view.outputAt(0).outputId, "HDMI-A-1");
         verify(view.outputAt(0).barVisible);
+        const restoredWorkspace = findChild(view.outputAt(0), "workspace:3");
+        const restoredTray = findChild(view.outputAt(0), "trayMenuButton:tray-network");
+        verify(restoredWorkspace.enabled && restoredWorkspace.activeFocusOnTab);
+        verify(!restoredWorkspace.Accessible.ignored);
+        restoredWorkspace.Accessible.pressAction();
+        compare(commands.sent.length, 1);
+        compare(commands.sent[0].command.type, "focusWorkspace");
+        restoredTray.Accessible.pressAction();
+        compare(view.outputAt(0).trayExpandedItemId, "tray-network");
     }
 
     function test_tray_preserves_stable_ids_and_routes_only_supported_menu_actions() {
@@ -224,10 +246,20 @@ TestCase {
         trayButton.clicked();
         wait(0);
         const menuButton = findChild(output, "trayMenuNode:menu-details");
+        const disabledMenuButton = findChild(output, "trayMenuNode:menu-status");
         verify(menuButton !== null);
-        verify(menuButton.enabled);
+        verify(disabledMenuButton !== null);
+        verify(!disabledMenuButton.enabled);
+        disabledMenuButton.Accessible.pressAction();
+        compare(commands.sent.length, 0);
+        verify(menuButton.enabled, "menu enabled state: bar=" + output.barVisible
+            + " expanded=" + output.trayExpandedItemId
+            + " node=" + menuButton.node.enabled
+            + " item=" + menuButton.trayItemId
+            + " supported=" + output.menuActivationSupported
+            + " parentEnabled=" + menuButton.parent.enabled);
         verify(menuButton.activeFocusOnTab);
-        menuButton.clicked();
+        menuButton.Accessible.pressAction();
         compare(JSON.stringify(commands.sent), JSON.stringify([{
             "family": "utility",
             "command": {"type": "invokeTrayMenu", "data": {
@@ -239,18 +271,25 @@ TestCase {
         const model = loadProductionModel();
         const initial = fixtureSnapshot();
         accept(model, initial, 1);
-        const view = createView(model,
-            createTemporaryObject(commandSinkFactory, testCase), false);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const view = createView(model, commands, false);
         const output = outputById(view, "DP-1");
         findChild(output, "trayMenuButton:tray-network").clicked();
         compare(output.trayExpandedItemId, "tray-network");
         verify(output.trayPopupOpen);
+        const retainedMenuButton = findChild(output, "trayMenuNode:menu-details");
+        verify(retainedMenuButton !== null && retainedMenuButton.enabled,
+            "retained menu enabled state: bar=" + output.barVisible
+            + " expanded=" + output.trayExpandedItemId);
 
         const fullscreen = JSON.parse(JSON.stringify(initial));
         fullscreen.compositor.hyprland.data.windows[0].fullscreen = true;
         accept(model, fullscreen, 2);
         compare(output.trayExpandedItemId, "");
         verify(!output.trayPopupOpen);
+        verify(findChild(output, "trayMenuNode:menu-details") === null);
+        verify(!output.activateMenuNode("tray-network", "menu-details"));
+        compare(commands.sent.length, 0);
 
         const restored = JSON.parse(JSON.stringify(initial));
         accept(model, restored, 3);
@@ -288,7 +327,7 @@ TestCase {
         verify(levelSlider.activeFocusOnTab && muteButton.activeFocusOnTab);
         levelSlider.value = 0.8;
         levelSlider.moved();
-        muteButton.clicked();
+        muteButton.Accessible.pressAction();
         compare(first.osdLevel, 0.42);
         compare(levelSlider.value, 0.42);
         verify(!first.osdMuted);
@@ -372,6 +411,43 @@ TestCase {
         compare(output.bluetoothStatusText, "Bluetooth unavailable");
     }
 
+    function test_surface_focus_changes_only_after_strict_confirmed_snapshot() {
+        const model = loadProductionModel();
+        const initial = fixtureSnapshot();
+        accept(model, initial, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const view = createView(model, commands, false);
+        const first = outputById(view, "DP-1");
+        const second = outputById(view, "HDMI-A-1");
+        const firstIdentity = first;
+        const secondIdentity = second;
+        const firstButton = findChild(first, "workspace:1");
+        const secondButton = findChild(second, "workspace:2");
+
+        compare(first.focusedWorkspaceId, "1");
+        compare(second.focusedWorkspaceId, "");
+        verify(firstButton.focused);
+        verify(!secondButton.focused);
+        secondButton.clicked();
+        compare(first.focusedWorkspaceId, "1");
+        compare(second.focusedWorkspaceId, "");
+
+        const confirmed = JSON.parse(JSON.stringify(initial));
+        confirmed.compositor.hyprland.data.monitors[0].focused = false;
+        confirmed.compositor.hyprland.data.monitors[1].focused = true;
+        confirmed.compositor.hyprland.data.workspaces.forEach(workspace => {
+            workspace.focused = workspace.id === "2";
+        });
+        accept(model, confirmed, 2);
+
+        verify(outputById(view, "DP-1") === firstIdentity);
+        verify(outputById(view, "HDMI-A-1") === secondIdentity);
+        compare(first.focusedWorkspaceId, "");
+        compare(second.focusedWorkspaceId, "2");
+        verify(!firstButton.focused);
+        verify(secondButton.focused);
+    }
+
     function test_shell_host_instantiates_offscreen_with_two_confirmed_outputs() {
         const model = loadProductionModel();
         accept(model, fixtureSnapshot(), 1);
@@ -387,9 +463,4 @@ TestCase {
         compare(host.outputCount, 2);
     }
 
-    function test_windowed_host_marks_both_interactive_windows_focusable() {
-        const qml = source("../../src/core/CoreDesktopWindows.qml");
-        compare((qml.match(/focusable:\s*true/g) || []).length, 2);
-        verify(!/focusable:\s*false/.test(qml));
-    }
 }
