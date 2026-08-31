@@ -1169,8 +1169,6 @@ QtObject {
             return root.publishDomainUpdate(payload.data);
         case "commandResult":
             root.lastCommandResult = Object.freeze(Object.assign({}, payload.data));
-            root.rememberRequest(payload.data.requestId, payload.data.generation);
-            root.commandResultAccepted(root.lastCommandResult);
             return true;
         default:
             return false;
@@ -1195,18 +1193,24 @@ QtObject {
         if (!root.validPayload(envelope))
             return root.fail("Invalid desktop event payload");
 
-        if (envelope.generation !== root.generation) {
+        const generationChanged = envelope.generation !== root.generation;
+        if (generationChanged) {
             root.generation = envelope.generation;
             root.clearObservedRequests();
-            root.daemonGenerationChanged(root.generation);
         }
         if (envelope.cause.kind === "request")
             root.rememberRequest(envelope.cause.requestId, envelope.generation);
-        if (!root.applyPayload(envelope))
-            return root.fail("Invalid desktop event payload");
+        root.applyPayload(envelope);
         root.snapshotReceived = true;
         root.connectionState = "ready";
         root.diagnostic = "";
+
+        // Public acceptance signals are stable and state-coherent:
+        // generation changes first, payload-specific results second, full event last.
+        if (generationChanged)
+            root.daemonGenerationChanged(root.generation);
+        if (envelope.payload.type === "commandResult")
+            root.commandResultAccepted(root.lastCommandResult);
         root.eventAccepted(Object.freeze(envelope));
         return true;
     }

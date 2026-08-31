@@ -339,6 +339,27 @@ TestCase {
         }, cause);
     }
 
+    function observedWallpaperId(protocol) {
+        return protocol.snapshot && protocol.snapshot.appearance
+            ? protocol.snapshot.appearance.wallpaperId : "";
+    }
+
+    function observedDnd(protocol) {
+        return protocol.snapshot && protocol.snapshot.notifications
+            ? protocol.snapshot.notifications.dnd : null;
+    }
+
+    function observedCommandResultGeneration(protocol) {
+        return protocol.lastCommandResult ? protocol.lastCommandResult.generation : 0;
+    }
+
+    function assertReadyAtGeneration(protocol, generation) {
+        compare(protocol.generation, generation);
+        compare(protocol.connectionState, "ready");
+        compare(protocol.diagnostic, "");
+        verify(protocol.snapshotReceived);
+    }
+
     function test_generation_accepts_safe_integer_beyond_qml_int32() {
         const protocol = freshProtocol();
 
@@ -502,6 +523,103 @@ TestCase {
         compare(JSON.stringify(protocol.snapshot.system.network), JSON.stringify(before));
     }
 
+    function test_full_snapshot_generation_signal_observes_atomic_published_state_and_stable_order() {
+        const protocol = freshProtocol();
+        const snapshot = semanticSnapshot();
+        snapshot.appearance.wallpaperId = "round5-full";
+        let observedChanges = 0;
+        const order = [];
+
+        protocol.observedRequestIdsChanged.connect(function() { ++observedChanges; });
+        protocol.daemonGenerationChanged.connect(function(generation) {
+            order.push("generation");
+            compare(generation, 1);
+            assertReadyAtGeneration(protocol, 1);
+            compare(protocol.observedRequestIds[requestId], 1);
+            compare(observedWallpaperId(protocol), "round5-full");
+        });
+        protocol.eventAccepted.connect(function() {
+            order.push("event");
+            assertReadyAtGeneration(protocol, 1);
+            compare(protocol.observedRequestIds[requestId], 1);
+            compare(observedWallpaperId(protocol), "round5-full");
+        });
+
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": snapshot
+        }, requestCause(requestId))));
+
+        compare(observedChanges, 2);
+        compare(JSON.stringify(order), JSON.stringify(["generation", "event"]));
+    }
+
+    function test_request_cause_without_generation_change_records_once_and_publishes_ready_event() {
+        const protocol = freshProtocol();
+        protocol.generation = 1;
+        const snapshot = semanticSnapshot();
+        snapshot.appearance.wallpaperId = "round5-no-generation-change";
+        let observedChanges = 0;
+        const order = [];
+
+        protocol.observedRequestIdsChanged.connect(function() { ++observedChanges; });
+        protocol.daemonGenerationChanged.connect(function() { order.push("generation"); });
+        protocol.eventAccepted.connect(function() {
+            order.push("event");
+            assertReadyAtGeneration(protocol, 1);
+            compare(protocol.observedRequestIds[requestId], 1);
+            compare(observedWallpaperId(protocol), "round5-no-generation-change");
+        });
+
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": snapshot
+        }, requestCause(requestId))));
+
+        compare(observedChanges, 1);
+        compare(JSON.stringify(order), JSON.stringify(["event"]));
+    }
+
+    function test_domain_update_generation_signal_observes_atomic_published_state_and_stable_order() {
+        const protocol = freshProtocol();
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        let observedChanges = 0;
+        const order = [];
+
+        protocol.observedRequestIdsChanged.connect(function() { ++observedChanges; });
+        protocol.daemonGenerationChanged.connect(function(generation) {
+            order.push("generation");
+            compare(generation, 2);
+            assertReadyAtGeneration(protocol, 2);
+            compare(protocol.observedRequestIds[requestId], 2);
+            compare(observedDnd(protocol), true);
+        });
+        protocol.eventAccepted.connect(function() {
+            order.push("event");
+            assertReadyAtGeneration(protocol, 2);
+            compare(protocol.observedRequestIds[requestId], 2);
+            compare(observedDnd(protocol), true);
+        });
+
+        verify(protocol.acceptEnvelope(envelope(2, {
+            "type": "domainUpdate",
+            "data": {
+                "topic": "notifications",
+                "update": {
+                    "availability": availability(),
+                    "dnd": true,
+                    "active": []
+                }
+            }
+        }, requestCause(requestId))));
+
+        compare(observedChanges, 2);
+        compare(JSON.stringify(order), JSON.stringify(["generation", "event"]));
+    }
+
     function test_command_result_event_accepts_correlated_request_cause() {
         const protocol = freshProtocol();
         verify(protocol.acceptEnvelope(envelope(1)));
@@ -517,6 +635,52 @@ TestCase {
         compare(protocol.lastCommandResult.requestId, requestId);
         compare(protocol.lastCommandResult.generation, 2);
         compare(protocol.observedRequestIds[requestId], 2);
+    }
+
+    function test_command_result_signals_observe_atomic_state_stable_order_and_single_cause_record() {
+        const protocol = freshProtocol();
+        const commandProtocol = createTemporaryObject(commandProtocolFactory, testCase);
+        commandProtocol.generation = Qt.binding(function() { return protocol.generation; });
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        let observedChanges = 0;
+        const order = [];
+
+        protocol.observedRequestIdsChanged.connect(function() { ++observedChanges; });
+        protocol.daemonGenerationChanged.connect(function(generation) {
+            order.push("generation");
+            compare(generation, 2);
+            assertReadyAtGeneration(protocol, 2);
+            compare(protocol.observedRequestIds[requestId], 2);
+            compare(observedCommandResultGeneration(protocol), 2);
+        });
+        protocol.commandResultAccepted.connect(function(result) {
+            order.push("commandResult");
+            assertReadyAtGeneration(protocol, 2);
+            compare(result.requestId, requestId);
+            compare(result.generation, 2);
+            compare(protocol.observedRequestIds[requestId], 2);
+            compare(observedCommandResultGeneration(protocol), 2);
+
+            verify(commandProtocol.send("session", "lock", otherRequestId));
+            const request = JSON.parse(commandProtocol.queuedLine);
+            compare(request.expectedGeneration, 2);
+            compare(request.requestId, otherRequestId);
+        });
+        protocol.eventAccepted.connect(function() {
+            order.push("event");
+            assertReadyAtGeneration(protocol, 2);
+            compare(protocol.observedRequestIds[requestId], 2);
+            compare(observedCommandResultGeneration(protocol), 2);
+        });
+
+        verify(protocol.acceptEnvelope(commandResultEnvelope(
+            requestCause(requestId), requestId, 2, 2)));
+
+        compare(observedChanges, 2);
+        compare(JSON.stringify(order), JSON.stringify(["generation", "commandResult", "event"]));
     }
 
     function test_command_result_signal_observes_advanced_generation_and_follow_up_expected_generation() {
@@ -658,6 +822,14 @@ TestCase {
                 "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[0].height = 4294967296; }
             },
             {
+                "tag": "monitor widths must be positive",
+                "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[0].width = 0; }
+            },
+            {
+                "tag": "monitor heights must be positive",
+                "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[0].height = 0; }
+            },
+            {
                 "tag": "workspace monitorId must reference a monitor",
                 "mutate": function(snapshot) { snapshot.compositor.hyprland.data.workspaces[0].monitorId = "missing"; }
             },
@@ -759,6 +931,21 @@ TestCase {
         compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
     }
 
+    function test_monitor_dimensions_accept_lower_bound_in_full_snapshot() {
+        const protocol = freshProtocol();
+        const snapshot = semanticSnapshot();
+        snapshot.compositor.hyprland.data.monitors[0].width = 1;
+        snapshot.compositor.hyprland.data.monitors[0].height = 1;
+
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": snapshot
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 1);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 1);
+    }
+
     function domainUpdateInvalidCases() {
         return [
             {
@@ -802,6 +989,14 @@ TestCase {
                 }
             },
             {
+                "tag": "compositor hyprland update rejects zero monitor widths",
+                "update": function() {
+                    const data = validHyprlandData();
+                    data.monitors[0].width = 0;
+                    return {"topic": "compositor", "update": {"domain": "hyprland", "data": {"status": "available", "data": data}}};
+                }
+            },
+            {
                 "tag": "compositor monitors update rejects duplicate ids",
                 "update": function() {
                     const data = validHyprlandData().monitors;
@@ -814,6 +1009,14 @@ TestCase {
                 "update": function() {
                     const data = validHyprlandData().monitors;
                     data[0].height = 4294967296;
+                    return {"topic": "compositor", "update": {"domain": "monitors", "data": data}};
+                }
+            },
+            {
+                "tag": "compositor monitors update rejects zero monitor heights",
+                "update": function() {
+                    const data = validHyprlandData().monitors;
+                    data[0].height = 0;
                     return {"topic": "compositor", "update": {"domain": "monitors", "data": data}};
                 }
             },
@@ -950,6 +1153,25 @@ TestCase {
         compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
     }
 
+    function test_monitor_dimensions_accept_lower_bound_in_hyprland_update() {
+        const protocol = freshProtocol();
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        const data = validHyprlandData();
+        data.monitors[0].width = 1;
+        data.monitors[0].height = 1;
+
+        verify(protocol.acceptEnvelope(envelope(2, {
+            "type": "domainUpdate",
+            "data": {"topic": "compositor", "update": {"domain": "hyprland", "data": {"status": "available", "data": data}}}
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 1);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 1);
+    }
+
     function test_monitor_dimensions_accept_u32_maximum_in_standalone_monitor_update() {
         const protocol = freshProtocol();
         verify(protocol.acceptEnvelope(envelope(1, {
@@ -967,6 +1189,25 @@ TestCase {
 
         compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 4294967295);
         compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
+    }
+
+    function test_monitor_dimensions_accept_lower_bound_in_standalone_monitor_update() {
+        const protocol = freshProtocol();
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        const data = validHyprlandData().monitors;
+        data[0].width = 1;
+        data[0].height = 1;
+
+        verify(protocol.acceptEnvelope(envelope(2, {
+            "type": "domainUpdate",
+            "data": {"topic": "compositor", "update": {"domain": "monitors", "data": data}}
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 1);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 1);
     }
 
     function test_retry_delay_is_bounded_between_protocol_limits() {
