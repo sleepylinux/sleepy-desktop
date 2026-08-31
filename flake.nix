@@ -215,15 +215,19 @@
             nativeBuildInputs = [
               pkgs.bash
               pkgs.coreutils
+              pkgs.dbus
               pkgs.glibc.bin
               pkgs.jq
+              pkgs.procps
               pkgs.python3
+              pkgs.util-linux
               quickshellWithModules
               pkgs.ripgrep
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
               pkgs.qt6.qtsvg
               pkgs.vulkan-loader
+              pkgs.sway
               pkgs.xorg.xorgserver
             ];
           } ''
@@ -249,6 +253,7 @@
             export DISPLAY=":$display_number"
             export SLEEPY_TEST_QPA_PLATFORM=xcb
             export SLEEPY_QML_TIMEOUT_SECONDS=120
+            export SLEEPY_PRIVATE_WAYLAND_TIMEOUT_SECONDS=600
             export QT_QUICK_BACKEND=software
             export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins
             export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
@@ -261,38 +266,17 @@
             export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
+            export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway
+            export SLEEPY_TEST_WAYLAND_COMPOSITOR=${pkgs.sway}/bin/sway
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
-            bash tests/run.sh
+            unset WAYLAND_DISPLAY
+            bash tests/with-private-wayland.sh bash tests/run.sh
             bash scripts/validate-qml.sh
 
             production_shell=${componentPackages.sleepy-shell}
-            production_runtime="$TMPDIR/sleepy-runtime"
-            mkdir -p "$production_runtime"
-            chmod 0700 "$production_runtime"
-            production_log="$TMPDIR/sleepy-production-shell.log"
-            set +e
-            XDG_RUNTIME_DIR="$production_runtime" \
-              timeout --signal=TERM --kill-after=5s 5 \
-                "$production_shell/bin/sleepy-shell" \
-                >"$production_log" 2>&1
-            production_status=$?
-            set -e
-            cat "$production_log"
-            if grep -Fq 'Failed to load configuration' "$production_log" || \
-                grep -Fq 'is not a type' "$production_log" || \
-                grep -Fq 'ReferenceError:' "$production_log" || \
-                grep -Fq 'TypeError:' "$production_log" || \
-                grep -Fq 'SyntaxError:' "$production_log" || \
-                grep -Eq 'module ".*" is not installed' "$production_log" || \
-                grep -Fq 'QQmlApplicationEngine failed' "$production_log"; then
-              printf 'packaged production shell failed to load its QML graph\n' >&2
-              exit 1
-            fi
-            if [[ $production_status -ne 124 ]]; then
-              printf 'packaged production shell exited unexpectedly with status %s\n' \
-                "$production_status" >&2
-              exit 1
-            fi
+            bash tests/with-private-wayland.sh \
+              bash tests/packaged-shell-smoke.sh \
+                "$production_shell/bin/sleepy-shell"
 
             test -e "$artworkAssets"
             touch "$out"

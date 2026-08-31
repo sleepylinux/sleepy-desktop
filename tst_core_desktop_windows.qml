@@ -5,11 +5,18 @@ import "src/core" as Core
 ShellRoot {
     id: root
 
+    readonly property bool virtualOnly:
+        Quickshell.env("SLEEPY_TASK7B_HOST_MODE") === "virtual-only"
     property int stage: 0
     property var actualSnapshot: ({})
     property var virtualSnapshot: ({})
     property var retainedVirtualOutput: null
     property int removedVirtualSerial: 0
+    property int removedActualSerial: 0
+    property int stressIndex: 0
+    readonly property int stressCycles: 24
+    property int actualStressIndex: 0
+    readonly property int actualStressCycles: 4
     property var actualProtocol: null
     property var virtualProtocol: null
     property var actualModel: null
@@ -97,6 +104,25 @@ ShellRoot {
             throw new Error("projection rejected confirmed snapshot");
     }
 
+    function stressSnapshot(index, included) {
+        const snapshot = JSON.parse(JSON.stringify(virtualSnapshot));
+        if (included) {
+            snapshot.compositor.hyprland.data.monitors[1].id = "stress-" + index;
+            snapshot.compositor.hyprland.data.workspaces[1].monitorId = "stress-" + index;
+        } else {
+            snapshot.compositor.hyprland.data.monitors.pop();
+            snapshot.compositor.hyprland.data.workspaces.pop();
+        }
+        return snapshot;
+    }
+
+    function actualSnapshotWithoutMonitor() {
+        const snapshot = JSON.parse(JSON.stringify(actualSnapshot));
+        snapshot.compositor.hyprland.data.monitors = [];
+        snapshot.compositor.hyprland.data.workspaces = [];
+        return snapshot;
+    }
+
     function require(condition, message) {
         if (!condition)
             throw new Error(message);
@@ -117,22 +143,25 @@ ShellRoot {
         if (stage === 0) {
             actualSnapshot = snapshotForNames([actualName]);
             virtualSnapshot = snapshotForNames([virtualScreenOne.name, virtualScreenTwo.name]);
-            accept(root.actualProtocol, root.actualModel, actualSnapshot, 1, "11");
+            if (!root.virtualOnly)
+                accept(root.actualProtocol, root.actualModel, actualSnapshot, 1, "11");
             accept(root.virtualProtocol, root.virtualModel, virtualSnapshot, 1, "22");
             stage = 1;
         } else if (stage === 1) {
-            require(actualHost.outputCount === 1, "real host output missing");
-            const actual = outputForName(actualHost, actualName);
-            require(actual !== null && actual.shellScreen === Quickshell.screens[0],
-                "real named screen binding mismatch");
-            require(actual.barWindow !== null && actual.osdWindow !== null,
-                "default real PanelWindows missing");
-            require(actual.barWindow.screen === Quickshell.screens[0], "real bar screen mismatch");
-            require(actual.osdWindow.screen === Quickshell.screens[0], "real OSD screen mismatch");
-            require(actual.barWindow.visible && actual.barWindow.focusable,
-                "real bar visible/focusable binding mismatch");
-            require(actual.barWindow.exclusiveZone === 64, "real bar exclusion mismatch");
-            require(actual.osdWindow.visible, "real OSD visible binding mismatch");
+            if (!root.virtualOnly) {
+                require(actualHost.outputCount === 1, "real host output missing");
+                const actual = outputForName(actualHost, actualName);
+                require(actual !== null && actual.shellScreen === Quickshell.screens[0],
+                    "real named screen binding mismatch");
+                require(actual.barWindow !== null && actual.osdWindow !== null,
+                    "default real PanelWindows missing");
+                require(actual.barWindow.screen === Quickshell.screens[0], "real bar screen mismatch");
+                require(actual.osdWindow.screen === Quickshell.screens[0], "real OSD screen mismatch");
+                require(actual.barWindow.visible && actual.barWindow.focusable,
+                    "real bar visible/focusable binding mismatch");
+                require(actual.barWindow.exclusiveZone === 64, "real bar exclusion mismatch");
+                require(actual.osdWindow.visible, "real OSD visible binding mismatch");
+            }
 
             require(virtualHost.outputCount === 2, "two-screen host lifecycle missing");
             retainedVirtualOutput = outputForName(virtualHost, virtualScreenOne.name);
@@ -189,7 +218,7 @@ ShellRoot {
             postHotplug.compositor.hyprland.data.workspaces[1].focused = true;
             accept(root.virtualProtocol, root.virtualModel, postHotplug, 6, "22");
             stage = 6;
-        } else {
+        } else if (stage === 6) {
             require(virtualHost.outputCount === 2,
                 "post-hotplug snapshot changed output count");
             require(outputForName(virtualHost, virtualScreenOne.name) === retainedVirtualOutput,
@@ -197,6 +226,70 @@ ShellRoot {
             require(outputForName(virtualHost, virtualScreenTwo.name)
                     .barWindow.outputState.focusedWorkspaceId === "2",
                 "post-hotplug confirmed focus did not reach re-added output");
+            accept(root.virtualProtocol, root.virtualModel,
+                stressSnapshot(stressIndex, true), 7, "22");
+            stage = 7;
+        } else if (stage === 7) {
+            require(virtualHost.outputCount === 2,
+                "stress monitor was not instantiated");
+            accept(root.virtualProtocol, root.virtualModel,
+                stressSnapshot(stressIndex, false), 8 + stressIndex * 2, "22");
+            stressIndex += 1;
+            stage = 8;
+        } else if (stressIndex < stressCycles) {
+            require(virtualHost.outputCount === 1,
+                "stress monitor was not retired");
+            accept(root.virtualProtocol, root.virtualModel,
+                stressSnapshot(stressIndex, true), 7 + stressIndex * 2, "22");
+            stage = 7;
+        } else if (stage === 9) {
+            require(actualHost.outputCount === 0,
+                "real PanelWindow pair was not retired");
+            accept(root.actualProtocol, root.actualModel, actualSnapshot,
+                3 + actualStressIndex * 2, "11");
+            stage = 10;
+        } else if (stage === 10) {
+            require(actualHost.outputCount === 1,
+                "real PanelWindow pair was not recreated");
+            const actual = outputForName(actualHost, actualName);
+            require(actual !== null && actual.instanceSerial !== removedActualSerial,
+                "real output delegate identity was reused after removal");
+            require(actual.shellScreen === Quickshell.screens[0],
+                "recreated real output lost its named screen binding");
+            require(actual.barWindow !== null && actual.osdWindow !== null,
+                "recreated real PanelWindows are missing");
+            actualStressIndex += 1;
+            if (actualStressIndex < actualStressCycles) {
+                removedActualSerial = actual.instanceSerial;
+                accept(root.actualProtocol, root.actualModel,
+                    actualSnapshotWithoutMonitor(),
+                    2 + actualStressIndex * 2, "11");
+                stage = 9;
+            } else {
+                require(actualHost.outputModelCache.length <= 1,
+                    "real output model cache grew across lifecycle stress: "
+                        + actualHost.outputModelCache.length);
+                console.log("TASK7B_HOST_PASS", actualName,
+                    virtualScreenOne.name, virtualScreenTwo.name);
+                Qt.quit();
+                return;
+            }
+        } else {
+            require(virtualHost.outputCount === 1,
+                "final stress monitor was not retired");
+            require(virtualHost.outputModelCache.length <= 2,
+                "retired output model cache grew without bound: "
+                    + virtualHost.outputModelCache.length);
+            if (!root.virtualOnly) {
+                const actual = outputForName(actualHost, actualName);
+                require(actual !== null, "real output missing before lifecycle stress");
+                removedActualSerial = actual.instanceSerial;
+                accept(root.actualProtocol, root.actualModel,
+                    actualSnapshotWithoutMonitor(), 2, "11");
+                stage = 9;
+                stageTimer.restart();
+                return;
+            }
             console.log("TASK7B_HOST_PASS", actualName,
                 virtualScreenOne.name, virtualScreenTwo.name);
             Qt.quit();
@@ -220,15 +313,19 @@ ShellRoot {
             throw new Error(protocolFactory.errorString());
         if (modelFactory.status !== Component.Ready)
             throw new Error(modelFactory.errorString());
-        root.actualProtocol = protocolFactory.createObject(root);
+        if (!root.virtualOnly)
+            root.actualProtocol = protocolFactory.createObject(root);
         root.virtualProtocol = protocolFactory.createObject(root);
-        root.actualModel = modelFactory.createObject(root);
+        if (!root.virtualOnly)
+            root.actualModel = modelFactory.createObject(root);
         root.virtualModel = modelFactory.createObject(root);
-        root.actualHost = hostFactory.createObject(root, {
-            "desktopModel": root.actualModel,
-            "commandClient": commandSink,
-            "tokens": ({"motionDuration": 0})
-        });
+        if (!root.virtualOnly) {
+            root.actualHost = hostFactory.createObject(root, {
+                "desktopModel": root.actualModel,
+                "commandClient": commandSink,
+                "tokens": ({"motionDuration": 0})
+            });
+        }
         root.virtualHost = hostFactory.createObject(root, {
             "desktopModel": root.virtualModel,
             "commandClient": commandSink,
@@ -237,7 +334,7 @@ ShellRoot {
             "barWindowComponent": virtualBarWindow,
             "osdWindowComponent": virtualOsdWindow
         });
-        if (!root.actualHost || !root.virtualHost)
+        if ((!root.virtualOnly && !root.actualHost) || !root.virtualHost)
             throw new Error("production CoreDesktopWindows host creation failed");
         stageTimer.start();
     }

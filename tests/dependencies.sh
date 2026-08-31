@@ -141,6 +141,27 @@ if ! rg -Fq 'pkgs.python3' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must provide Python for desktop command schema validation\n' >&2
   exit 1
 fi
+if ! rg -Fq 'pkgs.util-linux' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.dbus' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.procps' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.sway' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must declare setsid, dbus-run-session, ps, and Sway for its private Wayland host gate\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'unset WAYLAND_DISPLAY' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash tests/with-private-wayland.sh bash tests/run.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway' \
+      <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must run the mandatory host gates inside its declared private Wayland compositor\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'bash tests/with-private-wayland.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash tests/packaged-shell-smoke.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash "$repo_root/tests/private-wayland-contract.sh"' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: private Wayland status/cleanup and packaged shell smoke gates must be mandatory\n' >&2
+  exit 1
+fi
 if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; then
   printf 'FAIL: qml check must validate command fixtures against the pinned sleepy-sdk input\n' >&2
   exit 1
@@ -189,11 +210,16 @@ if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
   exit 1
 fi
 if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'Failed to load configuration'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'ReferenceError:'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'TypeError:'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'SyntaxError:'" <<< "$qml_check_block" ||
-    ! rg -Fq '[[ $production_status -ne 124 ]]' <<< "$qml_check_block"; then
+    ! rg -Fq "grep -Fq 'Failed to load configuration'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'ReferenceError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'TypeError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'SyntaxError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq '[[ $status -ne 124 ]]' \
+      "$repository_root/tests/packaged-shell-smoke.sh"; then
   printf 'FAIL: qml check must launch the packaged production shell and reject load failures\n' >&2
   exit 1
 fi

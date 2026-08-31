@@ -16,6 +16,8 @@ Scope {
     property Component osdWindowComponent: productionOsdWindow
     property var outputModels: []
     property var outputModelCache: []
+    property var pendingOutputRecords: []
+    property bool waitingForOutputRetirement: false
     property int nextOutputSerial: 1
     readonly property int outputCount: outputVariants.instances.length
 
@@ -24,31 +26,74 @@ Scope {
             ? outputVariants.instances[index] : null;
     }
 
-    function reconcileOutputs() {
-        const desired = root.desktopModel.monitors;
+    function createOutputModel(record) {
+        const reusable = root.outputModelCache.find(model => !model.active);
+        if (reusable) {
+            reusable.id = record.id;
+            reusable.name = record.name;
+            reusable.active = true;
+            return reusable;
+        }
+        const created = outputModelFactory.createObject(root, {
+            "id": record.id,
+            "name": record.name
+        });
+        root.outputModelCache = root.outputModelCache.concat([created]);
+        return created;
+    }
+
+    function commitPendingOutputs() {
+        const desired = root.pendingOutputRecords;
         const previous = root.outputModels.slice();
         const next = [];
-        for (const monitor of desired) {
-            const outputId = String(monitor.id);
-            const retained = previous.find(model => model.id === outputId)
-                || root.outputModelCache.find(model => model.id === outputId);
+        for (const record of desired) {
+            const retained = previous.find(model => model.id === record.id);
             if (retained) {
-                retained.name = String(monitor.name);
+                retained.name = record.name;
                 next.push(retained);
             } else {
-                const created = outputModelFactory.createObject(root, {
-                    "id": outputId,
-                    "name": String(monitor.name)
-                });
-                root.outputModelCache = root.outputModelCache.concat([created]);
-                next.push(created);
+                next.push(root.createOutputModel(record));
             }
         }
+        root.pendingOutputRecords = [];
         const changed = previous.length !== next.length
             || previous.some((model, index) => model !== next[index]);
-        if (!changed)
+        if (changed)
+            root.outputModels = next;
+    }
+
+    function reconcileOutputs() {
+        const desired = root.desktopModel.monitors.map(monitor => ({
+            "id": String(monitor.id),
+            "name": String(monitor.name)
+        }));
+        root.pendingOutputRecords = desired;
+        const desiredIds = desired.map(record => record.id);
+        const previous = root.outputModels.slice();
+        const retained = previous.filter(model => desiredIds.indexOf(model.id) >= 0);
+        for (const model of previous)
+            model.active = retained.indexOf(model) >= 0;
+        for (const model of retained) {
+            const record = desired.find(candidate => candidate.id === model.id);
+            model.name = record.name;
+        }
+        if (retained.length !== previous.length) {
+            root.waitingForOutputRetirement = true;
+            root.outputModels = retained;
             return;
-        root.outputModels = next;
+        }
+        if (!root.waitingForOutputRetirement)
+            root.commitPendingOutputs();
+    }
+
+    function settleOutputVariants() {
+        if (root.waitingForOutputRetirement) {
+            if (outputVariants.instances.length !== root.outputModels.length)
+                return;
+            root.waitingForOutputRetirement = false;
+        }
+        if (root.pendingOutputRecords.length > 0)
+            root.commitPendingOutputs();
     }
 
     Connections {
@@ -58,11 +103,19 @@ Scope {
 
     Component.onCompleted: root.reconcileOutputs()
 
+    Timer {
+        id: outputRetirement
+        interval: 0
+        repeat: false
+        onTriggered: root.settleOutputVariants()
+    }
+
     Component {
         id: outputModelFactory
         QtObject {
             required property string id
             required property string name
+            property bool active: true
         }
     }
 
@@ -131,6 +184,7 @@ Scope {
     Variants {
         id: outputVariants
         model: root.outputModels
+        onInstancesChanged: outputRetirement.restart()
 
         delegate: Scope {
             required property var modelData

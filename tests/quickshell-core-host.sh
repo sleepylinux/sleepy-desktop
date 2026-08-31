@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+sdk_root="${SLEEPY_SDK_ROOT:-$(cd "$repo_root/../sleepy-sdk" && pwd -P)}"
 backend="${1:-software}"
 case "$backend" in
     software|rhi) ;;
@@ -15,7 +16,7 @@ if [[ -z "${WAYLAND_DISPLAY:-}" || -z "${XDG_RUNTIME_DIR:-}" \
 fi
 
 if ! cmp -s "$repo_root/tests/fixtures/task7b-sdk-full-snapshot.json" \
-        "$repo_root/../sleepy-sdk/fixtures/desktop-runtime/full-snapshot.json"; then
+        "$sdk_root/fixtures/desktop-runtime/full-snapshot.json"; then
     printf 'FAIL: Task 7b host fixture must exactly mirror the authoritative SDK full snapshot\n' >&2
     exit 1
 fi
