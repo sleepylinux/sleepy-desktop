@@ -122,10 +122,58 @@ QtObject {
         root.desktopModel.capabilityAvailable("system", "brightness")
     readonly property bool busy: Boolean(root.commandClient?.busy ?? false)
 
+    // Launcher and notification surfaces share one local presentation state per
+    // confirmed output.  Daemon-owned rows remain read-only; mutations are
+    // routed by CoreOverlayState through the serialized command client.
+    readonly property string activeOverlay: overlayState.activeSurface
+    property alias launcherSearchText: overlayState.launcherSearchText
+    readonly property alias overlayOpen: overlayState.overlayOpen
+    readonly property alias overlayPresentationVisible: overlayState.overlayPresentationVisible
+    readonly property alias launcherAvailable: overlayState.launcherAvailable
+    readonly property alias launcherDiagnostic: overlayState.launcherDiagnostic
+    readonly property alias notificationsAvailable: overlayState.notificationsAvailable
+    readonly property alias notificationsDiagnostic: overlayState.notificationsDiagnostic
+    readonly property alias launcherCalculatorSupported: overlayState.launcherCalculatorSupported
+    readonly property alias launcherCommandModeSupported: overlayState.launcherCommandModeSupported
+    readonly property alias launcherActionsSupported: overlayState.launcherActionsSupported
+    readonly property alias filteredLauncherEntries: overlayState.filteredLauncherEntries
+    readonly property alias notificationItems: overlayState.notificationItems
+    readonly property alias toastItems: overlayState.toastItems
+    readonly property alias dndEnabled: overlayState.dndEnabled
+
     readonly property var colors: root.desktopModel.appearance?.theme?.colors || ({
         "surface": "#202124", "textPrimary": "#f1f3f4",
         "textSecondary": "#bdc1c6", "accent": "#8ab4f8", "control": "#e8eaed"
     })
+
+    function openOverlay(surfaceId, focusItem) {
+        return overlayState.openSurface(surfaceId, focusItem);
+    }
+    function toggleOverlay(surfaceId, focusItem) {
+        return overlayState.toggleSurface(surfaceId, focusItem);
+    }
+    function closeOverlay() { overlayState.closeSurface(); }
+    function launchEntry(desktopId) { return overlayState.launchEntry(desktopId); }
+    function launchAction(desktopId, actionId) {
+        return overlayState.launchAction(desktopId, actionId);
+    }
+    function setDnd(enabled) { return overlayState.setDnd(enabled); }
+    function archiveNotification(notificationId) {
+        return overlayState.archiveNotification(notificationId);
+    }
+    function invokeNotificationAction(notificationId, actionId) {
+        return overlayState.invokeNotificationAction(notificationId, actionId);
+    }
+
+    readonly property list<QtObject> _implementationObjects: [
+        CoreOverlayState {
+            id: overlayState
+            desktopModel: root.desktopModel
+            commandClient: root.commandClient
+            outputId: root.outputId
+            surfaceAllowed: root.monitor !== null && root.barVisible
+        }
+    ]
 
     function focusWorkspace(workspaceId) {
         if (!root.barVisible || !root.compositorActions.focusWorkspace

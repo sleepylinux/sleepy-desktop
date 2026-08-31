@@ -14,6 +14,7 @@ Scope {
     property var screens: Quickshell.screens
     property Component barWindowComponent: productionBarWindow
     property Component osdWindowComponent: productionOsdWindow
+    property Component overlayWindowComponent: productionOverlayWindow
     property var outputModels: []
     property var outputModelCache: []
     property var pendingOutputRecords: []
@@ -181,6 +182,49 @@ Scope {
         }
     }
 
+    Component {
+        id: productionOverlayWindow
+        PanelWindow {
+            id: overlayWindow
+            required property var shellScreen
+            required property var outputState
+            readonly property alias inputRegion: overlayInputRegion
+            readonly property alias overlayView: overlayContent
+            screen: shellScreen
+            visible: shellScreen !== null && outputState.overlayPresentationVisible
+            color: "transparent"
+            aboveWindows: true
+            focusable: visible && outputState.overlayOpen
+            exclusionMode: ExclusionMode.Ignore
+            implicitWidth: 568
+            anchors { top: true; right: true; bottom: true }
+            margins.top: 12
+            margins.right: 12
+            margins.bottom: 12
+            mask: overlayInputRegion
+
+            Region {
+                id: overlayInputRegion
+                readonly property int toastCount:
+                    Math.min(3, overlayWindow.outputState.toastItems.length)
+                x: overlayWindow.outputState.overlayOpen
+                    ? 14 : Math.max(0, overlayWindow.width - 358)
+                y: overlayWindow.outputState.overlayOpen ? 14 : 18
+                width: overlayWindow.outputState.overlayOpen
+                    ? Math.max(0, overlayWindow.width - 28) : 340
+                height: overlayWindow.outputState.overlayOpen
+                    ? Math.max(0, overlayWindow.height - 28)
+                    : toastCount * 72 + Math.max(0, toastCount - 1) * 8
+            }
+
+            CoreOverlayView {
+                id: overlayContent
+                anchors.fill: parent
+                outputState: overlayWindow.outputState
+            }
+        }
+    }
+
     Variants {
         id: outputVariants
         model: root.outputModels
@@ -197,6 +241,7 @@ Scope {
                 candidate => String(candidate.name) === outputScope.outputName) || null
             property var barWindow: null
             property var osdWindow: null
+            property var overlayWindow: null
 
             CoreOutputState {
                 id: state
@@ -214,6 +259,10 @@ Scope {
                     "outputState": state
                 });
                 outputScope.osdWindow = root.osdWindowComponent.createObject(outputScope, {
+                    "shellScreen": Qt.binding(function() { return outputScope.shellScreen; }),
+                    "outputState": state
+                });
+                outputScope.overlayWindow = root.overlayWindowComponent.createObject(outputScope, {
                     "shellScreen": Qt.binding(function() { return outputScope.shellScreen; }),
                     "outputState": state
                 });

@@ -16,6 +16,7 @@ ShellRoot {
     property int stressIndex: 0
     readonly property int stressCycles: 24
     property int actualStressIndex: 0
+    property bool actualOverlayProbed: false
     readonly property int actualStressCycles: 4
     property var actualProtocol: null
     property var virtualProtocol: null
@@ -33,6 +34,8 @@ ShellRoot {
         property bool busy: false
         function system(_command) { return true; }
         function compositor(_command) { return true; }
+        function notification(_command) { return true; }
+        function launcher(_command) { return true; }
         function utility(_command) { return true; }
     }
 
@@ -56,6 +59,27 @@ ShellRoot {
             readonly property var screen: shellScreen
             readonly property bool visible: shellScreen !== null && outputState.osdVisible
             readonly property bool focusable: visible
+        }
+    }
+
+    Component {
+        id: virtualOverlayWindow
+        QtObject {
+            id: virtualOverlay
+            required property var shellScreen
+            required property var outputState
+            readonly property var screen: shellScreen
+            readonly property bool visible:
+                shellScreen !== null && outputState.overlayPresentationVisible
+            readonly property bool focusable: visible && outputState.overlayOpen
+            readonly property QtObject inputRegion: QtObject {
+                readonly property int toastCount:
+                    Math.min(3, virtualOverlay.outputState.toastItems.length)
+                readonly property int width:
+                    virtualOverlay.outputState.overlayOpen ? 540 : 340
+                readonly property int height: virtualOverlay.outputState.overlayOpen
+                    ? 692 : toastCount * 72 + Math.max(0, toastCount - 1) * 8
+            }
         }
     }
 
@@ -153,14 +177,33 @@ ShellRoot {
                 const actual = outputForName(actualHost, actualName);
                 require(actual !== null && actual.shellScreen === Quickshell.screens[0],
                     "real named screen binding mismatch");
-                require(actual.barWindow !== null && actual.osdWindow !== null,
+                require(actual.barWindow !== null && actual.osdWindow !== null
+                        && actual.overlayWindow !== null,
                     "default real PanelWindows missing");
                 require(actual.barWindow.screen === Quickshell.screens[0], "real bar screen mismatch");
                 require(actual.osdWindow.screen === Quickshell.screens[0], "real OSD screen mismatch");
+                require(actual.overlayWindow.screen === Quickshell.screens[0],
+                    "real overlay screen mismatch");
                 require(actual.barWindow.visible && actual.barWindow.focusable,
                     "real bar visible/focusable binding mismatch");
                 require(actual.barWindow.exclusiveZone === 64, "real bar exclusion mismatch");
                 require(actual.osdWindow.visible, "real OSD visible binding mismatch");
+                require(actual.overlayWindow.visible && !actual.overlayWindow.focusable,
+                    "real overlay toast visibility/focus binding mismatch");
+                require(actual.overlayWindow.inputRegion.width === 340
+                        && actual.overlayWindow.inputRegion.height === 72,
+                    "toast-only overlay did not constrain its input mask");
+                if (!root.actualOverlayProbed) {
+                    require(actual.barWindow.outputState.openOverlay("launcher"),
+                        "real overlay did not open through production state");
+                    require(actual.overlayWindow.visible && actual.overlayWindow.focusable,
+                        "real overlay open binding did not reach PanelWindow");
+                    require(actual.overlayWindow.inputRegion.width === 540,
+                        "open overlay input mask did not expand to the panel");
+                    stage = 11;
+                    stageTimer.restart();
+                    return;
+                }
             }
 
             require(virtualHost.outputCount === 2, "two-screen host lifecycle missing");
@@ -170,6 +213,17 @@ ShellRoot {
                 "first virtual named screen mismatch");
             require(removedVirtualOutput.shellScreen === virtualScreenTwo,
                 "second virtual named screen mismatch");
+            require(retainedVirtualOutput.overlayWindow !== null
+                    && removedVirtualOutput.overlayWindow !== null,
+                "virtual overlay windows missing");
+            require(retainedVirtualOutput.barWindow.outputState.openOverlay("notifications"),
+                "first virtual overlay did not open");
+            require(retainedVirtualOutput.overlayWindow.focusable
+                    && !removedVirtualOutput.overlayWindow.focusable,
+                "per-output overlay focus leaked to another output");
+            retainedVirtualOutput.barWindow.outputState.closeOverlay();
+            require(!retainedVirtualOutput.overlayWindow.focusable,
+                "virtual overlay close did not release focus");
             const fullscreen = JSON.parse(JSON.stringify(virtualSnapshot));
             fullscreen.compositor.hyprland.data.windows = [{"id": "fullscreen",
                 "title": "Fullscreen", "applicationId": "test.fullscreen",
@@ -177,6 +231,19 @@ ShellRoot {
                 "floating": false, "pinned": false, "grouped": false}];
             accept(root.virtualProtocol, root.virtualModel, fullscreen, 2, "22");
             stage = 2;
+        } else if (stage === 11) {
+            const actualName = String(Quickshell.screens[0].name);
+            const actual = outputForName(actualHost, actualName);
+            require(actual !== null && actual.overlayWindow.overlayView.initialFocusItem.activeFocus,
+                "real overlay did not focus its initial launcher control");
+            actual.barWindow.outputState.closeOverlay();
+            require(actual.overlayWindow.visible && !actual.overlayWindow.focusable,
+                "real overlay close did not release PanelWindow focus");
+            require(actual.overlayWindow.inputRegion.width === 340
+                    && actual.overlayWindow.inputRegion.height === 72,
+                "closed overlay did not restore the toast-only input mask");
+            root.actualOverlayProbed = true;
+            stage = 1;
         } else if (stage === 2) {
             const first = outputForName(virtualHost, virtualScreenOne.name);
             require(first === retainedVirtualOutput, "fullscreen update recreated output");
@@ -192,6 +259,9 @@ ShellRoot {
             require(first.barWindow.exclusiveZone === 64, "bar exclusion did not restore");
             const second = outputForName(virtualHost, virtualScreenTwo.name);
             removedVirtualSerial = second.instanceSerial;
+            require(second.barWindow.outputState.openOverlay("launcher")
+                    && second.overlayWindow.focusable,
+                "removed output overlay was not open before teardown");
             const removed = JSON.parse(JSON.stringify(virtualSnapshot));
             removed.compositor.hyprland.data.monitors.pop();
             removed.compositor.hyprland.data.workspaces.pop();
@@ -256,7 +326,8 @@ ShellRoot {
                 "real output delegate identity was reused after removal");
             require(actual.shellScreen === Quickshell.screens[0],
                 "recreated real output lost its named screen binding");
-            require(actual.barWindow !== null && actual.osdWindow !== null,
+            require(actual.barWindow !== null && actual.osdWindow !== null
+                    && actual.overlayWindow !== null,
                 "recreated real PanelWindows are missing");
             actualStressIndex += 1;
             if (actualStressIndex < actualStressCycles) {
@@ -332,7 +403,8 @@ ShellRoot {
             "tokens": ({"motionDuration": 0}),
             "screens": root.virtualScreens,
             "barWindowComponent": virtualBarWindow,
-            "osdWindowComponent": virtualOsdWindow
+            "osdWindowComponent": virtualOsdWindow,
+            "overlayWindowComponent": virtualOverlayWindow
         });
         if ((!root.virtualOnly && !root.actualHost) || !root.virtualHost)
             throw new Error("production CoreDesktopWindows host creation failed");

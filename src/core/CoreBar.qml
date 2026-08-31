@@ -61,6 +61,15 @@ Rectangle {
         }
     }
 
+    CoreOverlayTriggers {
+        anchors {
+            top: parent.top
+            horizontalCenter: parent.horizontalCenter
+            topMargin: 12
+        }
+        outputState: root.outputState
+    }
+
     Column {
         anchors {
             top: parent.top

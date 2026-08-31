@@ -53,6 +53,29 @@ Item {
     function setOsdLevel(level) { return state.setOsdLevel(level); }
     function toggleOsdMuted() { return state.toggleOsdMuted(); }
     function setBrightness(level) { return state.setBrightness(level); }
+    function openOverlay(surfaceId, focusItem) { return state.openOverlay(surfaceId, focusItem); }
+    function toggleOverlay(surfaceId, focusItem) {
+        return state.toggleOverlay(surfaceId, focusItem);
+    }
+    function closeOverlay() { state.closeOverlay(); }
+    function launchEntry(desktopId) { return state.launchEntry(desktopId); }
+    function launchAction(desktopId, actionId) { return state.launchAction(desktopId, actionId); }
+    function setDnd(enabled) { return state.setDnd(enabled); }
+    function archiveNotification(notificationId) { return state.archiveNotification(notificationId); }
+    function invokeNotificationAction(notificationId, actionId) {
+        return state.invokeNotificationAction(notificationId, actionId);
+    }
+
+    readonly property string activeOverlay: state.activeOverlay
+    property alias launcherSearchText: state.launcherSearchText
+    readonly property alias launcherAvailable: state.launcherAvailable
+    readonly property alias notificationsAvailable: state.notificationsAvailable
+    readonly property alias launcherCalculatorSupported: state.launcherCalculatorSupported
+    readonly property alias launcherCommandModeSupported: state.launcherCommandModeSupported
+    readonly property alias filteredLauncherEntries: state.filteredLauncherEntries
+    readonly property alias notificationItems: state.notificationItems
+    readonly property alias toastItems: state.toastItems
+    readonly property alias dndEnabled: state.dndEnabled
 
     CoreOutputState {
         id: state
@@ -91,6 +114,11 @@ Item {
             bottom: parent.bottom
             bottomMargin: 18
         }
+        outputState: state
+    }
+
+    CoreOverlayView {
+        anchors.fill: parent
         outputState: state
     }
 }

@@ -48,7 +48,7 @@ timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
 # Re-run real production surfaces and the icon mask path with the RHI
 # scenegraph and Mesa software rendering. Each runner remains independently
 # bounded so a driver or scenegraph hang cannot be hidden.
-for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_surfaces.qml; do
+for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_surfaces.qml tst_core_overlays.qml; do
   QT_QUICK_BACKEND=rhi \
   QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
   LIBGL_ALWAYS_SOFTWARE=1 \
