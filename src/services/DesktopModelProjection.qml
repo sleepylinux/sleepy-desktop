@@ -50,13 +50,37 @@ QtObject {
     }
 
     function fallbackCapability(message) {
-        return Object.freeze({
-            "status": "unavailable",
-            "diagnostic": Object.freeze({"message": message})
-        });
+        const diagnostic = Object.create(null);
+        diagnostic.message = message;
+        const capability = Object.create(null);
+        capability.status = "unavailable";
+        capability.diagnostic = Object.freeze(diagnostic);
+        return Object.freeze(capability);
+    }
+
+    function validCapabilityPath(section, key) {
+        switch (section) {
+        case "system":
+            return ["network", "bluetooth", "audio", "media", "battery",
+                    "brightness", "nightLight", "power", "osd", "lock"].indexOf(key) >= 0;
+        case "compositor":
+            return key === "hyprland";
+        case "utilities":
+            return ["trayItems", "clipboardEntries", "recording", "idleInhibited",
+                    "gameMode", "screenshot", "colorPicker"].indexOf(key) >= 0;
+        default:
+            return false;
+        }
+    }
+
+    function validProducerSection(section) {
+        return ["notifications", "launcher", "calendar", "weather",
+                "appearance", "resources"].indexOf(section) >= 0;
     }
 
     function capability(section, key) {
+        if (!root.validCapabilityPath(section, key))
+            return root.fallbackCapability("Capability path is not part of the desktop protocol");
         const container = root[section] || {};
         return root.own(container, key)
             ? container[key]
@@ -79,6 +103,8 @@ QtObject {
     }
 
     function producerRecord(section) {
+        if (!root.validProducerSection(section))
+            return root.fallbackCapability("Producer is not part of the desktop protocol");
         const container = section === "notifications"
             ? root.notificationState : (root[section] || {});
         return container.availability || root.fallbackCapability("Producer has not reported");

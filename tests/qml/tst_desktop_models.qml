@@ -548,6 +548,39 @@ TestCase {
         }
     }
 
+    function test_public_capability_paths_cannot_expose_projection_members() {
+        const productionModel = loadProductionModelObjectGraph();
+        const initialSnapshot = JSON.stringify(productionModel.snapshot);
+        const initialGeneration = productionModel.generation;
+        const initialRevision = productionModel.modelRevision;
+        const projectionNames = [
+            "reconcileRows", "applyFullSnapshot", "applyDomainUpdate", "setConnectionState",
+            "clearAuthorityDerivedState", "snapshot", "monitors", "workspaces", "windows",
+            "rowRevision", "__proto__", "prototype", "constructor", "call", "apply"
+        ];
+        const metaKeys = ["prototype", "constructor", "call", "apply", "__proto__"];
+        const sentinel = Object.freeze({"sentinel": true});
+
+        for (const section of projectionNames) {
+            for (const key of metaKeys) {
+                const record = productionModel.capability(section, key);
+                compare(record.status, "unavailable", section + ":" + key);
+                verify(Object.isFrozen(record), section + ":" + key);
+                compare(Object.getPrototypeOf(record), null, section + ":" + key);
+                compare(record.constructor, undefined, section + ":" + key);
+                compare(productionModel.capabilityData(section, key, sentinel), sentinel,
+                        section + ":" + key);
+            }
+            verify(!productionModel.producerAvailable(section), section);
+        }
+
+        compare(JSON.stringify(productionModel.snapshot), initialSnapshot);
+        compare(productionModel.generation, initialGeneration);
+        compare(productionModel.modelRevision, initialRevision);
+        compare(productionModel.monitors.length, 0);
+        compare(productionModel.connectionState, "offline");
+    }
+
     function test_nested_presentation_rows_never_alias_source_or_snapshot() {
         const model = loadProductionModel();
         const initial = snapshot();
