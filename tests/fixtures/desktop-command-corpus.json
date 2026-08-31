@@ -417,6 +417,27 @@
     "command": { "type": "setIdleInhibited", "data": { "enabled": true } }
   },
   {
+    "name": "utility invoke tray menu",
+    "builder": "utilityInvokeTrayMenu",
+    "args": ["tray-network", "menu-details"],
+    "family": "utility",
+    "command": { "type": "invokeTrayMenu", "data": { "itemId": "tray-network", "menuId": "menu-details" } }
+  },
+  {
+    "name": "utility invoke tray menu rejects invalid item id",
+    "builder": "utilityInvokeTrayMenu",
+    "args": ["", "menu-details"],
+    "family": "utility",
+    "command": null
+  },
+  {
+    "name": "utility invoke tray menu rejects invalid menu id",
+    "builder": "utilityInvokeTrayMenu",
+    "args": ["tray-network", "bad\u0000menu"],
+    "family": "utility",
+    "command": null
+  },
+  {
     "name": "utility start recording",
     "builder": "utilityStartRecording",
     "args": ["eDP-1"],

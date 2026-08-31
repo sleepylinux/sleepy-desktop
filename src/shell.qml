@@ -6,6 +6,7 @@
 //@ pragma DefaultEnv QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 
 import "theme" as Theme
+import "core" as Core
 import QtQuick
 import Quickshell
 import qs.services
@@ -25,6 +26,12 @@ ShellRoot {
     Theme.ThemeTokens {
         id: tokens
         effectsPolicy: effects
+    }
+
+    Core.CoreDesktopWindows {
+        desktopModel: DesktopModel
+        commandClient: CommandClient
+        tokens: tokens
     }
 
     Component.onCompleted: {

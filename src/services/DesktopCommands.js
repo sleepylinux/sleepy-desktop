@@ -311,6 +311,15 @@ function utilitySetIdleInhibited(enabled) {
     return data ? {"type": "setIdleInhibited", "data": data} : null;
 }
 
+function utilityInvokeTrayMenu(itemId, menuId) {
+    const item = stableField("itemId", itemId);
+    const menu = stableField("menuId", menuId);
+    return item && menu ? {
+        "type": "invokeTrayMenu",
+        "data": {"itemId": item.itemId, "menuId": menu.menuId}
+    } : null;
+}
+
 function utilityStartRecording(outputId) {
     const id = stableId(outputId);
     return id ? {"type": "startRecording", "data": {"outputId": id}} : null;
