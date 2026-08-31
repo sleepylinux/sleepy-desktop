@@ -1,0 +1,313 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
+import QtQuick 6.0
+import QtTest 1.0
+
+TestCase {
+    id: testCase
+    name: "DesktopModels"
+
+    function loadProductionModel() {
+        const component = Qt.createComponent("../../src/services/DesktopModelProjection.qml");
+        verify(component.status === Component.Ready, component.errorString());
+        return createTemporaryObject(component, testCase);
+    }
+
+    function loadProductionProtocol() {
+        const component = Qt.createComponent("../../src/services/DesktopProtocol.qml");
+        verify(component.status === Component.Ready, component.errorString());
+        return createTemporaryObject(component, testCase);
+    }
+
+    function available(data) {
+        return {"status": "available", "data": data};
+    }
+
+    function unavailable(message) {
+        return {"status": "unsupported", "diagnostic": {"message": message}};
+    }
+
+    function snapshot() {
+        return {
+            "system": {
+                "network": available({"wifiEnabled": true, "scanning": false,
+                    "accessPoints": [
+                        {"id": "ap-home", "ssid": "Home", "signalLevel": 0.8, "secured": true},
+                        {"id": "ap-office", "ssid": "Office", "signalLevel": 0.5, "secured": true}
+                    ],
+                    "connections": [{"id": "wifi-home", "name": "Home", "kind": "wifi", "connected": true}]}),
+                "bluetooth": available({"powered": true, "scanning": false,
+                    "devices": [{"id": "headset", "name": "Headset", "paired": true, "connected": true}]}),
+                "audio": available({
+                    "nodes": [
+                        {"id": "speaker", "name": "Speakers", "kind": "output", "volume": 0.7, "muted": false, "isDefault": true},
+                        {"id": "mic", "name": "Microphone", "kind": "input", "volume": 0.4, "muted": false, "isDefault": true}
+                    ],
+                    "streams": [{"id": "music", "name": "Music", "nodeId": "speaker", "volume": 0.6, "muted": false}]
+                }),
+                "media": available({"players": [{"id": "player", "identity": "org.player", "title": "Song", "artist": "Artist", "playing": true, "progress": 0.4}]}),
+                "battery": available({"level": 0.82, "charging": false, "secondsRemaining": 4200}),
+                "brightness": available({"level": 0.65}),
+                "nightLight": available({"enabled": false}),
+                "power": available({"activeProfile": "balanced", "availableProfiles": ["power-saver", "balanced", "performance"]}),
+                "osd": available({"current": {"schemaVersion": 2, "outputId": "speaker", "kind": "volume", "level": 0.7, "muted": false, "label": "Volume"}, "history": []}),
+                "lock": available({"secure": true})
+            },
+            "compositor": {"hyprland": available({
+                "actionCapabilities": {"focusWindow": true, "moveWindowToWorkspace": true, "closeWindow": true,
+                    "focusWorkspace": true, "moveWorkspaceToMonitor": true, "toggleFullscreen": true,
+                    "toggleFloating": true, "togglePinned": true, "toggleGroup": true, "exit": true},
+                "monitors": [
+                    {"id": "m1", "name": "eDP-1", "width": 1920, "height": 1080, "scale": 1, "focused": true},
+                    {"id": "m2", "name": "HDMI-A-1", "width": 2560, "height": 1440, "scale": 1, "focused": false}
+                ],
+                "workspaces": [
+                    {"id": "1", "name": "1", "monitorId": "m1", "focused": true},
+                    {"id": "special", "name": "special:music", "monitorId": "m1", "focused": false},
+                    {"id": "2", "name": "2", "monitorId": "m2", "focused": false}
+                ],
+                "windows": [
+                    {"id": "w1", "title": "Terminal", "applicationId": "terminal", "workspaceId": "1", "focused": true, "fullscreen": true, "floating": false, "pinned": false, "grouped": false},
+                    {"id": "w2", "title": "Browser", "applicationId": "browser", "workspaceId": "2", "focused": false, "fullscreen": false, "floating": false, "pinned": false, "grouped": false}
+                ]
+            })},
+            "notifications": {"availability": {"status": "available"}, "dnd": false, "active": [
+                {"schemaVersion": 2, "id": 7, "applicationId": "org.sleepy.Test", "summary": "Ready", "body": "Body",
+                    "urgency": "normal", "createdAt": "2026-08-31T01:00:00Z", "read": false, "archived": false,
+                    "actions": [{"id": "open", "label": "Open", "state": "available"}]}
+            ]},
+            "launcher": {"availability": {"status": "available"}, "entries": [
+                {"id": "org.sleepy.Test.desktop", "name": "Sleepy Test", "icon": "sleepy"}
+            ]},
+            "calendar": {"availability": {"status": "available"}, "snapshot": {
+                "schemaVersion": 2, "providerId": "local", "windowStart": "2026-08-31T00:00:00Z",
+                "windowEnd": "2026-09-01T00:00:00Z", "sourceErrors": [], "events": [
+                {"id": "event-1", "summary": "Standup", "startsAt": "2026-08-31T09:00:00Z", "endsAt": "2026-08-31T09:30:00Z", "allDay": false, "sourceId": "local"}
+            ]}},
+            "weather": {"availability": {"status": "available"}, "snapshot": {
+                "schemaVersion": 2, "providerId": "weather", "location": {"displayName": "Prague", "latitude": 50.0755, "longitude": 14.4378},
+                "status": "online", "cache": "fresh", "attribution": "Test fixture", "forecast": [
+                {"at": "2026-08-31T12:00:00Z", "temperatureC": 22.5, "symbol": "clear"}
+            ]}},
+            "appearance": {"availability": {"status": "available"}, "wallpaperId": "moon", "theme": {
+                "schemaVersion": 1, "id": "018f3f4c-8af1-7f6b-bf42-1bd472868e67", "name": "Default", "origin": "builtin", "appearance": "dark",
+                "effects": "full", "reducedMotion": false, "opaqueFallback": false,
+                "colors": {"background": "#000000", "surface": "#111111", "textPrimary": "#ffffff",
+                    "textSecondary": "#d0d0d0", "accent": "#66ccff", "control": "#eeeeee"}
+            }},
+            "resources": {"availability": {"status": "available"}, "samples": [
+                {"id": "cpu", "cpuUsage": 0.4, "memoryUsage": 0.5, "loadOne": 1.1}
+            ]},
+            "utilities": {
+                "trayItems": available([{"id": "tray-1", "title": "Tray", "menu": {"id": "root", "label": "Root", "enabled": true, "children": []}}]),
+                "clipboardEntries": available([]), "recording": available({"status": "inactive"}),
+                "idleInhibited": available(false), "gameMode": available(false),
+                "screenshot": {"status": "available"}, "colorPicker": {"status": "available"}
+            }
+        };
+    }
+
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+
+    function test_fixture_is_accepted_by_the_production_strict_v3_protocol() {
+        const protocol = loadProductionProtocol();
+        verify(protocol.acceptEnvelope({
+            "schemaVersion": 3,
+            "generation": 1,
+            "eventId": "018f3f4c-8af1-7f6b-bf42-1bd472868e65",
+            "emittedAt": "2026-08-31T12:00:00Z",
+            "cause": {"kind": "lifecycle"},
+            "payload": {"type": "fullSnapshot", "data": snapshot()}
+        }), protocol.diagnostic);
+        compare(protocol.connectionState, "ready");
+    }
+
+    function test_full_then_incremental_updates_keep_identity_by_id() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        model.applyFullSnapshot(initial, 1);
+        const home = model.accessPoints[0];
+        const connection = model.connections[0];
+        const bluetooth = model.bluetoothDevices[0];
+        const speaker = model.audioNodes[0];
+        const stream = model.audioStreams[0];
+        const player = model.players[0];
+        const monitor = model.monitors[0];
+        const workspace = model.workspaces[0];
+        const window = model.windows[0];
+        const notification = model.notifications[0];
+        const launcher = model.launcherEntries[0];
+        const tray = model.trayItems[0];
+        const calendar = model.calendarEvents[0];
+        const resource = model.resourceSamples[0];
+
+        const network = clone(initial.system.network);
+        network.data.accessPoints = [
+            {"id": "ap-home", "ssid": "Home", "signalLevel": 0.9, "secured": true},
+            {"id": "ap-cafe", "ssid": "Cafe", "signalLevel": 0.3, "secured": false}
+        ];
+        model.applyDomainUpdate("system", {"domain": "network", "data": network}, 2);
+        compare(model.accessPoints[0], home);
+        compare(model.connections[0], connection);
+        compare(model.accessPoints[0].signalLevel, 0.9);
+        compare(model.accessPoints[1].id, "ap-cafe");
+        verify(model.accessPoints.indexOf(home) === 0);
+
+        const audio = clone(initial.system.audio);
+        audio.data.nodes[0].volume = 0.25;
+        model.applyDomainUpdate("system", {"domain": "audio", "data": audio}, 3);
+        compare(model.audioNodes[0], speaker);
+        compare(model.audioStreams[0], stream);
+        compare(model.audioNodes[0].volume, 0.25);
+
+        const media = clone(initial.system.media);
+        media.data.players[0].title = "Next Song";
+        model.applyDomainUpdate("system", {"domain": "media", "data": media}, 4);
+        compare(model.players[0], player);
+        compare(model.players[0].title, "Next Song");
+
+        const bluetoothUpdate = clone(initial.system.bluetooth);
+        bluetoothUpdate.data.devices[0].connected = false;
+        model.applyDomainUpdate("system", {"domain": "bluetooth", "data": bluetoothUpdate}, 5);
+        compare(model.bluetoothDevices[0], bluetooth);
+        verify(!model.bluetoothDevices[0].connected);
+
+        const compositor = clone(initial.compositor.hyprland);
+        compositor.data.monitors[0].width = 1600;
+        compositor.data.workspaces[0].name = "main";
+        compositor.data.windows[0].title = "Updated Terminal";
+        model.applyDomainUpdate("compositor", {"domain": "hyprland", "data": compositor}, 6);
+        compare(model.monitors[0], monitor);
+        compare(model.workspaces[0], workspace);
+        compare(model.windows[0], window);
+
+        const monitorRows = clone(compositor.data.monitors);
+        monitorRows[0].width = 1700;
+        model.applyDomainUpdate("compositor", {"domain": "monitors", "data": monitorRows}, 7);
+        compare(model.monitors[0], monitor);
+        compare(model.monitors[0].width, 1700);
+        compare(model.workspaces[0], workspace);
+        compare(model.windows[0], window);
+
+        const notifications = clone(initial.notifications);
+        notifications.active[0].summary = "Updated";
+        model.applyDomainUpdate("notifications", notifications, 8);
+        compare(model.notifications[0], notification);
+        compare(model.notifications[0].summary, "Updated");
+
+        model.applyDomainUpdate("launcher", clone(initial.launcher), 9);
+        model.applyDomainUpdate("utilities", {"domain": "trayItems", "data": clone(initial.utilities.trayItems)}, 10);
+        model.applyDomainUpdate("calendar", clone(initial.calendar), 11);
+        model.applyDomainUpdate("resources", clone(initial.resources), 12);
+        compare(model.launcherEntries[0], launcher);
+        compare(model.trayItems[0], tray);
+        compare(model.calendarEvents[0], calendar);
+        compare(model.resourceSamples[0], resource);
+        compare(JSON.stringify(model.monitors.map(item => item.id)), JSON.stringify(["m1", "m2"]));
+        compare(JSON.stringify(model.workspaces.map(item => item.id)), JSON.stringify(["1", "special", "2"]));
+        compare(JSON.stringify(model.windows.map(item => item.id)), JSON.stringify(["w1", "w2"]));
+        compare(JSON.stringify(model.accessPoints.map(item => item.id)), JSON.stringify(["ap-home", "ap-cafe"]));
+        compare(JSON.stringify(model.connections.map(item => item.id)), JSON.stringify(["wifi-home"]));
+        compare(JSON.stringify(model.bluetoothDevices.map(item => item.id)), JSON.stringify(["headset"]));
+        compare(JSON.stringify(model.audioNodes.map(item => item.id)), JSON.stringify(["speaker", "mic"]));
+        compare(JSON.stringify(model.audioStreams.map(item => item.id)), JSON.stringify(["music"]));
+        compare(JSON.stringify(model.players.map(item => item.id)), JSON.stringify(["player"]));
+        compare(JSON.stringify(model.notifications.map(item => item.id)), JSON.stringify([7]));
+        compare(JSON.stringify(model.launcherEntries.map(item => item.id)), JSON.stringify(["org.sleepy.Test.desktop"]));
+        compare(JSON.stringify(model.trayItems.map(item => item.id)), JSON.stringify(["tray-1"]));
+        compare(JSON.stringify(model.calendarEvents.map(item => item.id)), JSON.stringify(["event-1"]));
+        compare(JSON.stringify(model.resourceSamples.map(item => item.id)), JSON.stringify(["cpu"]));
+        verify(model.accessPoints.find(item => item.id === "ap-office") === undefined);
+        compare(model.generation, 12);
+        verify(typeof model.command === "undefined");
+        verify(typeof model.setVolume === "undefined");
+        verify(typeof model.launch === "undefined");
+    }
+
+    function test_all_core_domains_project_confirmed_lists() {
+        const model = loadProductionModel();
+        model.applyFullSnapshot(snapshot(), 1);
+        compare(model.monitors.length, 2);
+        compare(model.workspaces.length, 3);
+        compare(model.windows.length, 2);
+        compare(model.bluetoothDevices.length, 1);
+        compare(model.audioStreams.length, 1);
+        compare(model.calendarEvents.length, 1);
+        compare(model.weatherForecast.length, 1);
+        compare(model.resourceSamples.length, 1);
+        compare(model.trayItems.length, 1);
+        compare(model.appearance.wallpaperId, "moon");
+    }
+
+    function test_monitor_focus_hotplug_special_occupied_and_fullscreen_are_confirmed() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        model.applyFullSnapshot(initial, 1);
+        compare(model.focusedMonitor.id, "m1");
+        compare(model.focusedWorkspaceForMonitor("m1").id, "1");
+        compare(model.focusedWindowForMonitor("m1").id, "w1");
+        verify(model.monitorHasFullscreen("m1"));
+        verify(!model.monitorHasFullscreen("m2"));
+        compare(JSON.stringify(model.occupiedWorkspaceIds("m1")), JSON.stringify(["1"]));
+        compare(JSON.stringify(model.specialWorkspaceIds("m1")), JSON.stringify(["special"]));
+
+        const compositor = clone(initial.compositor.hyprland);
+        compositor.data.monitors = [compositor.data.monitors[1]];
+        compositor.data.monitors[0].focused = true;
+        compositor.data.workspaces = [compositor.data.workspaces[2]];
+        compositor.data.workspaces[0].focused = true;
+        compositor.data.windows = [compositor.data.windows[1]];
+        compositor.data.windows[0].focused = true;
+        model.applyDomainUpdate("compositor", {"domain": "hyprland", "data": compositor}, 2);
+        compare(model.monitors.length, 1);
+        compare(model.focusedMonitor.id, "m2");
+        compare(model.focusedWorkspaceForMonitor("m2").id, "2");
+        compare(model.focusedWindowForMonitor("m2").id, "w2");
+        compare(model.focusedWorkspaceForMonitor("m1"), null);
+        verify(!model.monitorHasFullscreen("m2"));
+    }
+
+    function test_disconnect_clears_authority_and_reconnect_replaces_without_stale_rows() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        model.applyFullSnapshot(initial, 10);
+        verify(model.available);
+        model.setConnectionState("offline", "daemon disconnected");
+        verify(!model.available);
+        compare(model.accessPoints.length, 0);
+        compare(model.windows.length, 0);
+        compare(model.notifications.length, 0);
+        compare(model.diagnostic, "daemon disconnected");
+
+        const replacement = snapshot();
+        replacement.system.network = unavailable("Network unavailable");
+        replacement.system.bluetooth = unavailable("Bluetooth unavailable");
+        replacement.system.audio = unavailable("Audio unavailable");
+        replacement.system.battery = unavailable("Battery unavailable");
+        replacement.weather.availability = {"status": "timeout", "diagnostic": {"message": "Weather timeout"}};
+        replacement.weather.snapshot.forecast = [];
+        replacement.launcher.entries = [{"id": "org.sleepy.Reconnected.desktop", "name": "Reconnected", "icon": "sleepy"}];
+        replacement.compositor.hyprland.data.monitors = [replacement.compositor.hyprland.data.monitors[1]];
+        replacement.compositor.hyprland.data.monitors[0].focused = true;
+        replacement.compositor.hyprland.data.workspaces = [replacement.compositor.hyprland.data.workspaces[2]];
+        replacement.compositor.hyprland.data.windows = [];
+        model.applyFullSnapshot(replacement, 12);
+        verify(model.available);
+        verify(!model.capabilityAvailable("system", "network"));
+        verify(!model.capabilityAvailable("system", "bluetooth"));
+        verify(!model.capabilityAvailable("system", "audio"));
+        verify(!model.capabilityAvailable("system", "battery"));
+        verify(!model.producerAvailable("weather"));
+        compare(model.capabilityDiagnostic("system", "network"), "Network unavailable");
+        compare(model.producerDiagnostic("weather"), "Weather timeout");
+        verify(model.capabilityAvailable("system", "brightness"));
+        verify(model.producerAvailable("notifications"));
+        compare(model.accessPoints.length, 0);
+        compare(model.weatherForecast.length, 0);
+        compare(JSON.stringify(model.monitors.map(item => item.id)), JSON.stringify(["m2"]));
+        compare(JSON.stringify(model.launcherEntries.map(item => item.id)), JSON.stringify(["org.sleepy.Reconnected.desktop"]));
+        verify(model.launcherEntries.find(item => item.id === "org.sleepy.Test.desktop") === undefined);
+        compare(model.generation, 12);
+    }
+
+}
