@@ -12,7 +12,8 @@ FocusScope {
     required property var outputState
     readonly property var colors: root.outputState.colors
     readonly property Item initialFocusItem: root.outputState.activeOverlay === "launcher"
-        ? launcherSearch : dndButton.enabled ? dndButton : closeButton
+        ? launcherSearch : root.outputState.activeOverlay === "dashboard"
+            ? dashboardContent.initialFocusItem : dndButton.enabled ? dndButton : closeButton
     readonly property string focusRequestKey: root.outputState.overlayOpen
         ? root.outputState.activeOverlay + ":" + root.initialFocusItem.objectName
         : ""
@@ -136,7 +137,8 @@ FocusScope {
                     height: closeButton.height
                     verticalAlignment: Text.AlignVCenter
                     text: root.outputState.activeOverlay === "launcher"
-                        ? "Applications" : "Notifications"
+                        ? "Applications" : root.outputState.activeOverlay === "dashboard"
+                            ? "Today" : "Notifications"
                     color: root.colors.textPrimary || "#f1f3f4"
                     font.pixelSize: 22
                     font.bold: true
@@ -150,6 +152,15 @@ FocusScope {
                     foreground: root.colors.textPrimary || "#f1f3f4"
                     onTriggered: root.outputState.closeOverlay()
                 }
+            }
+
+            CoreDashboardView {
+                id: dashboardContent
+                width: parent.width
+                height: Math.max(0, panel.height - 90)
+                visible: root.outputState.activeOverlay === "dashboard"
+                outputState: root.outputState
+                colors: root.colors
             }
 
             Column {

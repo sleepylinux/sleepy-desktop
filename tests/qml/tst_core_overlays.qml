@@ -160,6 +160,166 @@ TestCase {
         tryVerify(function() { return launcherTrigger.activeFocus; });
     }
 
+    function test_dashboard_is_a_per_output_surface_with_keyboard_focus_return() {
+        const fixture = setup();
+        const first = outputById(fixture.view, "DP-1");
+        const second = outputById(fixture.view, "HDMI-A-1");
+        verify(first !== null && second !== null);
+
+        const trigger = findChild(first, "overlayTrigger:dashboard");
+        verify(trigger !== null, "production dashboard trigger was not instantiated");
+        verify(trigger.activeFocusOnTab);
+        compare(trigger.Accessible.role, Accessible.Button);
+        const firstWorkspace = findChild(first, "workspace:1");
+        verify(firstWorkspace !== null);
+        const triggerBottom = trigger.mapToItem(first, 0, trigger.height).y;
+        const workspaceTop = firstWorkspace.mapToItem(first, 0, 0).y;
+        verify(triggerBottom <= workspaceTop,
+            "dashboard trigger overlaps the first workspace control");
+        trigger.forceActiveFocus();
+        tryVerify(function() { return trigger.activeFocus; });
+        trigger.Accessible.pressAction();
+        compare(first.activeOverlay, "dashboard");
+        compare(second.activeOverlay, "");
+
+        const overviewTab = findChild(first, "dashboardTab:overview");
+        verify(overviewTab !== null, "dashboard initial tab was not instantiated");
+        tryVerify(function() { return overviewTab.activeFocus; });
+        verify(first.openOverlay("launcher"));
+        compare(first.activeOverlay, "launcher");
+        verify(second.openOverlay("dashboard"));
+        compare(second.activeOverlay, "dashboard");
+        compare(first.activeOverlay, "launcher");
+
+        first.openOverlay("dashboard", trigger);
+        compare(first.dashboardTab, "overview");
+        verify(first.setDashboardTab("weather"));
+        compare(first.dashboardTab, "weather");
+        verify(!first.setDashboardTab("nexus"));
+        keyClick(Qt.Key_Escape);
+        compare(first.activeOverlay, "");
+        compare(first.dashboardTab, "overview");
+        tryVerify(function() { return trigger.activeFocus; });
+    }
+
+    function test_dashboard_projects_confirmed_v3_rows_and_routes_media_without_optimism() {
+        const fixture = setup();
+        const output = outputById(fixture.view, "DP-1");
+        verify(output.openOverlay("dashboard"));
+
+        verify(output.mediaAvailable);
+        verify(output.calendarAvailable);
+        verify(output.weatherAvailable);
+        verify(output.resourcesAvailable);
+        compare(output.players.length, 1);
+        compare(output.players[0].id, "firefox.instance1");
+        compare(output.calendarEvents.length, 1);
+        compare(output.calendarEvents[0].id, "meeting@example");
+        compare(output.weatherForecast.length, 1);
+        compare(output.weatherForecast[0].at, "2026-08-30T12:00:00Z");
+        compare(output.resourceSamples.length, 1);
+        compare(output.resourceSamples[0].id, "host");
+
+        const playPause = findChild(output,
+            "dashboardMediaTransport:firefox.instance1:playPause");
+        verify(playPause !== null, "confirmed player transport was not instantiated");
+        verify(playPause.enabled && playPause.activeFocusOnTab);
+        compare(playPause.Accessible.role, Accessible.Button);
+
+        verify(!output.controlPlayer("missing-player", "playPause"));
+        verify(!output.controlPlayer("firefox.instance1", "stop"));
+        compare(fixture.commands.sent.length, 0);
+        verify(output.controlPlayer("firefox.instance1", "playPause"));
+        compare(JSON.stringify(fixture.commands.sent), JSON.stringify([{
+            family: "system",
+            command: {domain: "media", action: {type: "transport", data: {
+                playerId: "firefox.instance1", transport: "playPause"}}}
+        }]));
+        verify(output.players[0].playing,
+            "dashboard optimistically changed daemon-owned player state");
+        compare(output.activeOverlay, "dashboard");
+
+        fixture.commands.busy = true;
+        wait(0);
+        verify(!playPause.enabled && !playPause.activeFocusOnTab);
+        compare(playPause.Accessible.description,
+            "Another desktop command is pending");
+        verify(!output.controlPlayer("firefox.instance1", "next"));
+        compare(fixture.commands.sent.length, 1);
+    }
+
+    function test_dashboard_producer_failures_are_independent() {
+        const model = loadProductionModel();
+        const degraded = fixtureSnapshot();
+        degraded.system.media = {status: "unsupported",
+            diagnostic: {message: "Media unavailable"}};
+        degraded.weather.availability = {status: "timeout",
+            diagnostic: {message: "Weather timeout"}};
+        accept(model, degraded, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("dashboard"));
+
+        verify(!output.mediaAvailable);
+        compare(output.mediaDiagnostic, "Media unavailable");
+        compare(output.players.length, 0);
+        verify(output.calendarAvailable);
+        compare(output.calendarEvents.length, 1);
+        verify(!output.weatherAvailable);
+        compare(output.weatherDiagnostic, "Weather timeout");
+        compare(output.weatherForecast.length, 0);
+        verify(output.resourcesAvailable);
+        compare(output.resourceSamples.length, 1);
+        verify(findChild(output, "dashboardUnavailable:media") !== null);
+        verify(findChild(output, "dashboardUnavailable:weather") !== null);
+        verify(findChild(output, "dashboardCalendarEvent:meeting@example") !== null);
+        verify(findChild(output, "dashboardResource:host") !== null);
+        output.setDashboardTab("media");
+        compare(output.dashboardTab, "media");
+        output.setDashboardTab("schedule");
+        compare(output.dashboardTab, "schedule");
+        output.setDashboardTab("weather");
+        compare(output.dashboardTab, "weather");
+        output.setDashboardTab("resources");
+        compare(output.dashboardTab, "resources");
+        verify(!output.controlPlayer("firefox.instance1", "playPause"));
+        compare(commands.sent.length, 0);
+    }
+
+    function test_dashboard_renders_daemon_markup_as_literal_plain_text() {
+        const model = loadProductionModel();
+        const hostile = fixtureSnapshot();
+        hostile.system.media.data.players[0].title = "<b>Quiet & Bold</b>";
+        hostile.calendar.snapshot.events[0].summary = "<img src=x> Calendar";
+        hostile.weather.availability = {status: "timeout", diagnostic: {
+            message: "<i>Weather timeout</i>"}};
+        accept(model, hostile, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("dashboard"));
+
+        verify(output.setDashboardTab("media"));
+        const playerTitle = findChild(output,
+            "dashboardPlayerTitle:firefox.instance1");
+        verify(playerTitle !== null, "dashboard player title Text was not exposed");
+        compare(playerTitle.text, "<b>Quiet & Bold</b>");
+        compare(playerTitle.textFormat, Text.PlainText);
+
+        verify(output.setDashboardTab("schedule"));
+        const calendarSummary = findChild(output,
+            "dashboardCalendarSummary:meeting@example");
+        verify(calendarSummary !== null,
+            "dashboard calendar summary Text was not exposed");
+        compare(calendarSummary.text, "<img src=x> Calendar");
+        compare(calendarSummary.textFormat, Text.PlainText);
+
+        verify(output.setDashboardTab("weather"));
+        const diagnostic = findChild(output, "dashboardUnavailable:weather");
+        verify(diagnostic !== null);
+        compare(diagnostic.text, "<i>Weather timeout</i>");
+        compare(diagnostic.textFormat, Text.PlainText);
+    }
+
     function test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch() {
         const fixture = setup();
         const output = outputById(fixture.view, "DP-1");

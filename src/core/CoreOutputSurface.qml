@@ -65,6 +65,10 @@ Item {
     function invokeNotificationAction(notificationId, actionId) {
         return state.invokeNotificationAction(notificationId, actionId);
     }
+    function setDashboardTab(tabId) { return state.setDashboardTab(tabId); }
+    function controlPlayer(playerId, transport) {
+        return state.controlPlayer(playerId, transport);
+    }
 
     readonly property string activeOverlay: state.activeOverlay
     property alias launcherSearchText: state.launcherSearchText
@@ -76,6 +80,19 @@ Item {
     readonly property alias notificationItems: state.notificationItems
     readonly property alias toastItems: state.toastItems
     readonly property alias dndEnabled: state.dndEnabled
+    readonly property string dashboardTab: state.dashboardTab
+    readonly property alias mediaAvailable: state.mediaAvailable
+    readonly property alias mediaDiagnostic: state.mediaDiagnostic
+    readonly property alias calendarAvailable: state.calendarAvailable
+    readonly property alias calendarDiagnostic: state.calendarDiagnostic
+    readonly property alias weatherAvailable: state.weatherAvailable
+    readonly property alias weatherDiagnostic: state.weatherDiagnostic
+    readonly property alias resourcesAvailable: state.resourcesAvailable
+    readonly property alias resourcesDiagnostic: state.resourcesDiagnostic
+    readonly property alias players: state.players
+    readonly property alias calendarEvents: state.calendarEvents
+    readonly property alias weatherForecast: state.weatherForecast
+    readonly property alias resourceSamples: state.resourceSamples
 
     CoreOutputState {
         id: state

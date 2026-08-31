@@ -122,7 +122,7 @@ QtObject {
         root.desktopModel.capabilityAvailable("system", "brightness")
     readonly property bool busy: Boolean(root.commandClient?.busy ?? false)
 
-    // Launcher and notification surfaces share one local presentation state per
+    // Launcher, notifications, and dashboard share one local presentation state per
     // confirmed output.  Daemon-owned rows remain read-only; mutations are
     // routed by CoreOverlayState through the serialized command client.
     readonly property string activeOverlay: overlayState.activeSurface
@@ -140,6 +140,19 @@ QtObject {
     readonly property alias notificationItems: overlayState.notificationItems
     readonly property alias toastItems: overlayState.toastItems
     readonly property alias dndEnabled: overlayState.dndEnabled
+    readonly property string dashboardTab: overlayState.dashboardTab
+    readonly property alias mediaAvailable: overlayState.mediaAvailable
+    readonly property alias mediaDiagnostic: overlayState.mediaDiagnostic
+    readonly property alias calendarAvailable: overlayState.calendarAvailable
+    readonly property alias calendarDiagnostic: overlayState.calendarDiagnostic
+    readonly property alias weatherAvailable: overlayState.weatherAvailable
+    readonly property alias weatherDiagnostic: overlayState.weatherDiagnostic
+    readonly property alias resourcesAvailable: overlayState.resourcesAvailable
+    readonly property alias resourcesDiagnostic: overlayState.resourcesDiagnostic
+    readonly property alias players: overlayState.players
+    readonly property alias calendarEvents: overlayState.calendarEvents
+    readonly property alias weatherForecast: overlayState.weatherForecast
+    readonly property alias resourceSamples: overlayState.resourceSamples
 
     readonly property var colors: root.desktopModel.appearance?.theme?.colors || ({
         "surface": "#202124", "textPrimary": "#f1f3f4",
@@ -163,6 +176,10 @@ QtObject {
     }
     function invokeNotificationAction(notificationId, actionId) {
         return overlayState.invokeNotificationAction(notificationId, actionId);
+    }
+    function setDashboardTab(tabId) { return overlayState.setDashboardTab(tabId); }
+    function controlPlayer(playerId, transport) {
+        return overlayState.controlPlayer(playerId, transport);
     }
 
     readonly property list<QtObject> _implementationObjects: [

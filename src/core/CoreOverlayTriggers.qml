@@ -12,7 +12,8 @@ Column {
     Repeater {
         model: [
             {id: "launcher", label: "Apps"},
-            {id: "notifications", label: "Alerts"}
+            {id: "notifications", label: "Alerts"},
+            {id: "dashboard", label: "Today"}
         ]
         delegate: CoreOverlayButton {
             id: triggerButton

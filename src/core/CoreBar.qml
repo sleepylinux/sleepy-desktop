@@ -74,7 +74,7 @@ Rectangle {
         anchors {
             top: parent.top
             horizontalCenter: parent.horizontalCenter
-            topMargin: 72
+            topMargin: 120
         }
         spacing: 7
 

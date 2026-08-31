@@ -13,6 +13,7 @@ QtObject {
     property bool surfaceAllowed: true
     property string activeSurface: ""
     property string launcherSearchText: ""
+    property string dashboardTab: "overview"
     property var returnFocusItem: null
 
     readonly property bool busy: Boolean(root.commandClient?.busy ?? false)
@@ -27,6 +28,30 @@ QtObject {
     readonly property bool launcherCalculatorSupported: false
     readonly property bool launcherCommandModeSupported: false
     readonly property bool launcherActionsSupported: false
+    readonly property bool mediaAvailable:
+        root.desktopModel.capabilityAvailable("system", "media")
+    readonly property string mediaDiagnostic:
+        root.desktopModel.capabilityDiagnostic("system", "media") || "Media unavailable"
+    readonly property bool calendarAvailable:
+        root.desktopModel.producerAvailable("calendar")
+    readonly property string calendarDiagnostic:
+        root.desktopModel.producerDiagnostic("calendar") || "Calendar unavailable"
+    readonly property bool weatherAvailable:
+        root.desktopModel.producerAvailable("weather")
+    readonly property string weatherDiagnostic:
+        root.desktopModel.producerDiagnostic("weather") || "Weather unavailable"
+    readonly property bool resourcesAvailable:
+        root.desktopModel.producerAvailable("resources")
+    readonly property string resourcesDiagnostic:
+        root.desktopModel.producerDiagnostic("resources") || "System resources unavailable"
+    readonly property var players:
+        root.mediaAvailable ? root.desktopModel.players : []
+    readonly property var calendarEvents:
+        root.calendarAvailable ? root.desktopModel.calendarEvents : []
+    readonly property var weatherForecast:
+        root.weatherAvailable ? root.desktopModel.weatherForecast : []
+    readonly property var resourceSamples:
+        root.resourcesAvailable ? root.desktopModel.resourceSamples : []
     readonly property var launcherEntries: root.desktopModel.launcherEntries
     readonly property var filteredLauncherEntries: {
         void(root.desktopModel.launcherEntries);
@@ -54,7 +79,8 @@ QtObject {
         root.overlayOpen || root.toastItems.length > 0
 
     function validSurface(surfaceId) {
-        return surfaceId === "launcher" || surfaceId === "notifications";
+        return surfaceId === "launcher" || surfaceId === "notifications"
+            || surfaceId === "dashboard";
     }
 
     function openSurface(surfaceId, focusItem) {
@@ -78,6 +104,7 @@ QtObject {
         const focusItem = root.returnFocusItem;
         root.activeSurface = "";
         root.launcherSearchText = "";
+        root.dashboardTab = "overview";
         root.returnFocusItem = null;
         if (focusItem && typeof focusItem.forceActiveFocus === "function") {
             Qt.callLater(function() {
@@ -104,6 +131,27 @@ QtObject {
     // affordance unavailable until a confirmed protocol row can authorize it.
     function launchAction(_desktopId, _actionId) {
         return false;
+    }
+
+    function setDashboardTab(tabId) {
+        if (["overview", "media", "schedule", "weather", "resources"]
+                .indexOf(tabId) < 0)
+            return false;
+        root.dashboardTab = tabId;
+        return true;
+    }
+
+    function playerById(playerId) {
+        if (typeof playerId !== "string")
+            return null;
+        return root.players.find(player => player.id === playerId) || null;
+    }
+
+    function controlPlayer(playerId, transport) {
+        if (!root.mediaAvailable || root.busy || !root.playerById(playerId))
+            return false;
+        const command = DesktopCommands.mediaTransport(playerId, transport);
+        return command ? root.commandClient.system(command) : false;
     }
 
     function notificationById(notificationId) {
