@@ -1,13 +1,18 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Sleepy.Locker
+import Sleepy.Locker.Native
 
 Scope {
     id: root
 
     property bool lockRequested: false
     readonly property bool secure: sessionLock.secure
+
+    LockerEndpoint {
+        secure: sessionLock.secure
+        onLockRequested: root.lockRequested = true
+    }
 
     function requestLock(): void {
         root.lockRequested = true;

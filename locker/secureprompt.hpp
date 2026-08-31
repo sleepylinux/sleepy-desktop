@@ -9,6 +9,7 @@
 namespace sleepy::locker {
 
 Q_NAMESPACE
+QML_NAMED_ELEMENT(AuthState)
 
 enum class AuthState { Idle, Authenticating, Accepted, Rejected, Error };
 Q_ENUM_NS(AuthState)

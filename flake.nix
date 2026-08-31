@@ -91,20 +91,17 @@
             cmakeDir = "locker";
             nativeBuildInputs = [
               pkgs.cmake
+              pkgs.makeWrapper
               pkgs.ninja
               pkgs.pkg-config
-              pkgs.qt6.wrapQtAppsHook
             ];
             buildInputs = [
               pkgs.pam
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
-              quickshellWithModules
             ];
-            preConfigure = ''
-              export QML2_IMPORT_PATH="${quickshellWithModules}/lib/qt-6/qml"
-              export QML_IMPORT_PATH="$QML2_IMPORT_PATH"
-            '';
+            runner = "${quickshellWithModules}/bin/qs";
+            dontWrapQtApps = true;
             doCheck = true;
             checkPhase = ''
               runHook preCheck
@@ -116,11 +113,11 @@
                 ctest --test-dir . --output-on-failure
               runHook postCheck
             '';
-            preFixup = ''
-              qtWrapperArgs+=(
-                --set QML2_IMPORT_PATH "${quickshellWithModules}/lib/qt-6/qml"
-                --set QML_IMPORT_PATH "${quickshellWithModules}/lib/qt-6/qml"
-              )
+            postInstall = ''
+              makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-locker" \
+                --set QML2_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
+                --set QML_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
+                --add-flags "-p $out/share/sleepy-locker/LockRoot.qml"
             '';
             meta = {
               description = "Fail-secure Sleepy ext-session-lock-v1 locker";
@@ -332,6 +329,11 @@
               bash tests/packaged-shell-smoke.sh \
                 "$production_shell/bin/sleepy-shell"
 
+            production_locker=${componentPackages.sleepy-locker}
+            bash tests/with-private-wayland.sh \
+              bash tests/packaged-locker-smoke.sh \
+                "$production_locker/bin/sleepy-locker"
+
             test -e "$artworkAssets"
             touch "$out"
           '';
@@ -340,7 +342,11 @@
             nativeBuildInputs = [ pkgs.jq pkgs.ripgrep ];
           } ''
             shell_package=${componentPackages.sleepy-shell}
+            locker_package=${componentPackages.sleepy-locker}
             test -x "$shell_package/bin/sleepy-shell"
+            test -x "$locker_package/bin/sleepy-locker"
+            test -f "$locker_package/share/sleepy-locker/LockRoot.qml"
+            test -f "$locker_package/lib/qt6/qml/Sleepy/Locker/Native/qmldir"
             test -f "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
             test -f "$shell_package/share/doc/sleepy-desktop/NOTICE"
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"

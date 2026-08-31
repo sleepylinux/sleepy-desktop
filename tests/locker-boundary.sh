@@ -16,6 +16,7 @@ for path in \
   "$locker/secureprompt.hpp" \
   "$locker/secureprompt.cpp" \
   "$locker/qml/LockRoot.qml" \
+  "$repo_root/tests/packaged-locker-smoke.sh" \
   "$repo_root/tests/locker_native.cpp"; do
   [[ -f "$path" ]] || fail "missing locker source: ${path#"$repo_root/"}"
 done
@@ -59,6 +60,17 @@ rg -Fq 'lock' "$locker/main.cpp" \
   || fail 'locker endpoint must accept a lock request'
 rg -Fq 'locked' "$locker/main.cpp" \
   || fail 'locker endpoint must acknowledge only confirmed secure state'
+rg -Fq 'URI Sleepy.Locker.Native' "$locker/CMakeLists.txt" \
+  || fail 'native secure prompt and endpoint must be a dedicated QML plugin'
+if rg -Fq 'QQmlApplicationEngine' "$locker/main.cpp"; then
+  fail 'standalone Qt engines cannot load Quickshell static Wayland modules'
+fi
+rg -Fq 'runner = "${quickshellWithModules}/bin/qs"' "$flake" \
+  || fail 'locker must run inside the pinned Quickshell engine'
+rg -Fq 'LockRoot.qml' "$flake" \
+  || fail 'packaged locker must start only its immutable lock configuration'
+rg -Fq 'packaged-locker-smoke.sh' "$flake" \
+  || fail 'Nix gate must acquire a real lock on the private two-output compositor'
 rg -Fq 'sleepy-locker = lockerPackage;' "$flake" \
   || fail 'flake must export the dedicated sleepy-locker package'
 rg -Fq 'quickShellWithModules' "$flake" 2>/dev/null \

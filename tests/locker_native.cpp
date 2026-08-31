@@ -1,12 +1,18 @@
 #include "secureprompt.hpp"
+#include "main.hpp"
 
 #include <QGuiApplication>
 #include <QKeyEvent>
+#include <QLocalSocket>
+#include <QTemporaryDir>
 #include <QtTest>
+
+#include <vector>
 
 using sleepy::locker::AuthState;
 using sleepy::locker::Authenticator;
 using sleepy::locker::SecurePrompt;
+using sleepy::locker::LockerEndpoint;
 
 class FakeAuthenticator final : public Authenticator {
 public:
@@ -88,6 +94,21 @@ private slots:
         prompt.reset();
     }
 
+    void shiftedCharactersAndShutdownAreHandledNatively()
+    {
+        FakeAuthenticator auth;
+        SecurePrompt prompt(&auth);
+        QKeyEvent shifted(QEvent::KeyPress, Qt::Key_Exclam, Qt::ShiftModifier,
+                          QStringLiteral("!"));
+        QCoreApplication::sendEvent(&prompt, &shifted);
+        QCOMPARE(prompt.inputLength(), 1);
+
+        QVERIFY(QMetaObject::invokeMethod(QCoreApplication::instance(), "aboutToQuit",
+                                          Qt::DirectConnection));
+        QCOMPARE(prompt.inputLength(), 0);
+        QVERIFY(prompt.secretStorageIsZeroForTesting());
+    }
+
     void qmlMetaObjectExposesNoPlaintextProperty()
     {
         FakeAuthenticator auth;
@@ -100,6 +121,83 @@ private slots:
             QVERIFY(!name.contains("text"));
             QVERIFY(!name.contains("buffer"));
         }
+    }
+
+    void privateEndpointHandlesFragmentedLockAndSecureAck()
+    {
+        QTemporaryDir runtime;
+        QVERIFY(runtime.isValid());
+        const QByteArray oldRuntime = qgetenv("XDG_RUNTIME_DIR");
+        const QByteArray oldSocket = qgetenv("SLEEPY_LOCKER_SOCKET");
+        qputenv("XDG_RUNTIME_DIR", runtime.path().toUtf8());
+        qunsetenv("SLEEPY_LOCKER_SOCKET");
+
+        {
+            LockerEndpoint endpoint;
+            QSignalSpy requested(&endpoint, &LockerEndpoint::lockRequested);
+            QLocalSocket client;
+            client.connectToServer(runtime.path() + QStringLiteral("/sleepy/locker.sock"));
+            QVERIFY(client.waitForConnected(1000));
+            QCOMPARE(client.write("lo"), 2);
+            QVERIFY(client.waitForBytesWritten(1000));
+            QTest::qWait(10);
+            QCOMPARE(requested.count(), 0);
+            QCOMPARE(client.state(), QLocalSocket::ConnectedState);
+
+            QCOMPARE(client.write("ck\n"), 3);
+            QVERIFY(client.waitForBytesWritten(1000));
+            QTRY_COMPARE(requested.count(), 1);
+            endpoint.setSecure(true);
+            QTRY_VERIFY(client.canReadLine());
+            QCOMPARE(client.readLine(), QByteArrayLiteral("locked\n"));
+        }
+
+        if (oldRuntime.isNull()) qunsetenv("XDG_RUNTIME_DIR");
+        else qputenv("XDG_RUNTIME_DIR", oldRuntime);
+        if (oldSocket.isNull()) qunsetenv("SLEEPY_LOCKER_SOCKET");
+        else qputenv("SLEEPY_LOCKER_SOCKET", oldSocket);
+    }
+
+    void privateEndpointRejectsUnlockAndBoundsIdleClients()
+    {
+        QTemporaryDir runtime;
+        QVERIFY(runtime.isValid());
+        const QByteArray oldRuntime = qgetenv("XDG_RUNTIME_DIR");
+        const QByteArray oldSocket = qgetenv("SLEEPY_LOCKER_SOCKET");
+        qputenv("XDG_RUNTIME_DIR", runtime.path().toUtf8());
+        qunsetenv("SLEEPY_LOCKER_SOCKET");
+
+        {
+            LockerEndpoint endpoint;
+            QSignalSpy requested(&endpoint, &LockerEndpoint::lockRequested);
+            const QString socketPath = runtime.path() + QStringLiteral("/sleepy/locker.sock");
+            QLocalSocket invalid;
+            invalid.connectToServer(socketPath);
+            QVERIFY(invalid.waitForConnected(1000));
+            invalid.write("unlock\n");
+            QVERIFY(invalid.waitForBytesWritten(1000));
+            QTRY_VERIFY(invalid.canReadLine());
+            QCOMPARE(invalid.readLine(), QByteArrayLiteral("error\n"));
+            QCOMPARE(requested.count(), 0);
+
+            std::vector<std::unique_ptr<QLocalSocket>> idle;
+            for (int index = 0; index < 16; ++index) {
+                auto client = std::make_unique<QLocalSocket>();
+                client->connectToServer(socketPath);
+                QVERIFY(client->waitForConnected(1000));
+                idle.push_back(std::move(client));
+                QCoreApplication::processEvents();
+            }
+            QLocalSocket overflow;
+            overflow.connectToServer(socketPath);
+            QVERIFY(overflow.waitForConnected(1000));
+            QTRY_COMPARE(overflow.state(), QLocalSocket::UnconnectedState);
+        }
+
+        if (oldRuntime.isNull()) qunsetenv("XDG_RUNTIME_DIR");
+        else qputenv("XDG_RUNTIME_DIR", oldRuntime);
+        if (oldSocket.isNull()) qunsetenv("SLEEPY_LOCKER_SOCKET");
+        else qputenv("SLEEPY_LOCKER_SOCKET", oldSocket);
     }
 };
 

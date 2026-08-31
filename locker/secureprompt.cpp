@@ -2,6 +2,7 @@
 
 #include <QInputMethodEvent>
 #include <QKeyEvent>
+#include <QCoreApplication>
 
 #include <security/pam_appl.h>
 #include <sys/mman.h>
@@ -232,6 +233,8 @@ SecurePrompt::SecurePrompt(QQuickItem *parent)
     setFlag(ItemAcceptsInputMethod, true);
     setActiveFocusOnTab(true);
     retryClock_.start();
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
+            this, &SecurePrompt::clearSecret, Qt::DirectConnection);
 }
 
 SecurePrompt::SecurePrompt(Authenticator *authenticator, QQuickItem *parent)
@@ -245,6 +248,8 @@ SecurePrompt::SecurePrompt(Authenticator *authenticator, QQuickItem *parent)
     setFlag(ItemAcceptsInputMethod, true);
     setActiveFocusOnTab(true);
     retryClock_.start();
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
+            this, &SecurePrompt::clearSecret, Qt::DirectConnection);
 }
 
 SecurePrompt::~SecurePrompt()
@@ -318,7 +323,9 @@ void SecurePrompt::keyPressEvent(QKeyEvent *event)
         clearSecret();
         setAuthState(AuthState::Idle);
         event->accept();
-    } else if (!event->text().isEmpty() && event->modifiers() == Qt::NoModifier) {
+    } else if (!event->text().isEmpty()
+               && !(event->modifiers()
+                    & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
         appendText(event->text());
         event->accept();
     } else {
