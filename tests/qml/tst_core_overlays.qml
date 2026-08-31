@@ -320,6 +320,205 @@ TestCase {
         compare(diagnostic.textFormat, Text.PlainText);
     }
 
+    function test_nexus_is_a_per_output_surface_with_local_tabs_and_focus_return() {
+        const fixture = setup();
+        const first = outputById(fixture.view, "DP-1");
+        const second = outputById(fixture.view, "HDMI-A-1");
+        const trigger = findChild(first, "overlayTrigger:nexus");
+        verify(trigger !== null, "production Nexus trigger was not instantiated");
+        const firstWorkspace = findChild(first, "workspace:1");
+        verify(firstWorkspace !== null);
+        verify(trigger.mapToItem(first, 0, trigger.height).y
+                <= firstWorkspace.mapToItem(first, 0, 0).y,
+            "Nexus trigger overlaps the first workspace control");
+        trigger.forceActiveFocus();
+        trigger.Accessible.pressAction();
+        compare(first.activeOverlay, "nexus");
+        compare(second.activeOverlay, "");
+        compare(first.nexusTab, "network");
+        const networkTab = findChild(first, "nexusTab:network");
+        verify(networkTab !== null);
+        tryVerify(function() { return networkTab.activeFocus; });
+        verify(first.setNexusTab("bluetooth"));
+        compare(first.nexusTab, "bluetooth");
+        verify(first.setNexusTab("audio"));
+        verify(first.setNexusTab("appearance"));
+        verify(!first.setNexusTab("lock"));
+        keyClick(Qt.Key_Escape);
+        compare(first.activeOverlay, "");
+        compare(first.nexusTab, "network");
+        tryVerify(function() { return trigger.activeFocus; });
+    }
+
+    function test_nexus_routes_exact_confirmed_system_and_appearance_commands_without_optimism() {
+        const model = loadProductionModel();
+        const snapshot = fixtureSnapshot();
+        snapshot.system.bluetooth.data.devices.push({id: "keyboard", name: "Keyboard",
+            paired: false, connected: false});
+        snapshot.system.bluetooth.data.devices.push({id: "mouse", name: "Mouse",
+            paired: true, connected: false});
+        accept(model, snapshot, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("nexus"));
+
+        verify(output.networkAvailable && output.bluetoothAvailable
+            && output.audioAvailable && output.appearanceAvailable);
+        compare(output.accessPoints.length, 1);
+        compare(output.bluetoothDevices.length, 3);
+        compare(output.audioNodes.length, 1);
+        compare(output.currentThemeId, "018f3f4c-8af1-7f6b-bf42-1bd472868e67");
+        compare(output.currentWallpaperId, "moon-cache-handle");
+        verify(!output.connectWifi("missing"));
+        verify(!output.disconnectBluetoothDevice("missing"));
+        verify(!output.setNodeVolume("missing", 0.5));
+        verify(!output.applyTheme("invented-theme"));
+        verify(!output.applyWallpaper("invented-wallpaper"));
+
+        verify(output.setWifiEnabled(false));
+        verify(output.scanWifi());
+        verify(output.connectWifi("ap-home"));
+        verify(output.disconnectNetwork("wifi-home"));
+        verify(output.setBluetoothPowered(false));
+        verify(output.scanBluetooth());
+        verify(output.pairBluetoothDevice("keyboard"));
+        verify(output.connectBluetoothDevice("mouse"));
+        verify(output.disconnectBluetoothDevice("headphones"));
+        verify(output.setDefaultAudioNode("speaker"));
+        verify(output.setNodeVolume("speaker", 0.5));
+        verify(output.setNodeMuted("speaker", true));
+        verify(output.setStreamVolume("stream-firefox", 0.4));
+        verify(output.setStreamMuted("stream-firefox", true));
+        verify(output.applyTheme(output.currentThemeId));
+        verify(output.applyWallpaper(output.currentWallpaperId));
+        verify(output.setReducedMotion(false));
+        verify(output.setOpaque(false));
+
+        compare(JSON.stringify(commands.sent), JSON.stringify([
+            {family: "system", command: {domain: "network", action: {
+                type: "setWifiEnabled", data: {enabled: false}}}},
+            {family: "system", command: {domain: "network", action: {type: "scanWifi"}}},
+            {family: "system", command: {domain: "network", action: {
+                type: "connectWifi", data: {accessPointId: "ap-home"}}}},
+            {family: "system", command: {domain: "network", action: {
+                type: "disconnect", data: {connectionId: "wifi-home"}}}},
+            {family: "system", command: {domain: "bluetooth", action: {
+                type: "setPowered", data: {powered: false}}}},
+            {family: "system", command: {domain: "bluetooth", action: {type: "scan"}}},
+            {family: "system", command: {domain: "bluetooth", action: {
+                type: "pair", data: {deviceId: "keyboard"}}}},
+            {family: "system", command: {domain: "bluetooth", action: {
+                type: "connect", data: {deviceId: "mouse"}}}},
+            {family: "system", command: {domain: "bluetooth", action: {
+                type: "disconnect", data: {deviceId: "headphones"}}}},
+            {family: "system", command: {domain: "audio", action: {
+                type: "setDefaultNode", data: {nodeId: "speaker"}}}},
+            {family: "system", command: {domain: "audio", action: {
+                type: "setNodeVolume", data: {nodeId: "speaker", level: 0.5}}}},
+            {family: "system", command: {domain: "audio", action: {
+                type: "setNodeMuted", data: {nodeId: "speaker", muted: true}}}},
+            {family: "system", command: {domain: "audio", action: {
+                type: "setStreamVolume", data: {streamId: "stream-firefox", level: 0.4}}}},
+            {family: "system", command: {domain: "audio", action: {
+                type: "setStreamMuted", data: {streamId: "stream-firefox", muted: true}}}},
+            {family: "appearance", command: {type: "applyTheme", data: {
+                themeId: "018f3f4c-8af1-7f6b-bf42-1bd472868e67"}}},
+            {family: "appearance", command: {type: "setWallpaper", data: {
+                wallpaperId: "moon-cache-handle"}}},
+            {family: "appearance", command: {type: "setReducedMotion", data: {
+                enabled: false}}},
+            {family: "appearance", command: {type: "setOpaque", data: {
+                enabled: false}}}
+        ]));
+        verify(output.networkData.wifiEnabled,
+            "Nexus optimistically changed confirmed Wi-Fi state");
+        verify(output.bluetoothDevices[0].connected,
+            "Nexus optimistically changed confirmed Bluetooth state");
+        compare(output.audioNodes[0].volume, 0.42);
+        verify(output.reducedMotion);
+        verify(output.opaque);
+
+        commands.busy = true;
+        wait(0);
+        verify(!output.scanWifi());
+        verify(!output.setNodeMuted("speaker", false));
+        verify(!output.setReducedMotion(true));
+        compare(commands.sent.length, 18);
+    }
+
+    function test_nexus_radio_guards_and_audio_accessibility_match_action_contracts() {
+        const model = loadProductionModel();
+        const snapshot = fixtureSnapshot();
+        snapshot.system.network.data.wifiEnabled = false;
+        snapshot.system.bluetooth.data.powered = false;
+        accept(model, snapshot, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("nexus"));
+
+        const wifiConnect = findChild(output, "nexusWifiConnect:ap-home");
+        const wifiScan = findChild(output, "nexusWifiScan");
+        verify(wifiConnect !== null && wifiScan !== null);
+        verify(!wifiConnect.enabled && !wifiConnect.activeFocusOnTab);
+        compare(wifiScan.Accessible.description, "Wi-Fi is off");
+        verify(!output.connectWifi("ap-home"));
+        output.setNexusTab("bluetooth");
+        const bluetoothAction = findChild(output, "nexusBluetoothAction:headphones");
+        const bluetoothScan = findChild(output, "nexusBluetoothScan");
+        verify(bluetoothAction !== null && bluetoothScan !== null);
+        verify(!bluetoothAction.enabled && !bluetoothAction.activeFocusOnTab);
+        compare(bluetoothScan.Accessible.description, "Bluetooth is off");
+        verify(!output.disconnectBluetoothDevice("headphones"));
+
+        output.setNexusTab("audio");
+        const nodeDown = findChild(output, "nexusNodeVolumeDown:speaker");
+        const nodeUp = findChild(output, "nexusNodeVolumeUp:speaker");
+        const nodeMute = findChild(output, "nexusNodeMute:speaker");
+        const streamDown = findChild(output, "nexusStreamVolumeDown:stream-firefox");
+        verify(nodeDown !== null && nodeUp !== null && nodeMute !== null
+            && streamDown !== null);
+        compare(nodeDown.Accessible.name, "Decrease Speakers volume");
+        compare(nodeUp.Accessible.name, "Increase Speakers volume");
+        compare(nodeMute.Accessible.name, "Mute Speakers");
+        compare(streamDown.Accessible.name, "Decrease Firefox volume");
+        compare(commands.sent.length, 0);
+        commands.busy = true;
+        wait(0);
+        verify(!nodeMute.enabled && !nodeMute.activeFocusOnTab);
+        compare(nodeMute.Accessible.description,
+            "Another desktop command is pending");
+    }
+
+    function test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text() {
+        const model = loadProductionModel();
+        const degraded = fixtureSnapshot();
+        degraded.system.network = {status: "timeout", diagnostic: {
+            message: "<b>Network timeout</b>"}};
+        degraded.appearance.availability = {status: "unsupported", diagnostic: {
+            message: "<img src=x> Appearance unavailable"}};
+        accept(model, degraded, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("nexus"));
+
+        verify(!output.networkAvailable);
+        verify(output.bluetoothAvailable && output.audioAvailable);
+        verify(!output.appearanceAvailable);
+        compare(output.accessPoints.length, 0);
+        verify(!output.scanWifi());
+        verify(output.scanBluetooth());
+        compare(commands.sent.length, 1);
+        const networkDiagnostic = findChild(output, "nexusUnavailable:network");
+        verify(networkDiagnostic !== null);
+        compare(networkDiagnostic.text, "<b>Network timeout</b>");
+        compare(networkDiagnostic.textFormat, Text.PlainText);
+        verify(output.setNexusTab("appearance"));
+        const appearanceDiagnostic = findChild(output, "nexusUnavailable:appearance");
+        verify(appearanceDiagnostic !== null);
+        compare(appearanceDiagnostic.textFormat, Text.PlainText);
+        verify(!output.applyTheme("018f3f4c-8af1-7f6b-bf42-1bd472868e67"));
+    }
+
     function test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch() {
         const fixture = setup();
         const output = outputById(fixture.view, "DP-1");

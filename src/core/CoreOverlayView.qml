@@ -13,7 +13,8 @@ FocusScope {
     readonly property var colors: root.outputState.colors
     readonly property Item initialFocusItem: root.outputState.activeOverlay === "launcher"
         ? launcherSearch : root.outputState.activeOverlay === "dashboard"
-            ? dashboardContent.initialFocusItem : dndButton.enabled ? dndButton : closeButton
+            ? dashboardContent.initialFocusItem : root.outputState.activeOverlay === "nexus"
+                ? nexusContent.initialFocusItem : dndButton.enabled ? dndButton : closeButton
     readonly property string focusRequestKey: root.outputState.overlayOpen
         ? root.outputState.activeOverlay + ":" + root.initialFocusItem.objectName
         : ""
@@ -138,7 +139,8 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                     text: root.outputState.activeOverlay === "launcher"
                         ? "Applications" : root.outputState.activeOverlay === "dashboard"
-                            ? "Today" : "Notifications"
+                            ? "Today" : root.outputState.activeOverlay === "nexus"
+                                ? "Nexus" : "Notifications"
                     color: root.colors.textPrimary || "#f1f3f4"
                     font.pixelSize: 22
                     font.bold: true
@@ -159,6 +161,15 @@ FocusScope {
                 width: parent.width
                 height: Math.max(0, panel.height - 90)
                 visible: root.outputState.activeOverlay === "dashboard"
+                outputState: root.outputState
+                colors: root.colors
+            }
+
+            CoreNexusView {
+                id: nexusContent
+                width: parent.width
+                height: Math.max(0, panel.height - 90)
+                visible: root.outputState.activeOverlay === "nexus"
                 outputState: root.outputState
                 colors: root.colors
             }

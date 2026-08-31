@@ -133,6 +133,42 @@ function networkDisconnect(connectionId) {
     }) : null;
 }
 
+function bluetoothSetPowered(powered) {
+    const value = booleanValue(powered);
+    return value !== null ? systemDomain("bluetooth", {
+        "type": "setPowered",
+        "data": {"powered": value}
+    }) : null;
+}
+
+function bluetoothScan() {
+    return systemDomain("bluetooth", {"type": "scan"});
+}
+
+function bluetoothPair(deviceId) {
+    const data = stableField("deviceId", deviceId);
+    return data ? systemDomain("bluetooth", {
+        "type": "pair",
+        "data": data
+    }) : null;
+}
+
+function bluetoothConnect(deviceId) {
+    const data = stableField("deviceId", deviceId);
+    return data ? systemDomain("bluetooth", {
+        "type": "connect",
+        "data": data
+    }) : null;
+}
+
+function bluetoothDisconnect(deviceId) {
+    const data = stableField("deviceId", deviceId);
+    return data ? systemDomain("bluetooth", {
+        "type": "disconnect",
+        "data": data
+    }) : null;
+}
+
 function audioSetDefaultNode(nodeId) {
     const data = stableField("nodeId", nodeId);
     return data ? systemDomain("audio", {

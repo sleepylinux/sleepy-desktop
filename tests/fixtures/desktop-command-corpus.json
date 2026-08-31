@@ -47,6 +47,63 @@
     }
   },
   {
+    "name": "bluetooth powered",
+    "builder": "bluetoothSetPowered",
+    "args": [true],
+    "family": "system",
+    "command": {
+      "domain": "bluetooth",
+      "action": { "type": "setPowered", "data": { "powered": true } }
+    }
+  },
+  {
+    "name": "bluetooth scan",
+    "builder": "bluetoothScan",
+    "args": [],
+    "family": "system",
+    "command": {
+      "domain": "bluetooth",
+      "action": { "type": "scan" }
+    }
+  },
+  {
+    "name": "bluetooth pair",
+    "builder": "bluetoothPair",
+    "args": ["headphones"],
+    "family": "system",
+    "command": {
+      "domain": "bluetooth",
+      "action": { "type": "pair", "data": { "deviceId": "headphones" } }
+    }
+  },
+  {
+    "name": "bluetooth connect",
+    "builder": "bluetoothConnect",
+    "args": ["headphones"],
+    "family": "system",
+    "command": {
+      "domain": "bluetooth",
+      "action": { "type": "connect", "data": { "deviceId": "headphones" } }
+    }
+  },
+  {
+    "name": "bluetooth disconnect",
+    "builder": "bluetoothDisconnect",
+    "args": ["headphones"],
+    "family": "system",
+    "command": {
+      "domain": "bluetooth",
+      "action": { "type": "disconnect", "data": { "deviceId": "headphones" } }
+    }
+  },
+  {
+    "name": "bluetooth connect oversized id",
+    "builder": "bluetoothConnect",
+    "args": ["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+    "family": "system",
+    "command": null
+  },
+  {
     "name": "audio default node",
     "builder": "audioSetDefaultNode",
     "args": ["speaker"],

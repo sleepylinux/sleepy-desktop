@@ -69,6 +69,31 @@ Item {
     function controlPlayer(playerId, transport) {
         return state.controlPlayer(playerId, transport);
     }
+    function setNexusTab(tabId) { return state.setNexusTab(tabId); }
+    function setWifiEnabled(enabled) { return state.setWifiEnabled(enabled); }
+    function scanWifi() { return state.scanWifi(); }
+    function connectWifi(accessPointId) { return state.connectWifi(accessPointId); }
+    function disconnectNetwork(connectionId) { return state.disconnectNetwork(connectionId); }
+    function setBluetoothPowered(powered) { return state.setBluetoothPowered(powered); }
+    function scanBluetooth() { return state.scanBluetooth(); }
+    function pairBluetoothDevice(deviceId) { return state.pairBluetoothDevice(deviceId); }
+    function connectBluetoothDevice(deviceId) { return state.connectBluetoothDevice(deviceId); }
+    function disconnectBluetoothDevice(deviceId) {
+        return state.disconnectBluetoothDevice(deviceId);
+    }
+    function setDefaultAudioNode(nodeId) { return state.setDefaultAudioNode(nodeId); }
+    function setNodeVolume(nodeId, level) { return state.setNodeVolume(nodeId, level); }
+    function setNodeMuted(nodeId, muted) { return state.setNodeMuted(nodeId, muted); }
+    function setStreamVolume(streamId, level) {
+        return state.setStreamVolume(streamId, level);
+    }
+    function setStreamMuted(streamId, muted) {
+        return state.setStreamMuted(streamId, muted);
+    }
+    function applyTheme(themeId) { return state.applyTheme(themeId); }
+    function applyWallpaper(wallpaperId) { return state.applyWallpaper(wallpaperId); }
+    function setReducedMotion(enabled) { return state.setReducedMotion(enabled); }
+    function setOpaque(enabled) { return state.setOpaque(enabled); }
 
     readonly property string activeOverlay: state.activeOverlay
     property alias launcherSearchText: state.launcherSearchText
@@ -93,6 +118,25 @@ Item {
     readonly property alias calendarEvents: state.calendarEvents
     readonly property alias weatherForecast: state.weatherForecast
     readonly property alias resourceSamples: state.resourceSamples
+    readonly property string nexusTab: state.nexusTab
+    readonly property alias networkAvailable: state.networkAvailable
+    readonly property alias networkDiagnostic: state.networkDiagnostic
+    readonly property alias bluetoothAvailable: state.bluetoothAvailable
+    readonly property alias bluetoothDiagnostic: state.bluetoothDiagnostic
+    readonly property alias audioAvailable: state.audioAvailable
+    readonly property alias audioDiagnostic: state.audioDiagnostic
+    readonly property alias appearanceAvailable: state.appearanceAvailable
+    readonly property alias appearanceDiagnostic: state.appearanceDiagnostic
+    readonly property alias networkData: state.networkData
+    readonly property alias accessPoints: state.accessPoints
+    readonly property alias connections: state.connections
+    readonly property alias bluetoothDevices: state.bluetoothDevices
+    readonly property alias audioNodes: state.audioNodes
+    readonly property alias audioStreams: state.audioStreams
+    readonly property alias currentThemeId: state.currentThemeId
+    readonly property alias currentWallpaperId: state.currentWallpaperId
+    readonly property alias reducedMotion: state.reducedMotion
+    readonly property alias opaque: state.opaque
 
     CoreOutputState {
         id: state

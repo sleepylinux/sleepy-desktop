@@ -13,7 +13,8 @@ Column {
         model: [
             {id: "launcher", label: "Apps"},
             {id: "notifications", label: "Alerts"},
-            {id: "dashboard", label: "Today"}
+            {id: "dashboard", label: "Today"},
+            {id: "nexus", label: "Nexus"}
         ]
         delegate: CoreOverlayButton {
             id: triggerButton

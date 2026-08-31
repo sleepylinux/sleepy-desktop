@@ -122,7 +122,7 @@ QtObject {
         root.desktopModel.capabilityAvailable("system", "brightness")
     readonly property bool busy: Boolean(root.commandClient?.busy ?? false)
 
-    // Launcher, notifications, and dashboard share one local presentation state per
+    // Launcher, notifications, dashboard, and Nexus share one local presentation state per
     // confirmed output.  Daemon-owned rows remain read-only; mutations are
     // routed by CoreOverlayState through the serialized command client.
     readonly property string activeOverlay: overlayState.activeSurface
@@ -153,6 +153,24 @@ QtObject {
     readonly property alias calendarEvents: overlayState.calendarEvents
     readonly property alias weatherForecast: overlayState.weatherForecast
     readonly property alias resourceSamples: overlayState.resourceSamples
+    readonly property string nexusTab: overlayState.nexusTab
+    readonly property alias networkAvailable: overlayState.networkAvailable
+    readonly property alias networkDiagnostic: overlayState.networkDiagnostic
+    readonly property alias bluetoothAvailable: overlayState.bluetoothAvailable
+    readonly property alias bluetoothDiagnostic: overlayState.bluetoothDiagnostic
+    readonly property alias audioAvailable: overlayState.audioAvailable
+    readonly property alias audioDiagnostic: overlayState.audioDiagnostic
+    readonly property alias appearanceAvailable: overlayState.appearanceAvailable
+    readonly property alias appearanceDiagnostic: overlayState.appearanceDiagnostic
+    readonly property alias accessPoints: overlayState.accessPoints
+    readonly property alias connections: overlayState.connections
+    readonly property alias bluetoothDevices: overlayState.bluetoothDevices
+    readonly property alias audioNodes: overlayState.audioNodes
+    readonly property alias audioStreams: overlayState.audioStreams
+    readonly property alias currentThemeId: overlayState.currentThemeId
+    readonly property alias currentWallpaperId: overlayState.currentWallpaperId
+    readonly property alias reducedMotion: overlayState.reducedMotion
+    readonly property alias opaque: overlayState.opaque
 
     readonly property var colors: root.desktopModel.appearance?.theme?.colors || ({
         "surface": "#202124", "textPrimary": "#f1f3f4",
@@ -181,6 +199,49 @@ QtObject {
     function controlPlayer(playerId, transport) {
         return overlayState.controlPlayer(playerId, transport);
     }
+    function setNexusTab(tabId) { return overlayState.setNexusTab(tabId); }
+    function setWifiEnabled(enabled) { return overlayState.setWifiEnabled(enabled); }
+    function scanWifi() { return overlayState.scanWifi(); }
+    function connectWifi(accessPointId) { return overlayState.connectWifi(accessPointId); }
+    function disconnectNetwork(connectionId) {
+        return overlayState.disconnectNetwork(connectionId);
+    }
+    function setBluetoothPowered(powered) {
+        return overlayState.setBluetoothPowered(powered);
+    }
+    function scanBluetooth() { return overlayState.scanBluetooth(); }
+    function pairBluetoothDevice(deviceId) {
+        return overlayState.pairBluetoothDevice(deviceId);
+    }
+    function connectBluetoothDevice(deviceId) {
+        return overlayState.connectBluetoothDevice(deviceId);
+    }
+    function disconnectBluetoothDevice(deviceId) {
+        return overlayState.disconnectBluetoothDevice(deviceId);
+    }
+    function setDefaultAudioNode(nodeId) {
+        return overlayState.setDefaultAudioNode(nodeId);
+    }
+    function setNodeVolume(nodeId, level) {
+        return overlayState.setNodeVolume(nodeId, level);
+    }
+    function setNodeMuted(nodeId, muted) {
+        return overlayState.setNodeMuted(nodeId, muted);
+    }
+    function setStreamVolume(streamId, level) {
+        return overlayState.setStreamVolume(streamId, level);
+    }
+    function setStreamMuted(streamId, muted) {
+        return overlayState.setStreamMuted(streamId, muted);
+    }
+    function applyTheme(themeId) { return overlayState.applyTheme(themeId); }
+    function applyWallpaper(wallpaperId) {
+        return overlayState.applyWallpaper(wallpaperId);
+    }
+    function setReducedMotion(enabled) {
+        return overlayState.setReducedMotion(enabled);
+    }
+    function setOpaque(enabled) { return overlayState.setOpaque(enabled); }
 
     readonly property list<QtObject> _implementationObjects: [
         CoreOverlayState {
