@@ -18,6 +18,7 @@ bash "$repo_root/tests/closed-imports.sh"
 bash "$repo_root/tests/service-boundary.sh"
 bash "$repo_root/tests/active-graph.sh"
 bash "$repo_root/tests/native-plugin-contracts.sh"
+bash "$repo_root/tests/locker-boundary.sh"
 
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner

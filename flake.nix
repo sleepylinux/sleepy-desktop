@@ -78,6 +78,57 @@
               (pkgs.lib.cmakeFeature "DISTRIBUTOR" "sleepy-nix-flake")
             ];
           };
+          lockerPackage = pkgs.clangStdenv.mkDerivation {
+            pname = "sleepy-locker";
+            version = "0.2.0";
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = pkgs.lib.fileset.unions [
+                ./locker
+                ./tests/locker_native.cpp
+              ];
+            };
+            cmakeDir = "locker";
+            nativeBuildInputs = [
+              pkgs.cmake
+              pkgs.ninja
+              pkgs.pkg-config
+              pkgs.qt6.wrapQtAppsHook
+            ];
+            buildInputs = [
+              pkgs.pam
+              pkgs.qt6.qtbase
+              pkgs.qt6.qtdeclarative
+              quickshellWithModules
+            ];
+            preConfigure = ''
+              export QML2_IMPORT_PATH="${quickshellWithModules}/lib/qt-6/qml"
+              export QML_IMPORT_PATH="$QML2_IMPORT_PATH"
+            '';
+            doCheck = true;
+            checkPhase = ''
+              runHook preCheck
+              QT_QPA_PLATFORM=offscreen \
+              QT_QUICK_BACKEND=software \
+              QT_QPA_PLATFORMTHEME= \
+              KDE_FULL_SESSION= \
+              XDG_CURRENT_DESKTOP= \
+                ctest --test-dir . --output-on-failure
+              runHook postCheck
+            '';
+            preFixup = ''
+              qtWrapperArgs+=(
+                --set QML2_IMPORT_PATH "${quickshellWithModules}/lib/qt-6/qml"
+                --set QML_IMPORT_PATH "${quickshellWithModules}/lib/qt-6/qml"
+              )
+            '';
+            meta = {
+              description = "Fail-secure Sleepy ext-session-lock-v1 locker";
+              license = pkgs.lib.licenses.gpl3Only;
+              platforms = pkgs.lib.platforms.linux;
+              mainProgram = "sleepy-locker";
+            };
+          };
           qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
 
           mkDesktopPackage = { pname, runner, runnerFlags }:
@@ -173,6 +224,7 @@
         in
         rec {
           sleepy-qml-plugin = nativePlugin;
+          sleepy-locker = lockerPackage;
 
           sleepy-shell = mkDesktopPackage {
             pname = "sleepy-shell";
@@ -210,6 +262,8 @@
           qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
         in
         {
+          locker = componentPackages.sleepy-locker;
+
           qml = pkgs.runCommand "sleepy-desktop-qml-contracts" {
             artworkAssets = sleepy-artwork.checks.${system}.assets;
             nativeBuildInputs = [

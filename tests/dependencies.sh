@@ -263,8 +263,8 @@ mapfile -t check_names < <(
     -e 's/^          "([^"]+)"[[:space:]]*=.*/\1/p' \
     <<< "$checks_attrset"
 )
-if [[ "${check_names[*]:-}" != "qml package preview" ]]; then
-  printf 'FAIL: per-system desktop checks must expose exactly qml package preview, found: %s\n' \
+if [[ "${check_names[*]:-}" != "locker qml package preview" ]]; then
+  printf 'FAIL: per-system desktop checks must expose exactly locker qml package preview, found: %s\n' \
     "${check_names[*]:-(none)}" >&2
   exit 1
 fi
