@@ -25,7 +25,8 @@ if [[ "${1:-}" == "--session" ]]; then
     trap 'exit 143' TERM
     trap 'exit 130' INT
 
-    env -u WAYLAND_DISPLAY -u DISPLAY -u HYPRLAND_INSTANCE_SIGNATURE \
+    env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET -u DISPLAY \
+        -u HYPRLAND_INSTANCE_SIGNATURE -u SWAYSOCK -u I3SOCK \
         XDG_RUNTIME_DIR="$runtime_dir" WLR_BACKENDS=headless \
         WLR_HEADLESS_OUTPUTS=2 WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman \
         "$compositor" --unsupported-gpu --config "$compositor_config" \
@@ -55,6 +56,7 @@ if [[ "${1:-}" == "--session" ]]; then
 
     export XDG_RUNTIME_DIR="$runtime_dir"
     export WAYLAND_DISPLAY="$wayland_socket"
+    unset WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
     set +e
     "$@"
     child_status=$?
@@ -116,7 +118,7 @@ trap cleanup_session EXIT
 trap 'exit 143' TERM
 trap 'exit 130' INT
 
-unset WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE
+unset WAYLAND_DISPLAY WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
 setsid timeout --signal=TERM --kill-after=5s "$timeout_seconds" \
     dbus-run-session -- bash "$0" --session \
         "$runtime_dir" "$compositor" "$compositor_config" "$compositor_log" \

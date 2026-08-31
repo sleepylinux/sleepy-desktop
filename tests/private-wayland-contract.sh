@@ -17,6 +17,16 @@ import os
 import signal
 import socket
 
+for inherited_name in (
+    "WAYLAND_DISPLAY",
+    "WAYLAND_SOCKET",
+    "HYPRLAND_INSTANCE_SIGNATURE",
+    "SWAYSOCK",
+    "I3SOCK",
+):
+    if inherited_name in os.environ:
+        raise SystemExit(f"inherited compositor state: {inherited_name}")
+
 socket_path = os.path.join(os.environ["XDG_RUNTIME_DIR"], "wayland-contract")
 server = socket.socket(socket.AF_UNIX)
 server.bind(socket_path)
@@ -37,8 +47,13 @@ set +e
 SLEEPY_TEST_WAYLAND_COMPOSITOR="$fake_compositor" \
 SLEEPY_TEST_COMPOSITOR_PID_FILE="$pid_file" \
 SLEEPY_PRIVATE_WAYLAND_TIMEOUT_SECONDS=20 \
+WAYLAND_DISPLAY=live-wayland \
+WAYLAND_SOCKET=999 \
+HYPRLAND_INSTANCE_SIGNATURE=live-hyprland \
+SWAYSOCK=/live/sway.sock \
+I3SOCK=/live/i3.sock \
     bash "$repo_root/tests/with-private-wayland.sh" \
-        bash -c 'test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"; exit 23'
+        bash -c 'test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"; test -z "${WAYLAND_SOCKET:-}"; test -z "${HYPRLAND_INSTANCE_SIGNATURE:-}"; test -z "${SWAYSOCK:-}"; test -z "${I3SOCK:-}"; exit 23'
 status=$?
 set -e
 
