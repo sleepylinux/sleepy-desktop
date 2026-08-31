@@ -18,6 +18,17 @@ TestCase {
         }
     }
 
+    Component {
+        id: retainedRowProbeFactory
+
+        QtObject {
+            required property var row
+            property string rowId: row.id
+            property string rowName: row.ssid
+            property real rowSignalLevel: row.signalLevel
+        }
+    }
+
     Component { id: signalSpy; SignalSpy {} }
 
     function loadProductionModel() {
@@ -152,6 +163,87 @@ TestCase {
         return object;
     }
 
+    function loadPrivateLibraryAttacker() {
+        const qml = `
+            import QtQuick 6.0
+            import "../../src/services/DesktopModelPrivate.js" as Internal
+
+            QtObject {
+                readonly property Component maliciousFactory: Component {
+                    QtObject {
+                        property bool available: true
+                        property string connectionState: "ready"
+                        property string diagnostic: ""
+                        property int generation: 777
+                        property var snapshot: ({"injected": true})
+                        property var accessPoints: [{"id": "first-writer"}]
+
+                        function setConnectionState(_state, _diagnostic) {}
+                        function applyFullSnapshot(document, confirmedGeneration) {
+                            snapshot = document;
+                            generation = confirmedGeneration;
+                            accessPoints = document.system?.network?.data?.accessPoints || [];
+                            return true;
+                        }
+                    }
+                }
+
+                function preinitialize() { return Internal.initialize(maliciousFactory); }
+                function inject(document) {
+                    return Internal.synchronize("ready", "", document, 999, true);
+                }
+            }
+        `;
+        try {
+            return Qt.createQmlObject(qml, testCase, "DesktopModelPrivateAttack");
+        } catch (_error) {
+            return null;
+        }
+    }
+
+    function publicRows(model) {
+        const names = ["monitors", "workspaces", "windows", "accessPoints", "connections",
+                       "bluetoothDevices", "audioNodes", "audioStreams", "players", "notifications",
+                       "launcherEntries", "trayItems", "clipboardEntries", "calendarEvents",
+                       "weatherForecast", "resourceSamples"];
+        const rows = [];
+        for (const name of names) {
+            verify(model[name].length > 0, name);
+            rows.push({"collection": name, "row": model[name][0]});
+        }
+        return rows;
+    }
+
+    function reachableRowBacking(row) {
+        const candidates = [row];
+        const visited = [];
+        while (candidates.length > 0) {
+            const candidate = candidates.shift();
+            if (!candidate || (typeof candidate !== "object" && typeof candidate !== "function")
+                    || visited.indexOf(candidate) >= 0)
+                continue;
+            visited.push(candidate);
+            if (candidate !== row && (candidate.record !== undefined
+                    || candidate.revision !== undefined || candidate.disposed !== undefined
+                    || typeof candidate.destroy === "function"))
+                return candidate;
+            const names = Object.getOwnPropertyNames(candidate);
+            for (const name of names) {
+                let value;
+                try { value = candidate[name]; } catch (_error) { continue; }
+                if (value && (typeof value === "object" || typeof value === "function"))
+                    candidates.push(value);
+            }
+            for (const symbol of Object.getOwnPropertySymbols(candidate)) {
+                let value;
+                try { value = candidate[symbol]; } catch (_error) { continue; }
+                if (value && (typeof value === "object" || typeof value === "function"))
+                    candidates.push(value);
+            }
+        }
+        return null;
+    }
+
     function falseActionCapabilities() {
         return {
             "focusWindow": false,
@@ -194,6 +286,97 @@ TestCase {
         compare(monitorSpy.count, 1);
         compare(workspaceSpy.count, 1);
         compare(windowSpy.count, 1);
+    }
+
+    function test_importable_helpers_cannot_publish_or_retain_desktop_state() {
+        const attacker = loadPrivateLibraryAttacker();
+        if (attacker)
+            verify(attacker.preinitialize());
+
+        let productionModel = loadProductionModelObjectGraph();
+        const injected = snapshot();
+        injected.system.network.data.accessPoints = [
+            {"id": "injected", "ssid": "Injected", "signalLevel": 1, "secured": false}
+        ];
+        if (attacker)
+            attacker.inject(injected);
+        if (productionModel.modelFacade
+                && typeof productionModel.modelFacade.synchronize === "function")
+            productionModel.modelFacade.synchronize("ready", "", injected, 999, true);
+        productionModel.modelRevision += 1;
+
+        compare(productionModel.connectionState, "offline");
+        compare(productionModel.generation, 0);
+        compare(productionModel.accessPoints.length, 0);
+        productionModel.destroy();
+        wait(0);
+
+        productionModel = loadProductionModelObjectGraph();
+        compare(productionModel.connectionState, "offline");
+        compare(productionModel.generation, 0);
+        compare(productionModel.accessPoints.length, 0);
+    }
+
+    function test_public_rows_are_frozen_and_expose_no_forgeable_backing_state() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        initial.utilities.clipboardEntries = available([
+            {"id": "clipboard-1", "mimeType": "text/plain", "preview": "Copied"}
+        ]);
+        model.applyFullSnapshot(initial, 1);
+
+        for (const entry of publicRows(model)) {
+            const row = entry.row;
+            const identifier = row.id ?? row.at;
+            const backing = reachableRowBacking(row);
+            if (backing) {
+                try { backing.record = Object.freeze({"id": "forged", "at": "forged"}); }
+                catch (_error) {}
+                try { backing.revision = Number(backing.revision || 0) + 1; }
+                catch (_error) {}
+                try { backing.disposed = true; } catch (_error) {}
+            }
+            compare(row.id ?? row.at, identifier, entry.collection);
+            compare(backing, null, entry.collection);
+            verify(Object.isFrozen(row), entry.collection);
+            compare(Object.getOwnPropertySymbols(row).length, 0, entry.collection);
+            try { row.id = "forged"; } catch (_error) {}
+            compare(row.id ?? row.at, identifier, entry.collection);
+        }
+        compare(model.generation, 1);
+        compare(model.snapshot.system.network.data.accessPoints[0].id, "ap-home");
+    }
+
+    function test_removed_row_remains_readable_and_readd_gets_fresh_identity() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        model.applyFullSnapshot(initial, 1);
+        const retired = model.accessPoints[1];
+        const probe = createTemporaryObject(retainedRowProbeFactory, testCase, {"row": retired});
+
+        const withoutOffice = clone(initial.system.network);
+        withoutOffice.data.accessPoints = [withoutOffice.data.accessPoints[0]];
+        model.applyDomainUpdate("system", {"domain": "network", "data": withoutOffice}, 2);
+        wait(0);
+        compare(retired.id, "ap-office");
+        compare(retired.ssid, "Office");
+        compare(retired.signalLevel, 0.5);
+        compare(probe.rowId, "ap-office");
+        compare(probe.rowName, "Office");
+        compare(probe.rowSignalLevel, 0.5);
+        verify(model.accessPoints.indexOf(retired) < 0);
+
+        const withOfficeAgain = clone(withoutOffice);
+        withOfficeAgain.data.accessPoints.push(
+            {"id": "ap-office", "ssid": "Office Rejoined", "signalLevel": 0.7, "secured": true});
+        model.applyDomainUpdate("system", {"domain": "network", "data": withOfficeAgain}, 3);
+        const readded = model.accessPoints[1];
+        verify(readded !== retired);
+        compare(readded.id, "ap-office");
+        compare(readded.ssid, "Office Rejoined");
+        compare(retired.ssid, "Office");
+        verify(Object.isFrozen(retired));
+        verify(Object.isFrozen(readded));
     }
 
     function test_production_singleton_does_not_expose_projection_or_state_mutators() {
@@ -286,7 +469,7 @@ TestCase {
         const initial = snapshot();
         model.applyFullSnapshot(initial, 1);
         const home = model.accessPoints[0];
-        const removedOfficeState = model.accessPoints[1].__sleepyPresentationState;
+        const removedOffice = model.accessPoints[1];
         const connection = model.connections[0];
         const bluetooth = model.bluetoothDevices[0];
         const speaker = model.audioNodes[0];
@@ -312,7 +495,7 @@ TestCase {
         compare(model.accessPoints[0].signalLevel, 0.9);
         compare(model.accessPoints[1].id, "ap-cafe");
         verify(model.accessPoints.indexOf(home) === 0);
-        verify(removedOfficeState.disposed);
+        verify(model.accessPoints.indexOf(removedOffice) < 0);
 
         const audio = clone(initial.system.audio);
         audio.data.nodes[0].volume = 0.25;

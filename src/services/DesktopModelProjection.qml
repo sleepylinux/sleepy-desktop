@@ -6,13 +6,7 @@ import QtQuick 6.0
 QtObject {
     id: root
 
-    readonly property Component rowStateFactory: Component {
-        QtObject {
-            property var record: Object.freeze({})
-            property int revision: 0
-            property bool disposed: false
-        }
-    }
+    property int rowRevision: 0
 
     property string connectionState: "offline"
     property string diagnostic: "Waiting for sleepy-sessiond"
@@ -118,79 +112,55 @@ QtObject {
         return Object.freeze(value);
     }
 
-    function rowState(target) {
-        return target?.__sleepyPresentationState || null;
-    }
+    readonly property var reconcileRows: (function() {
+        const cells = new WeakMap();
 
-    function ensureReactiveKey(target, key) {
-        if (root.own(target, key))
-            return;
-        Object.defineProperty(target, key, {
-            "configurable": false,
-            "enumerable": true,
-            "get": function() {
-                const state = root.rowState(target);
-                if (!state)
-                    return undefined;
-                void(state.revision);
-                return state.record[key];
+        function createRow(source) {
+            const cell = {"record": root.deepFreeze(root.deepClone(source))};
+            const target = {};
+            for (const key of Object.keys(source)) {
+                Object.defineProperty(target, key, {
+                    "configurable": false,
+                    "enumerable": true,
+                    "get": function() {
+                        void(root.rowRevision);
+                        return cell.record[key];
+                    }
+                });
             }
-        });
-    }
-
-    function createRow() {
-        const state = rowStateFactory.createObject(root);
-        const target = {};
-        Object.defineProperty(target, "__sleepyPresentationState", {
-            "configurable": false,
-            "enumerable": false,
-            "value": state
-        });
-        return target;
-    }
-
-    function replaceRecord(target, source) {
-        const state = root.rowState(target);
-        if (!state) {
-            const created = root.createRow();
-            return root.replaceRecord(created, source);
-        }
-        for (const key of Object.keys(source))
-            root.ensureReactiveKey(target, key);
-        state.record = root.deepFreeze(root.deepClone(source));
-        state.revision += 1;
-        return target;
-    }
-
-    function reconcileRows(propertyName, records, keyName) {
-        const source = Array.isArray(records) ? records : [];
-        const key = keyName || "id";
-        const previous = root[propertyName] || [];
-        const byId = Object.create(null);
-        for (const item of previous) {
-            if (item && root.own(item, key))
-                byId[String(item[key])] = item;
+            cells.set(target, cell);
+            return Object.freeze(target);
         }
 
-        const next = [];
-        for (const record of source) {
-            if (!record || !root.own(record, key))
-                continue;
-            const identifier = String(record[key]);
-            const item = root.own(byId, identifier) ? byId[identifier] : root.createRow();
-            next.push(root.replaceRecord(item, record));
+        function replaceRecord(target, source) {
+            const cell = cells.get(target);
+            if (!cell || Object.keys(source).some(key => !root.own(target, key)))
+                return createRow(source);
+            cell.record = root.deepFreeze(root.deepClone(source));
+            return target;
         }
-        root[propertyName] = Object.freeze(next);
-        for (const item of previous) {
-            if (next.indexOf(item) < 0) {
-                const state = root.rowState(item);
-                if (state) {
-                    state.disposed = true;
-                    state.destroy();
-                }
+
+        return function(propertyName, records, keyName) {
+            const source = Array.isArray(records) ? records : [];
+            const key = keyName || "id";
+            const previous = root[propertyName] || [];
+            const byId = Object.create(null);
+            for (const item of previous) {
+                if (item && root.own(item, key))
+                    byId[String(item[key])] = item;
             }
-        }
-    }
+
+            const next = [];
+            for (const record of source) {
+                if (!record || !root.own(record, key))
+                    continue;
+                const identifier = String(record[key]);
+                const item = root.own(byId, identifier) ? byId[identifier] : null;
+                next.push(replaceRecord(item, record));
+            }
+            root[propertyName] = Object.freeze(next);
+        };
+    })()
 
     function reconcileConfirmedLists() {
         const network = root.capabilityData("system", "network", {});
@@ -217,6 +187,7 @@ QtObject {
         root.reconcileRows("calendarEvents", root.calendar.snapshot?.events || [], "id");
         root.reconcileRows("weatherForecast", root.weather.snapshot?.forecast || [], "at");
         root.reconcileRows("resourceSamples", root.resources.samples || [], "id");
+        root.rowRevision += 1;
     }
 
     function applyFullSnapshot(document, confirmedGeneration) {
