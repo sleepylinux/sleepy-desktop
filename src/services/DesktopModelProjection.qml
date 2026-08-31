@@ -6,6 +6,14 @@ import QtQuick 6.0
 QtObject {
     id: root
 
+    readonly property Component rowStateFactory: Component {
+        QtObject {
+            property var record: Object.freeze({})
+            property int revision: 0
+            property bool disposed: false
+        }
+    }
+
     property string connectionState: "offline"
     property string diagnostic: "Waiting for sleepy-sessiond"
     property var generation: 0
@@ -90,13 +98,67 @@ QtObject {
         return root.producerRecord(section).diagnostic?.message || "";
     }
 
+    function deepClone(value) {
+        if (Array.isArray(value))
+            return value.map(item => root.deepClone(item));
+        if (value && typeof value === "object") {
+            const copy = {};
+            for (const key of Object.keys(value))
+                copy[key] = root.deepClone(value[key]);
+            return copy;
+        }
+        return value;
+    }
+
+    function deepFreeze(value) {
+        if (!value || typeof value !== "object" || Object.isFrozen(value))
+            return value;
+        for (const key of Object.keys(value))
+            root.deepFreeze(value[key]);
+        return Object.freeze(value);
+    }
+
+    function rowState(target) {
+        return target?.__sleepyPresentationState || null;
+    }
+
+    function ensureReactiveKey(target, key) {
+        if (root.own(target, key))
+            return;
+        Object.defineProperty(target, key, {
+            "configurable": false,
+            "enumerable": true,
+            "get": function() {
+                const state = root.rowState(target);
+                if (!state)
+                    return undefined;
+                void(state.revision);
+                return state.record[key];
+            }
+        });
+    }
+
+    function createRow() {
+        const state = rowStateFactory.createObject(root);
+        const target = {};
+        Object.defineProperty(target, "__sleepyPresentationState", {
+            "configurable": false,
+            "enumerable": false,
+            "value": state
+        });
+        return target;
+    }
+
     function replaceRecord(target, source) {
-        for (const key of Object.keys(target)) {
-            if (!root.own(source, key))
-                delete target[key];
+        const state = root.rowState(target);
+        if (!state) {
+            const created = root.createRow();
+            return root.replaceRecord(created, source);
         }
         for (const key of Object.keys(source))
-            target[key] = source[key];
+            root.ensureReactiveKey(target, key);
+        state.record = root.deepFreeze(root.deepClone(source));
+        state.revision += 1;
         return target;
     }
 
@@ -115,10 +177,19 @@ QtObject {
             if (!record || !root.own(record, key))
                 continue;
             const identifier = String(record[key]);
-            const item = root.own(byId, identifier) ? byId[identifier] : {};
+            const item = root.own(byId, identifier) ? byId[identifier] : root.createRow();
             next.push(root.replaceRecord(item, record));
         }
         root[propertyName] = Object.freeze(next);
+        for (const item of previous) {
+            if (next.indexOf(item) < 0) {
+                const state = root.rowState(item);
+                if (state) {
+                    state.disposed = true;
+                    state.destroy();
+                }
+            }
+        }
     }
 
     function reconcileConfirmedLists() {
@@ -151,7 +222,7 @@ QtObject {
     function applyFullSnapshot(document, confirmedGeneration) {
         if (!document || typeof document !== "object" || Array.isArray(document))
             return false;
-        root.snapshot = document;
+        root.snapshot = root.deepFreeze(root.deepClone(document));
         root.generation = confirmedGeneration;
         root.connectionState = "ready";
         root.diagnostic = "";
@@ -179,8 +250,8 @@ QtObject {
                 const current = compositorSection.hyprland || {};
                 const currentData = current.status === "available" && current.data
                     && typeof current.data === "object" && !Array.isArray(current.data)
-                    ? current.data : {"actionCapabilities": {}, "monitors": [],
-                                      "workspaces": [], "windows": []};
+                    ? current.data : {"actionCapabilities": root.defaultHyprlandActionCapabilities(),
+                                      "monitors": [], "workspaces": [], "windows": []};
                 const data = Object.assign({}, currentData);
                 data[update.domain] = update.data;
                 compositorSection.hyprland = {"status": "available", "data": data};
@@ -200,6 +271,21 @@ QtObject {
     function clearAuthorityDerivedState() {
         root.snapshot = Object.freeze({});
         root.reconcileConfirmedLists();
+    }
+
+    function defaultHyprlandActionCapabilities() {
+        return Object.freeze({
+            "focusWindow": false,
+            "moveWindowToWorkspace": false,
+            "closeWindow": false,
+            "focusWorkspace": false,
+            "moveWorkspaceToMonitor": false,
+            "toggleFullscreen": false,
+            "toggleFloating": false,
+            "togglePinned": false,
+            "toggleGroup": false,
+            "exit": false
+        });
     }
 
     function setConnectionState(state, message) {

@@ -7,6 +7,19 @@ TestCase {
     id: testCase
     name: "DesktopModels"
 
+    Component {
+        id: bindingProbeFactory
+
+        QtObject {
+            required property var model
+            property real monitorWidth: model.focusedMonitor?.width ?? 0
+            property string workspaceName: model.focusedWorkspace?.name ?? ""
+            property string windowTitle: model.focusedWindow?.title ?? ""
+        }
+    }
+
+    Component { id: signalSpy; SignalSpy {} }
+
     function loadProductionModel() {
         const component = Qt.createComponent("../../src/services/DesktopModelProjection.qml");
         verify(component.status === Component.Ready, component.errorString());
@@ -109,6 +122,152 @@ TestCase {
 
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
+    function source(relativePath) {
+        const request = new XMLHttpRequest();
+        request.open("GET", Qt.resolvedUrl(relativePath), false);
+        request.send();
+        return request.responseText;
+    }
+
+    function loadProductionModelObjectGraph() {
+        let qml = source("../../src/services/DesktopModel.qml");
+        qml = qml.replace("pragma Singleton", "");
+        qml = qml.replace("\"DesktopModelPrivate.js\"", "\"../../src/services/DesktopModelPrivate.js\"");
+        qml = qml.replace("import QtQuick 6.0",
+            "import QtQuick 6.0\nimport \"../../src/services\" as Services");
+        qml = qml.replace(/DesktopModelProjection/g, "Services.DesktopModelProjection");
+        qml = qml.replace(/DesktopClient/g, "client");
+        qml = qml.replace("id: root", `id: root
+            property QtObject client: QtObject {
+                property string connectionState: "offline"
+                property string diagnostic: ""
+                property int generation: 0
+                property var snapshot: ({})
+                property bool snapshotReceived: false
+                signal eventAccepted
+                signal daemonGenerationChanged
+            }`);
+        const object = Qt.createQmlObject(qml, testCase, "ProductionDesktopModelAudit");
+        verify(object !== null);
+        return object;
+    }
+
+    function falseActionCapabilities() {
+        return {
+            "focusWindow": false,
+            "moveWindowToWorkspace": false,
+            "closeWindow": false,
+            "focusWorkspace": false,
+            "moveWorkspaceToMonitor": false,
+            "toggleFullscreen": false,
+            "toggleFloating": false,
+            "togglePinned": false,
+            "toggleGroup": false,
+            "exit": false
+        };
+    }
+
+    function test_identity_preserving_updates_notify_direct_field_bindings_once() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        model.applyFullSnapshot(initial, 1);
+        const monitor = model.focusedMonitor;
+        const workspace = model.focusedWorkspace;
+        const window = model.focusedWindow;
+        const probe = createTemporaryObject(bindingProbeFactory, testCase, {"model": model});
+        const monitorSpy = signalSpy.createObject(testCase, {"target": probe, "signalName": "monitorWidthChanged"});
+        const workspaceSpy = signalSpy.createObject(testCase, {"target": probe, "signalName": "workspaceNameChanged"});
+        const windowSpy = signalSpy.createObject(testCase, {"target": probe, "signalName": "windowTitleChanged"});
+
+        const compositor = clone(initial.compositor.hyprland);
+        compositor.data.monitors[0].width = 1600;
+        compositor.data.workspaces[0].name = "main";
+        compositor.data.windows[0].title = "Updated Terminal";
+        model.applyDomainUpdate("compositor", {"domain": "hyprland", "data": compositor}, 2);
+
+        compare(model.focusedMonitor, monitor);
+        compare(model.focusedWorkspace, workspace);
+        compare(model.focusedWindow, window);
+        compare(probe.monitorWidth, 1600);
+        compare(probe.workspaceName, "main");
+        compare(probe.windowTitle, "Updated Terminal");
+        compare(monitorSpy.count, 1);
+        compare(workspaceSpy.count, 1);
+        compare(windowSpy.count, 1);
+    }
+
+    function test_production_singleton_does_not_expose_projection_or_state_mutators() {
+        const qml = source("../../src/services/DesktopModel.qml");
+        verify(!/property\s+DesktopModelProjection\s+projection\b/.test(qml));
+        for (const name of ["applyFullSnapshot", "applyDomainUpdate", "setConnectionState",
+                            "clearAuthorityDerivedState", "reconcileConfirmedLists", "replaceRecord"])
+            verify(qml.indexOf("function " + name + "(") < 0, name);
+    }
+
+    function test_production_singleton_object_graph_has_no_reachable_state_mutator() {
+        const productionModel = loadProductionModelObjectGraph();
+        const candidates = [productionModel];
+        for (const propertyName of ["children", "data"]) {
+            const values = productionModel[propertyName];
+            if (values && typeof values.length === "number") {
+                for (let index = 0; index < values.length; index++)
+                    candidates.push(values[index]);
+            }
+        }
+        for (const candidate of candidates) {
+            if (!candidate)
+                continue;
+            for (const name of ["applyFullSnapshot", "applyDomainUpdate", "setConnectionState",
+                                "clearAuthorityDerivedState", "reconcileConfirmedLists", "replaceRecord"])
+                compare(typeof candidate[name], "undefined", name);
+        }
+    }
+
+    function test_nested_presentation_rows_never_alias_source_or_snapshot() {
+        const model = loadProductionModel();
+        const initial = snapshot();
+        const initialText = JSON.stringify(initial);
+        model.applyFullSnapshot(initial, 1);
+        const acceptedText = JSON.stringify(model.snapshot);
+        const notificationRow = model.notifications[0];
+        const firstActions = notificationRow.actions;
+        verify(firstActions !== model.snapshot.notifications.active[0].actions);
+        verify(model.trayItems[0].menu !== model.snapshot.utilities.trayItems.data[0].menu);
+        model.notifications[0].actions[0].label = "Mutated presentation";
+        model.trayItems[0].menu.children.push({"id": "injected"});
+        compare(JSON.stringify(initial), initialText);
+        compare(JSON.stringify(model.snapshot), acceptedText);
+
+        const update = clone(initial.notifications);
+        update.active[0].actions[0].label = "Confirmed update";
+        const updateText = JSON.stringify(update);
+        model.applyDomainUpdate("notifications", update, 2);
+        const updatedSnapshotText = JSON.stringify(model.snapshot);
+        compare(model.notifications[0], notificationRow);
+        verify(model.notifications[0].actions !== firstActions);
+        verify(model.notifications[0].actions !== model.snapshot.notifications.active[0].actions);
+        firstActions[0].label = "Mutated retired presentation";
+        model.notifications[0].actions[0].label = "Mutated again";
+        compare(JSON.stringify(update), updateText);
+        compare(JSON.stringify(model.snapshot), updatedSnapshotText);
+        compare(model.snapshot.notifications.active[0].actions[0].label, "Confirmed update");
+    }
+
+    function test_granular_compositor_fallback_matches_protocol_false_capabilities() {
+        for (const domain of ["monitors", "workspaces", "windows"]) {
+            const model = loadProductionModel();
+            const initial = snapshot();
+            initial.compositor.hyprland = unavailable("Hyprland unavailable");
+            model.applyFullSnapshot(initial, 1);
+            verify(model.applyDomainUpdate("compositor", {"domain": domain, "data": []}, 2));
+            const actual = model.compositor.hyprland.data.actionCapabilities;
+            compare(JSON.stringify(actual), JSON.stringify(falseActionCapabilities()), domain);
+            compare(Object.keys(actual).length, 10, domain);
+            for (const key of Object.keys(falseActionCapabilities()))
+                compare(actual[key], false, domain + ":" + key);
+        }
+    }
+
     function test_fixture_is_accepted_by_the_production_strict_v3_protocol() {
         const protocol = loadProductionProtocol();
         verify(protocol.acceptEnvelope({
@@ -127,6 +286,7 @@ TestCase {
         const initial = snapshot();
         model.applyFullSnapshot(initial, 1);
         const home = model.accessPoints[0];
+        const removedOfficeState = model.accessPoints[1].__sleepyPresentationState;
         const connection = model.connections[0];
         const bluetooth = model.bluetoothDevices[0];
         const speaker = model.audioNodes[0];
@@ -152,6 +312,7 @@ TestCase {
         compare(model.accessPoints[0].signalLevel, 0.9);
         compare(model.accessPoints[1].id, "ap-cafe");
         verify(model.accessPoints.indexOf(home) === 0);
+        verify(removedOfficeState.disposed);
 
         const audio = clone(initial.system.audio);
         audio.data.nodes[0].volume = 0.25;
