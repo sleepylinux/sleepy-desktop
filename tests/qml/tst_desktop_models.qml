@@ -29,6 +29,18 @@ TestCase {
         }
     }
 
+    Component {
+        id: optionalFieldProbeFactory
+
+        QtObject {
+            required property var model
+            property string notificationSummary: model.notifications[0]?.summary ?? ""
+            property int notificationTimeoutMs: model.notifications[0]?.timeoutMs ?? -1
+            property string calendarSummary: model.calendarEvents[0]?.summary ?? ""
+            property string calendarLocation: model.calendarEvents[0]?.location ?? ""
+        }
+    }
+
     Component { id: signalSpy; SignalSpy {} }
 
     function loadProductionModel() {
@@ -138,6 +150,30 @@ TestCase {
         request.open("GET", Qt.resolvedUrl(relativePath), false);
         request.send();
         return request.responseText;
+    }
+
+    function sdkFullSnapshotEnvelope() {
+        return JSON.parse(source("../../../sleepy-sdk/fixtures/desktop-runtime/full-snapshot.json"));
+    }
+
+    function strictDomainEnvelope(generation, topic, update) {
+        return {
+            "schemaVersion": 3,
+            "generation": generation,
+            "eventId": "22222222-2222-4222-8222-222222222222",
+            "emittedAt": "2026-08-31T12:00:00Z",
+            "cause": {"kind": "external"},
+            "payload": {
+                "type": "domainUpdate",
+                "data": {"topic": topic, "update": update}
+            }
+        };
+    }
+
+    function acceptAndProject(protocol, model, generation, topic, update) {
+        verify(protocol.acceptEnvelope(strictDomainEnvelope(generation, topic, update)),
+               protocol.diagnostic);
+        verify(model.applyDomainUpdate(topic, protocol.snapshot[topic], protocol.generation));
     }
 
     function loadProductionModelObjectGraph() {
@@ -286,6 +322,112 @@ TestCase {
         compare(monitorSpy.count, 1);
         compare(workspaceSpy.count, 1);
         compare(windowSpy.count, 1);
+    }
+
+    function test_strict_notification_optional_timeout_preserves_identity_and_bindings() {
+        const protocol = loadProductionProtocol();
+        const model = loadProductionModel();
+        const full = sdkFullSnapshotEnvelope();
+        verify(protocol.acceptEnvelope(full), protocol.diagnostic);
+        verify(model.applyFullSnapshot(protocol.snapshot, protocol.generation));
+        const notification = model.notifications[0];
+        const probe = createTemporaryObject(optionalFieldProbeFactory, testCase,
+            {"model": model});
+        const summarySpy = signalSpy.createObject(testCase,
+            {"target": probe, "signalName": "notificationSummaryChanged"});
+        const timeoutSpy = signalSpy.createObject(testCase,
+            {"target": probe, "signalName": "notificationTimeoutMsChanged"});
+        compare(probe.notificationTimeoutMs, -1);
+
+        const withTimeout = clone(protocol.snapshot.notifications);
+        withTimeout.active[0].summary = "Ready with timeout";
+        withTimeout.active[0].timeoutMs = 5000;
+        acceptAndProject(protocol, model, 8, "notifications", withTimeout);
+        wait(0);
+        compare(model.notifications[0], notification);
+        compare(notification.summary, "Ready with timeout");
+        compare(notification.timeoutMs, 5000);
+        compare(probe.notificationSummary, "Ready with timeout");
+        compare(probe.notificationTimeoutMs, 5000);
+        compare(summarySpy.count, 1);
+        compare(timeoutSpy.count, 1);
+        verify(Object.isFrozen(notification));
+
+        const withoutTimeout = clone(protocol.snapshot.notifications);
+        withoutTimeout.active[0].summary = "Ready without timeout";
+        delete withoutTimeout.active[0].timeoutMs;
+        acceptAndProject(protocol, model, 9, "notifications", withoutTimeout);
+        wait(0);
+        compare(model.notifications[0], notification);
+        compare(notification.summary, "Ready without timeout");
+        compare(notification.timeoutMs, undefined);
+        compare(probe.notificationSummary, "Ready without timeout");
+        compare(probe.notificationTimeoutMs, -1);
+        compare(summarySpy.count, 2);
+        compare(timeoutSpy.count, 2);
+
+        const removed = clone(protocol.snapshot.notifications);
+        removed.active = [];
+        acceptAndProject(protocol, model, 10, "notifications", removed);
+        compare(model.notifications.length, 0);
+        const readded = clone(withoutTimeout);
+        readded.active[0].summary = "Re-added";
+        acceptAndProject(protocol, model, 11, "notifications", readded);
+        verify(model.notifications[0] !== notification);
+        compare(model.notifications[0].id, 1);
+    }
+
+    function test_strict_calendar_optional_location_preserves_identity_and_bindings() {
+        const protocol = loadProductionProtocol();
+        const model = loadProductionModel();
+        const full = sdkFullSnapshotEnvelope();
+        verify(protocol.acceptEnvelope(full), protocol.diagnostic);
+        verify(model.applyFullSnapshot(protocol.snapshot, protocol.generation));
+        const calendarEvent = model.calendarEvents[0];
+        const probe = createTemporaryObject(optionalFieldProbeFactory, testCase,
+            {"model": model});
+        const summarySpy = signalSpy.createObject(testCase,
+            {"target": probe, "signalName": "calendarSummaryChanged"});
+        const locationSpy = signalSpy.createObject(testCase,
+            {"target": probe, "signalName": "calendarLocationChanged"});
+        compare(probe.calendarLocation, "");
+
+        const withLocation = clone(protocol.snapshot.calendar);
+        withLocation.snapshot.events[0].summary = "Meeting in person";
+        withLocation.snapshot.events[0].location = "Office";
+        acceptAndProject(protocol, model, 8, "calendar", withLocation);
+        wait(0);
+        compare(model.calendarEvents[0], calendarEvent);
+        compare(calendarEvent.summary, "Meeting in person");
+        compare(calendarEvent.location, "Office");
+        compare(probe.calendarSummary, "Meeting in person");
+        compare(probe.calendarLocation, "Office");
+        compare(summarySpy.count, 1);
+        compare(locationSpy.count, 1);
+        verify(Object.isFrozen(calendarEvent));
+
+        const withoutLocation = clone(protocol.snapshot.calendar);
+        withoutLocation.snapshot.events[0].summary = "Meeting remote";
+        delete withoutLocation.snapshot.events[0].location;
+        acceptAndProject(protocol, model, 9, "calendar", withoutLocation);
+        wait(0);
+        compare(model.calendarEvents[0], calendarEvent);
+        compare(calendarEvent.summary, "Meeting remote");
+        compare(calendarEvent.location, undefined);
+        compare(probe.calendarSummary, "Meeting remote");
+        compare(probe.calendarLocation, "");
+        compare(summarySpy.count, 2);
+        compare(locationSpy.count, 2);
+
+        const removed = clone(protocol.snapshot.calendar);
+        removed.snapshot.events = [];
+        acceptAndProject(protocol, model, 10, "calendar", removed);
+        compare(model.calendarEvents.length, 0);
+        const readded = clone(withoutLocation);
+        readded.snapshot.events[0].summary = "Re-added meeting";
+        acceptAndProject(protocol, model, 11, "calendar", readded);
+        verify(model.calendarEvents[0] !== calendarEvent);
+        compare(model.calendarEvents[0].id, "meeting@example");
     }
 
     function test_importable_helpers_cannot_publish_or_retain_desktop_state() {

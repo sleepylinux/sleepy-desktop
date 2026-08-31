@@ -114,11 +114,23 @@ QtObject {
 
     readonly property var reconcileRows: (function() {
         const cells = new WeakMap();
+        const allowedKeysByCollection = Object.freeze({
+            "notifications": Object.freeze([
+                "schemaVersion", "id", "applicationId", "summary", "body", "urgency",
+                "createdAt", "timeoutMs", "read", "archived", "actions"
+            ]),
+            "calendarEvents": Object.freeze([
+                "id", "summary", "startsAt", "endsAt", "allDay", "sourceId", "location"
+            ])
+        });
 
-        function createRow(source) {
+        function createRow(propertyName, source) {
             const cell = {"record": root.deepFreeze(root.deepClone(source))};
             const target = {};
-            for (const key of Object.keys(source)) {
+            const keys = allowedKeysByCollection[propertyName] || Object.keys(source);
+            // Retained rows are immutable identity handles, not standalone QML notify sources.
+            // Reactive bindings must also depend on the collection, which is republished below.
+            for (const key of keys) {
                 Object.defineProperty(target, key, {
                     "configurable": false,
                     "enumerable": true,
@@ -132,10 +144,10 @@ QtObject {
             return Object.freeze(target);
         }
 
-        function replaceRecord(target, source) {
+        function replaceRecord(propertyName, target, source) {
             const cell = cells.get(target);
             if (!cell || Object.keys(source).some(key => !root.own(target, key)))
-                return createRow(source);
+                return createRow(propertyName, source);
             cell.record = root.deepFreeze(root.deepClone(source));
             return target;
         }
@@ -156,7 +168,7 @@ QtObject {
                     continue;
                 const identifier = String(record[key]);
                 const item = root.own(byId, identifier) ? byId[identifier] : null;
-                next.push(replaceRecord(item, record));
+                next.push(replaceRecord(propertyName, item, record));
             }
             root[propertyName] = Object.freeze(next);
         };
