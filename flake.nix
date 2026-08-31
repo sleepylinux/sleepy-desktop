@@ -118,6 +118,8 @@
                 --set QML2_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
                 --set QML_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
                 --add-flags "-p $out/share/sleepy-locker/LockRoot.qml"
+              makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-locker-control" \
+                --add-flags "kill"
             '';
             meta = {
               description = "Fail-secure Sleepy ext-session-lock-v1 locker";

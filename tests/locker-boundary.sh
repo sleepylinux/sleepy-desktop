@@ -38,6 +38,12 @@ for exit_path in submit cancel failure destruction shutdown; do
   rg -Fq "ZEROIZE_${exit_path^^}" "$locker/secureprompt.cpp" \
     || fail "missing auditable zeroization marker for $exit_path"
 done
+rg -Fq 'terminationSignalHandler' "$locker/secureprompt.cpp" \
+  || fail 'SIGTERM must zeroize native credential memory without depending on Qt teardown'
+for hint in ImhHiddenText ImhSensitiveData ImhNoPredictiveText; do
+  rg -Fq "$hint" "$locker/secureprompt.cpp" \
+    || fail "secure input must publish the $hint IME hint"
+done
 
 rg -Fq 'WlSessionLock' "$locker/qml/LockRoot.qml" \
   || fail 'locker must own ext-session-lock through Quickshell WlSessionLock'
@@ -69,6 +75,8 @@ rg -Fq 'runner = "${quickshellWithModules}/bin/qs"' "$flake" \
   || fail 'locker must run inside the pinned Quickshell engine'
 rg -Fq 'LockRoot.qml' "$flake" \
   || fail 'packaged locker must start only its immutable lock configuration'
+rg -Fq 'sleepy-locker-control' "$flake" \
+  || fail 'packaged locker must expose an exact-instance graceful stop command'
 rg -Fq 'packaged-locker-smoke.sh' "$flake" \
   || fail 'Nix gate must acquire a real lock on the private two-output compositor'
 rg -Fq 'sleepy-locker = lockerPackage;' "$flake" \

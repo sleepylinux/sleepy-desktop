@@ -10,16 +10,102 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <cerrno>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <pwd.h>
 #include <stdexcept>
 #include <strings.h>
+#include <system_error>
 
 namespace sleepy::locker {
 namespace {
 
 constexpr std::size_t kSecretCapacity = 4096;
+constexpr std::size_t kSecretSlotCount = 64;
+
+struct SignalSecretSlot {
+    std::atomic<char *> bytes{nullptr};
+    std::atomic<bool> inUse{false};
+};
+
+static_assert(std::atomic<char *>::is_always_lock_free);
+static_assert(std::atomic<bool>::is_always_lock_free);
+
+std::array<SignalSecretSlot, kSecretSlotCount> signalSecretSlots;
+std::once_flag signalHandlersInstalled;
+
+void wipeProcessSecrets() noexcept
+{
+    for (auto &slot : signalSecretSlots) {
+        char *const bytes = slot.bytes.load(std::memory_order_relaxed);
+        if (bytes == nullptr) {
+            continue;
+        }
+        auto *volatile target = reinterpret_cast<volatile unsigned char *>(bytes);
+        for (std::size_t index = 0; index < kSecretCapacity; ++index) {
+            target[index] = 0;
+        }
+    }
+}
+
+[[noreturn]] void terminationSignalHandler(int signalNumber) noexcept
+{
+    wipeProcessSecrets();
+    ::_exit(128 + signalNumber);
+}
+
+void installTerminationSignalHandlers()
+{
+    std::call_once(signalHandlersInstalled, [] {
+        struct sigaction action {};
+        action.sa_handler = terminationSignalHandler;
+        ::sigemptyset(&action.sa_mask);
+        action.sa_flags = 0;
+        for (const int signalNumber : {SIGTERM, SIGINT, SIGHUP}) {
+            if (::sigaction(signalNumber, &action, nullptr) != 0) {
+                throw std::system_error(errno, std::generic_category(),
+                                        "failed to install locker termination handler");
+            }
+        }
+    });
+}
+
+SignalSecretSlot *acquireSignalSecretSlot()
+{
+    installTerminationSignalHandlers();
+    for (auto &slot : signalSecretSlots) {
+        bool expected = false;
+        if (!slot.inUse.compare_exchange_strong(expected, true,
+                                                std::memory_order_acq_rel)) {
+            continue;
+        }
+        char *bytes = slot.bytes.load(std::memory_order_acquire);
+        if (bytes == nullptr) {
+            void *mapping = ::mmap(nullptr, kSecretCapacity, PROT_READ | PROT_WRITE,
+                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (mapping == MAP_FAILED) {
+                slot.inUse.store(false, std::memory_order_release);
+                throw std::runtime_error("failed to allocate secure input memory");
+            }
+            bytes = static_cast<char *>(mapping);
+            if (::mlock(bytes, kSecretCapacity) != 0) {
+                ::munmap(bytes, kSecretCapacity);
+                slot.inUse.store(false, std::memory_order_release);
+                throw std::runtime_error("failed to lock secure input memory");
+            }
+#ifdef MADV_DONTDUMP
+            static_cast<void>(::madvise(bytes, kSecretCapacity, MADV_DONTDUMP));
+#endif
+            slot.bytes.store(bytes, std::memory_order_release);
+        }
+        return &slot;
+    }
+    throw std::runtime_error("secure input buffer pool exhausted");
+}
 
 struct PamConversationData { std::span<const char> secret; };
 
@@ -129,35 +215,25 @@ class LockedSecretBuffer final {
 public:
     LockedSecretBuffer()
     {
-        void *mapping = ::mmap(nullptr, kSecretCapacity, PROT_READ | PROT_WRITE,
-                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (mapping == MAP_FAILED) {
-            throw std::runtime_error("failed to allocate secure input memory");
-        }
-        bytes_ = static_cast<char *>(mapping);
-        if (::mlock(bytes_, kSecretCapacity) != 0) {
-            ::munmap(bytes_, kSecretCapacity);
-            bytes_ = nullptr;
-            throw std::runtime_error("failed to lock secure input memory");
-        }
-#ifdef MADV_DONTDUMP
-        static_cast<void>(::madvise(bytes_, kSecretCapacity, MADV_DONTDUMP));
-#endif
+        slot_ = acquireSignalSecretSlot();
+        bytes_ = slot_->bytes.load(std::memory_order_acquire);
     }
 
     ~LockedSecretBuffer()
     {
         clear(); // ZEROIZE_DESTRUCTION
-        if (bytes_ != nullptr) {
-            ::munlock(bytes_, kSecretCapacity);
-            ::munmap(bytes_, kSecretCapacity);
-        }
+        slot_->inUse.store(false, std::memory_order_release);
     }
 
     [[nodiscard]] std::span<const char> value() const noexcept { return {bytes_, size_}; }
     [[nodiscard]] int codePoints() const noexcept { return codePoints_; }
 
     void append(QStringView text)
+    {
+        insertAt(size_, text);
+    }
+
+    void insertAt(std::size_t byteOffset, QStringView text)
     {
         std::array<char, 4> encoded{};
         for (auto iterator = text.begin(); iterator != text.end(); ++iterator) {
@@ -179,8 +255,11 @@ public:
             if (size_ + count > kSecretCapacity) {
                 break;
             }
-            std::memcpy(bytes_ + size_, encoded.data(), count);
+            std::memmove(bytes_ + byteOffset + count, bytes_ + byteOffset,
+                         size_ - byteOffset);
+            std::memcpy(bytes_ + byteOffset, encoded.data(), count);
             size_ += count;
+            byteOffset += count;
             ++codePoints_;
         }
         explicit_bzero(encoded.data(), encoded.size());
@@ -201,6 +280,42 @@ public:
         --codePoints_;
     }
 
+    bool replace(int replacementStart, int replacementLength, QStringView text)
+    {
+        if (replacementStart > 0 || replacementLength < 0) {
+            return false;
+        }
+        const int firstCodePoint = codePoints_ + replacementStart;
+        const int lastCodePoint = firstCodePoint + replacementLength;
+        if (firstCodePoint < 0 || lastCodePoint < firstCodePoint
+            || lastCodePoint > codePoints_) {
+            return false;
+        }
+
+        const auto byteOffset = [this](int targetCodePoint) {
+            int currentCodePoint = 0;
+            std::size_t offset = 0;
+            while (offset < size_ && currentCodePoint < targetCodePoint) {
+                ++offset;
+                while (offset < size_
+                       && (static_cast<unsigned char>(bytes_[offset]) & 0xc0U) == 0x80U) {
+                    ++offset;
+                }
+                ++currentCodePoint;
+            }
+            return offset;
+        };
+        const std::size_t firstByte = byteOffset(firstCodePoint);
+        const std::size_t lastByte = byteOffset(lastCodePoint);
+        const std::size_t removedBytes = lastByte - firstByte;
+        std::memmove(bytes_ + firstByte, bytes_ + lastByte, size_ - lastByte);
+        size_ -= removedBytes;
+        explicit_bzero(bytes_ + size_, removedBytes);
+        codePoints_ -= replacementLength;
+        insertAt(firstByte, text);
+        return true;
+    }
+
     void clear() noexcept
     {
         if (bytes_ != nullptr) {
@@ -219,6 +334,7 @@ public:
 #endif
 
 private:
+    SignalSecretSlot *slot_ = nullptr;
     char *bytes_ = nullptr;
     std::size_t size_ = 0;
     int codePoints_ = 0;
@@ -304,10 +420,34 @@ void SecurePrompt::clearSecret() noexcept
     }
 }
 
+QVariant SecurePrompt::inputMethodQuery(Qt::InputMethodQuery query) const
+{
+    switch (query) {
+    case Qt::ImEnabled:
+        return true;
+    case Qt::ImHints:
+        return QVariant::fromValue(Qt::InputMethodHints(
+            Qt::ImhHiddenText | Qt::ImhSensitiveData | Qt::ImhNoPredictiveText));
+    case Qt::ImCursorPosition:
+    case Qt::ImAnchorPosition:
+        return inputLength_;
+    case Qt::ImSurroundingText:
+    case Qt::ImCurrentSelection:
+        return QString();
+    default:
+        return QQuickItem::inputMethodQuery(query);
+    }
+}
+
 #ifdef SLEEPY_LOCKER_TESTING
 bool SecurePrompt::secretStorageIsZeroForTesting() const noexcept
 {
     return secret_->isZero();
+}
+
+void SecurePrompt::zeroizeProcessSecretsForTesting() noexcept
+{
+    wipeProcessSecrets();
 }
 #endif
 
@@ -335,8 +475,16 @@ void SecurePrompt::keyPressEvent(QKeyEvent *event)
 
 void SecurePrompt::inputMethodEvent(QInputMethodEvent *event)
 {
-    if (!event->commitString().isEmpty()) {
-        appendText(event->commitString());
+    if (!event->commitString().isEmpty() || event->replacementLength() != 0) {
+        const int previous = secret_->codePoints();
+        if (secret_->replace(event->replacementStart(), event->replacementLength(),
+                             event->commitString())) {
+            inputLength_ = secret_->codePoints();
+            if (inputLength_ != previous) {
+                setAuthState(AuthState::Idle);
+                emit inputLengthChanged();
+            }
+        }
     }
     event->accept();
 }

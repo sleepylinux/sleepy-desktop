@@ -7,6 +7,9 @@
 #include <QTemporaryDir>
 #include <QtTest>
 
+#include <csignal>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <vector>
 
 using sleepy::locker::AuthState;
@@ -106,6 +109,60 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(QCoreApplication::instance(), "aboutToQuit",
                                           Qt::DirectConnection));
         QCOMPARE(prompt.inputLength(), 0);
+        QVERIFY(prompt.secretStorageIsZeroForTesting());
+    }
+
+    void terminationSignalZeroizesBeforeImmediateExit()
+    {
+        FakeAuthenticator auth;
+        {
+            SecurePrompt prompt(&auth);
+            type(prompt, QStringLiteral("signal secret"));
+            QVERIFY(!prompt.secretStorageIsZeroForTesting());
+
+            SecurePrompt::zeroizeProcessSecretsForTesting();
+            QVERIFY(prompt.secretStorageIsZeroForTesting());
+        }
+
+        SecurePrompt signalPrompt(&auth);
+        type(signalPrompt, QStringLiteral("second secret"));
+        const pid_t child = ::fork();
+        QVERIFY(child >= 0);
+        if (child == 0) {
+            ::raise(SIGTERM);
+            ::_exit(99);
+        }
+
+        int status = 0;
+        QCOMPARE(::waitpid(child, &status, 0), child);
+        QVERIFY(WIFEXITED(status));
+        QCOMPARE(WEXITSTATUS(status), 128 + SIGTERM);
+    }
+
+    void inputMethodIsPrivateAndHonorsReplacementRanges()
+    {
+        FakeAuthenticator auth;
+        auth.expected = QByteArray("a\xc3\xa7" "b");
+        SecurePrompt prompt(&auth);
+
+        QCOMPARE(prompt.inputMethodQuery(Qt::ImEnabled).toBool(), true);
+        const auto hints = prompt.inputMethodQuery(Qt::ImHints).value<Qt::InputMethodHints>();
+        QVERIFY(hints.testFlag(Qt::ImhHiddenText));
+        QVERIFY(hints.testFlag(Qt::ImhSensitiveData));
+        QVERIFY(hints.testFlag(Qt::ImhNoPredictiveText));
+
+        type(prompt, QStringLiteral("ab"));
+        QInputMethodEvent insertion;
+        insertion.setCommitString(QStringLiteral("X"), -1, 0);
+        QCoreApplication::sendEvent(&prompt, &insertion);
+        QCOMPARE(prompt.inputLength(), 3);
+
+        QInputMethodEvent replacement;
+        replacement.setCommitString(QStringLiteral("ç"), -2, 1);
+        QCoreApplication::sendEvent(&prompt, &replacement);
+        QCOMPARE(prompt.inputLength(), 3);
+        QVERIFY(prompt.authenticate());
+        QCOMPARE(auth.observed, auth.expected);
         QVERIFY(prompt.secretStorageIsZeroForTesting());
     }
 

@@ -37,9 +37,11 @@ public:
     [[nodiscard]] AuthState authState() const noexcept;
     Q_INVOKABLE bool authenticate();
     Q_INVOKABLE void clearSecret() noexcept;
+    [[nodiscard]] QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
 
 #ifdef SLEEPY_LOCKER_TESTING
     [[nodiscard]] bool secretStorageIsZeroForTesting() const noexcept;
+    static void zeroizeProcessSecretsForTesting() noexcept;
 #endif
 
 signals:
