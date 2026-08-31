@@ -2,6 +2,7 @@
 // Modified for Sleepy on 2026-08-31: instantiable v3 desktop command protocol core.
 
 import QtQuick 6.0
+import "DesktopCommands.js" as DesktopCommands
 
 QtObject {
     id: root
@@ -49,8 +50,7 @@ QtObject {
     }
 
     function validFamily(family) {
-        return ["system", "compositor", "notification", "launcher",
-                "appearance", "utility", "session"].indexOf(family) >= 0;
+        return DesktopCommands.validFamily(family);
     }
 
     function rememberRequest(requestId, acceptedGeneration) {
@@ -78,6 +78,7 @@ QtObject {
             && typeof command === "string" && command.length > 0;
         if (root.busy || !root.validFamily(family) || !command
                 || !(commandIsObject || commandIsSessionEnum)
+                || !DesktopCommands.validCommand(family, command)
                 || !Number.isSafeInteger(root.generation)
                 || root.generation <= 0)
             return false;

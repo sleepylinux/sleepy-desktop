@@ -30,6 +30,13 @@
     }
   },
   {
+    "name": "network connect wifi oversized id",
+    "builder": "networkConnectWifi",
+    "args": ["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+    "family": "system",
+    "command": null
+  },
+  {
     "name": "network disconnect",
     "builder": "networkDisconnect",
     "args": ["wifi-home"],
@@ -58,6 +65,13 @@
       "domain": "audio",
       "action": { "type": "setNodeVolume", "data": { "nodeId": "speaker", "level": 0.5 } }
     }
+  },
+  {
+    "name": "audio node volume out of range",
+    "builder": "audioSetNodeVolume",
+    "args": ["speaker", 1.5],
+    "family": "system",
+    "command": null
   },
   {
     "name": "audio node muted",
@@ -183,6 +197,13 @@
     "command": { "type": "focusWindow", "data": { "windowId": "win-1" } }
   },
   {
+    "name": "compositor focus window control id",
+    "builder": "compositor",
+    "args": ["focusWindow", { "windowId": "win-\u0001" }],
+    "family": "compositor",
+    "command": null
+  },
+  {
     "name": "compositor close window",
     "builder": "compositor",
     "args": ["closeWindow", { "windowId": "win-1" }],
@@ -283,6 +304,13 @@
     }
   },
   {
+    "name": "notification action oversized action id",
+    "builder": "notificationInvokeAction",
+    "args": [7, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+    "family": "notification",
+    "command": null
+  },
+  {
     "name": "launcher launch",
     "builder": "launcherLaunch",
     "args": ["org.sleepy.Test.desktop", ["/tmp/example.txt"], ""],
@@ -315,6 +343,34 @@
     "name": "launcher launch unsupported desktop id",
     "builder": "launcherLaunch",
     "args": ["org.sleepy.Test", [], ""],
+    "family": "launcher",
+    "command": null
+  },
+  {
+    "name": "launcher launch malformed resource type",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", [7], ""],
+    "family": "launcher",
+    "command": null
+  },
+  {
+    "name": "launcher launch empty resource",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", [""], ""],
+    "family": "launcher",
+    "command": null
+  },
+  {
+    "name": "launcher launch NUL resource",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", ["bad\u0000resource"], ""],
+    "family": "launcher",
+    "command": null
+  },
+  {
+    "name": "launcher launch oversized action id",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", [], "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     "family": "launcher",
     "command": null
   },
@@ -387,6 +443,13 @@
     "args": ["active"],
     "family": "utility",
     "command": { "type": "screenshot", "data": { "outputId": "active" } }
+  },
+  {
+    "name": "utility screenshot oversized output id",
+    "builder": "utilityScreenshot",
+    "args": ["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+    "family": "utility",
+    "command": null
   },
   {
     "name": "utility game mode",

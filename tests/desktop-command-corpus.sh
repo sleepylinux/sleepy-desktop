@@ -158,7 +158,18 @@ for index, fixture in enumerate(fixtures):
     except ValidationError as error:
         failures.append(f"{name}: {error}")
 
-helpers = {"stableId", "positiveInteger", "normalized", "systemDomain"}
+helpers = {
+    "own", "exact", "oneOf", "noControlCharacters", "stableId",
+    "validStableId", "positiveInteger", "normalized", "booleanValue",
+    "enabledData", "systemDomain", "stableField", "validStableField",
+    "validEnabledData", "validLauncherResource", "validLauncherResources",
+    "desktopEntryId", "validLauncherData", "validFamily",
+    "validLegacySystemMutation", "validNetworkAction", "validBluetoothAction",
+    "validAudioAction", "validMediaAction", "validDisplayAction",
+    "validSystemDomainCommand", "validSystemCommand", "validHyprlandCommand",
+    "validNotificationCommand", "validLauncherCommand", "validAppearanceCommand",
+    "validUtilityCommand", "validCommand",
+}
 builder_source = pathlib.Path(builders_path).read_text(encoding="utf-8")
 exported_builders = {
     match.group(1)
@@ -171,6 +182,7 @@ for qml_path in pathlib.Path(services_path).glob("*.qml"):
     active_builders.update(
         re.findall(r"DesktopCommands\.([A-Za-z_][A-Za-z0-9_]*)\s*\(", qml_source)
     )
+active_builders -= helpers
 
 unknown_fixtures = fixture_builders - exported_builders
 missing_exports = exported_builders - fixture_builders

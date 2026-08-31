@@ -19,6 +19,8 @@ QtObject {
     property var observedRequestOrder: Object.freeze([])
     property var lastCommandResult: null
     property bool snapshotReceived: false
+    readonly property int maximumMenuNodes: 65536
+    readonly property int maximumMenuDepth: 1024
 
     signal eventAccepted(var envelope)
     signal commandResultAccepted(var result)
@@ -88,6 +90,38 @@ QtObject {
         return value.every(item => validator(item));
     }
 
+    function validUniqueArray(value, maximum, validator, key) {
+        if (!Array.isArray(value) || (maximum >= 0 && value.length > maximum))
+            return false;
+        const seen = Object.create(null);
+        for (const item of value) {
+            if (!validator(item))
+                return false;
+            const identifier = item[key];
+            if ((typeof identifier !== "string" && !Number.isSafeInteger(identifier))
+                    || root.own(seen, String(identifier)))
+                return false;
+            seen[String(identifier)] = true;
+        }
+        return true;
+    }
+
+    function idSet(items) {
+        const ids = Object.create(null);
+        for (const item of items)
+            ids[item.id] = true;
+        return ids;
+    }
+
+    function focusedCount(items) {
+        let count = 0;
+        for (const item of items) {
+            if (item.focused)
+                ++count;
+        }
+        return count;
+    }
+
     function validDiagnostic(value) {
         return root.exact(value, ["message"], [])
             && root.nonEmpty(value.message);
@@ -118,8 +152,8 @@ QtObject {
         return root.exact(value, ["wifiEnabled", "scanning", "accessPoints", "connections"], [])
             && typeof value.wifiEnabled === "boolean"
             && typeof value.scanning === "boolean"
-            && root.validArray(value.accessPoints, 4096, root.validAccessPoint)
-            && root.validArray(value.connections, -1, root.validConnection);
+            && root.validUniqueArray(value.accessPoints, 4096, root.validAccessPoint, "id")
+            && root.validUniqueArray(value.connections, -1, root.validConnection, "id");
     }
 
     function validAccessPoint(value) {
@@ -142,7 +176,7 @@ QtObject {
         return root.exact(value, ["powered", "scanning", "devices"], [])
             && typeof value.powered === "boolean"
             && typeof value.scanning === "boolean"
-            && root.validArray(value.devices, 1024, root.validBluetoothDevice);
+            && root.validUniqueArray(value.devices, 1024, root.validBluetoothDevice, "id");
     }
 
     function validBluetoothDevice(value) {
@@ -154,9 +188,16 @@ QtObject {
     }
 
     function validAudio(value) {
-        return root.exact(value, ["nodes", "streams"], [])
-            && root.validArray(value.nodes, 4096, root.validAudioNode)
-            && root.validArray(value.streams, 16384, root.validAudioStream);
+        if (!root.exact(value, ["nodes", "streams"], [])
+                || !root.validUniqueArray(value.nodes, 4096, root.validAudioNode, "id")
+                || !root.validUniqueArray(value.streams, 16384, root.validAudioStream, "id"))
+            return false;
+        const nodeIds = root.idSet(value.nodes);
+        for (const stream of value.streams) {
+            if (!root.own(nodeIds, stream.nodeId))
+                return false;
+        }
+        return true;
     }
 
     function validAudioNode(value) {
@@ -180,7 +221,7 @@ QtObject {
 
     function validMedia(value) {
         return root.exact(value, ["players"], [])
-            && root.validArray(value.players, 256, root.validPlayer);
+            && root.validUniqueArray(value.players, 256, root.validPlayer, "id");
     }
 
     function validPlayer(value) {
@@ -222,7 +263,7 @@ QtObject {
                 return false;
             seen[profile] = true;
         }
-        return true;
+        return root.own(seen, value.activeProfile);
     }
 
     function validOsd(value) {
@@ -336,9 +377,22 @@ QtObject {
             && typeof value.focused === "boolean";
     }
 
-    function validWorkspaceCollection(value) {
-        return root.validArray(value, 1024, root.validWorkspace)
-            && value.filter(item => item.focused).length <= 1;
+    function validMonitorCollection(value) {
+        return root.validUniqueArray(value, 64, root.validMonitor, "id")
+            && root.focusedCount(value) <= 1;
+    }
+
+    function validWorkspaceCollection(value, monitorIds) {
+        if (!root.validUniqueArray(value, 1024, root.validWorkspace, "id")
+                || root.focusedCount(value) > 1)
+            return false;
+        if (monitorIds) {
+            for (const workspace of value) {
+                if (!root.own(monitorIds, workspace.monitorId))
+                    return false;
+            }
+        }
+        return true;
     }
 
     function validWindow(value) {
@@ -357,12 +411,29 @@ QtObject {
             && typeof value.grouped === "boolean";
     }
 
+    function validWindowCollection(value, workspaceIds) {
+        if (!root.validUniqueArray(value, 16384, root.validWindow, "id")
+                || root.focusedCount(value) > 1)
+            return false;
+        if (workspaceIds) {
+            for (const window of value) {
+                if (!root.own(workspaceIds, window.workspaceId))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     function validHyprland(value) {
-        return root.exact(value, ["actionCapabilities", "monitors", "workspaces", "windows"], [])
-            && root.validHyprlandActionCapabilities(value.actionCapabilities)
-            && root.validArray(value.monitors, 64, root.validMonitor)
-            && root.validWorkspaceCollection(value.workspaces)
-            && root.validArray(value.windows, 16384, root.validWindow);
+        if (!root.exact(value, ["actionCapabilities", "monitors", "workspaces", "windows"], [])
+                || !root.validHyprlandActionCapabilities(value.actionCapabilities)
+                || !root.validMonitorCollection(value.monitors))
+            return false;
+        const monitorIds = root.idSet(value.monitors);
+        if (!root.validWorkspaceCollection(value.workspaces, monitorIds))
+            return false;
+        const workspaceIds = root.idSet(value.workspaces);
+        return root.validWindowCollection(value.windows, workspaceIds);
     }
 
     function validHyprlandCapability(value) {
@@ -396,14 +467,14 @@ QtObject {
             && (!root.own(value, "timeoutMs") || root.unsignedInteger(value.timeoutMs))
             && typeof value.read === "boolean"
             && typeof value.archived === "boolean"
-            && root.validArray(value.actions, -1, root.validNotificationAction);
+            && root.validUniqueArray(value.actions, -1, root.validNotificationAction, "id");
     }
 
     function validNotifications(value) {
         return root.exact(value, ["availability", "dnd", "active"], [])
             && root.validProducerAvailability(value.availability)
             && typeof value.dnd === "boolean"
-            && root.validArray(value.active, 500, root.validNotification);
+            && root.validUniqueArray(value.active, 500, root.validNotification, "id");
     }
 
     function validLauncherEntry(value) {
@@ -416,7 +487,7 @@ QtObject {
     function validLauncher(value) {
         return root.exact(value, ["availability", "entries"], [])
             && root.validProducerAvailability(value.availability)
-            && root.validArray(value.entries, -1, root.validLauncherEntry);
+            && root.validUniqueArray(value.entries, -1, root.validLauncherEntry, "id");
     }
 
     function validCalendarEvent(value) {
@@ -437,16 +508,23 @@ QtObject {
     }
 
     function validCalendarData(value) {
-        return root.exact(value, [
-            "schemaVersion", "providerId", "windowStart", "windowEnd",
-            "events", "sourceErrors"
-        ], [])
-            && value.schemaVersion === 2
-            && root.nonEmpty(value.providerId)
-            && root.validTimestamp(value.windowStart)
-            && root.validTimestamp(value.windowEnd)
-            && root.validArray(value.events, -1, root.validCalendarEvent)
-            && root.validArray(value.sourceErrors, -1, root.validCalendarError);
+        if (!root.exact(value, [
+                    "schemaVersion", "providerId", "windowStart", "windowEnd",
+                    "events", "sourceErrors"
+                ], [])
+                || value.schemaVersion !== 2
+                || !root.nonEmpty(value.providerId)
+                || !root.validTimestamp(value.windowStart)
+                || !root.validTimestamp(value.windowEnd)
+                || value.windowStart >= value.windowEnd
+                || !root.validUniqueArray(value.events, -1, root.validCalendarEvent, "id")
+                || !root.validArray(value.sourceErrors, -1, root.validCalendarError))
+            return false;
+        for (const event of value.events) {
+            if (event.startsAt >= event.endsAt)
+                return false;
+        }
+        return true;
     }
 
     function validCalendar(value) {
@@ -512,19 +590,61 @@ QtObject {
     }
 
     function validTheme(value) {
-        return root.exact(value, [
-            "schemaVersion", "id", "name", "origin", "appearance", "effects",
-            "reducedMotion", "opaqueFallback", "colors"
-        ], [])
-            && value.schemaVersion === 1
-            && root.nonEmpty(value.id)
-            && root.nonEmpty(value.name)
-            && root.oneOf(value.origin, ["builtin", "user"])
-            && root.oneOf(value.appearance, ["dark", "light", "system"])
-            && root.oneOf(value.effects, ["full", "reduced", "none"])
-            && typeof value.reducedMotion === "boolean"
-            && typeof value.opaqueFallback === "boolean"
-            && root.validThemeColors(value.colors);
+        if (!root.exact(value, [
+                    "schemaVersion", "id", "name", "origin", "appearance", "effects",
+                    "reducedMotion", "opaqueFallback", "colors"
+                ], [])
+                || value.schemaVersion !== 1
+                || !root.nonEmpty(value.id)
+                || !root.nonEmpty(value.name)
+                || !root.oneOf(value.origin, ["builtin", "user"])
+                || !root.oneOf(value.appearance, ["dark", "light", "system"])
+                || !root.oneOf(value.effects, ["full", "reduced", "none"])
+                || typeof value.reducedMotion !== "boolean"
+                || typeof value.opaqueFallback !== "boolean"
+                || !root.validThemeColors(value.colors))
+            return false;
+        if (value.origin === "user" && !root.canonicalUuid(value.id))
+            return false;
+        const colors = value.colors;
+        return root.contrastRatio(colors.textPrimary, colors.background) >= 4.5
+            && root.contrastRatio(colors.textPrimary, colors.surface) >= 4.5
+            && root.contrastRatio(colors.textSecondary, colors.background) >= 4.5
+            && root.contrastRatio(colors.textSecondary, colors.surface) >= 4.5
+            && root.contrastRatio(colors.accent, colors.background) >= 3.0
+            && root.contrastRatio(colors.accent, colors.surface) >= 3.0
+            && root.contrastRatio(colors.control, colors.background) >= 3.0
+            && root.contrastRatio(colors.control, colors.surface) >= 3.0;
+    }
+
+    function parseColor(value) {
+        return [
+            parseInt(value.slice(1, 3), 16),
+            parseInt(value.slice(3, 5), 16),
+            parseInt(value.slice(5, 7), 16)
+        ];
+    }
+
+    function luminanceChannel(value) {
+        const normalizedValue = value / 255;
+        return normalizedValue <= 0.04045
+            ? normalizedValue / 12.92
+            : Math.pow((normalizedValue + 0.055) / 1.055, 2.4);
+    }
+
+    function relativeLuminance(color) {
+        const rgb = root.parseColor(color);
+        return 0.2126 * root.luminanceChannel(rgb[0])
+            + 0.7152 * root.luminanceChannel(rgb[1])
+            + 0.0722 * root.luminanceChannel(rgb[2]);
+    }
+
+    function contrastRatio(foreground, background) {
+        const foregroundLuminance = root.relativeLuminance(foreground);
+        const backgroundLuminance = root.relativeLuminance(background);
+        const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+        const darker = Math.min(foregroundLuminance, backgroundLuminance);
+        return (lighter + 0.05) / (darker + 0.05);
     }
 
     function validAppearance(value) {
@@ -546,22 +666,67 @@ QtObject {
     function validResources(value) {
         return root.exact(value, ["availability", "samples"], [])
             && root.validProducerAvailability(value.availability)
-            && root.validArray(value.samples, -1, root.validResourceSample);
+            && root.validUniqueArray(value.samples, -1, root.validResourceSample, "id");
     }
 
     function validMenuNode(value) {
+        return root.validMenuNodeRecord(value);
+    }
+
+    function validMenuNodeRecord(value) {
         return root.exact(value, ["id", "label", "enabled", "children"], [])
             && root.nonEmpty(value.id)
             && root.nonEmpty(value.label)
             && typeof value.enabled === "boolean"
-            && root.validArray(value.children, 65535, root.validMenuNode);
+            && Array.isArray(value.children)
+            && value.children.length <= 65535;
+    }
+
+    function validMenuTree(value, aggregate) {
+        const menuIds = Object.create(null);
+        const pending = [{"node": value, "depth": 1}];
+        while (pending.length > 0) {
+            const frame = pending.pop();
+            if (frame.depth > root.maximumMenuDepth)
+                return false;
+            if (!root.validMenuNodeRecord(frame.node))
+                return false;
+            ++aggregate.count;
+            if (aggregate.count > root.maximumMenuNodes)
+                return false;
+            if (root.own(menuIds, frame.node.id))
+                return false;
+            menuIds[frame.node.id] = true;
+            for (const child of frame.node.children)
+                pending.push({"node": child, "depth": frame.depth + 1});
+        }
+        return true;
     }
 
     function validTrayItem(value) {
+        return root.validTrayItemRecord(value)
+            && root.validMenuTree(value.menu, {"count": 0});
+    }
+
+    function validTrayItemRecord(value) {
         return root.exact(value, ["id", "title", "menu"], [])
             && root.nonEmpty(value.id)
-            && root.nonEmpty(value.title)
-            && root.validMenuNode(value.menu);
+            && root.nonEmpty(value.title);
+    }
+
+    function validTrayItems(value) {
+        if (!Array.isArray(value) || value.length > 1024)
+            return false;
+        const trayIds = Object.create(null);
+        const aggregate = {"count": 0};
+        for (const item of value) {
+            if (!root.validTrayItemRecord(item)
+                    || root.own(trayIds, item.id)
+                    || !root.validMenuTree(item.menu, aggregate))
+                return false;
+            trayIds[item.id] = true;
+        }
+        return true;
     }
 
     function validClipboardEntry(value) {
@@ -582,14 +747,12 @@ QtObject {
     }
 
     function validTrayItemsCapability(value) {
-        return root.validCapability(value, function(data) {
-            return root.validArray(data, 1024, root.validTrayItem);
-        });
+        return root.validCapability(value, root.validTrayItems);
     }
 
     function validClipboardEntriesCapability(value) {
         return root.validCapability(value, function(data) {
-            return root.validArray(data, 500, root.validClipboardEntry);
+            return root.validUniqueArray(data, 500, root.validClipboardEntry, "id");
         });
     }
 
@@ -666,11 +829,11 @@ QtObject {
         case "hyprland":
             return root.validHyprlandCapability(update.data);
         case "monitors":
-            return root.validArray(update.data, 64, root.validMonitor);
+            return root.validMonitorCollection(update.data);
         case "workspaces":
             return root.validWorkspaceCollection(update.data);
         case "windows":
-            return root.validArray(update.data, 16384, root.validWindow);
+            return root.validWindowCollection(update.data);
         default:
             return false;
         }
@@ -965,7 +1128,16 @@ QtObject {
             && root.nonEmpty(result.diagnostic.message);
     }
 
-    function applyPayload(payload) {
+    function validCommandResultEnvelope(envelope) {
+        const result = envelope.payload.data;
+        return root.validCommandResult(result)
+            && envelope.cause.kind === "request"
+            && envelope.cause.requestId === result.requestId
+            && envelope.generation === result.generation;
+    }
+
+    function applyPayload(envelope) {
+        const payload = envelope.payload;
         if (!root.exact(payload, ["type", "data"], [])
                 || ["fullSnapshot", "domainUpdate", "commandResult"].indexOf(payload.type) < 0)
             return false;
@@ -978,7 +1150,7 @@ QtObject {
         case "domainUpdate":
             return root.applyDomainUpdate(payload.data);
         case "commandResult":
-            if (!root.validCommandResult(payload.data))
+            if (!root.validCommandResultEnvelope(envelope))
                 return false;
             root.lastCommandResult = Object.freeze(Object.assign({}, payload.data));
             root.rememberRequest(payload.data.requestId, payload.data.generation);
@@ -1005,7 +1177,7 @@ QtObject {
             return root.fail("Desktop event generation did not increase");
         if (!root.snapshotReceived && envelope.generation < root.generation)
             return root.fail("Replay generation regressed");
-        if (!root.applyPayload(envelope.payload))
+        if (!root.applyPayload(envelope))
             return root.fail("Invalid desktop event payload");
 
         if (envelope.generation !== root.generation) {
