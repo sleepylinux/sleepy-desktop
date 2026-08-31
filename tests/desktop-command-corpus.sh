@@ -5,18 +5,21 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sdk_root="${SLEEPY_SDK_ROOT:-$(cd "$repo_root/../sleepy-sdk" && pwd -P)}"
 schema="$sdk_root/schemas/desktop-command-v3.schema.json"
 fixture="$repo_root/tests/fixtures/desktop-command-corpus.json"
+builders="$repo_root/src/services/DesktopCommands.js"
+services="$repo_root/src/services"
 
 if [[ ! -f "$schema" ]]; then
   printf 'FAIL: desktop command schema is missing: %s\n' "$schema" >&2
   exit 1
 fi
 
-python3 - "$schema" "$fixture" <<'PY'
+python3 - "$schema" "$fixture" "$builders" "$services" <<'PY'
 import json
+import pathlib
 import re
 import sys
 
-schema_path, fixture_path = sys.argv[1:3]
+schema_path, fixture_path, builders_path, services_path = sys.argv[1:5]
 schema = json.load(open(schema_path, encoding="utf-8"))
 fixtures = json.load(open(fixture_path, encoding="utf-8"))
 
@@ -103,25 +106,87 @@ def validate(node, value, path="$"):
 
 
 failures = []
-for fixture in fixtures:
+fixture_names = set()
+fixture_builders = set()
+valid_families = {
+    "system", "compositor", "notification", "launcher",
+    "appearance", "utility", "session",
+}
+
+for index, fixture in enumerate(fixtures):
+    prefix = f"fixture[{index}]"
+    name = fixture.get("name")
+    if not isinstance(name, str) or not name.strip():
+        failures.append(f"{prefix}: missing non-empty name")
+        continue
+    if name in fixture_names:
+        failures.append(f"{name}: duplicate fixture name")
+    fixture_names.add(name)
+
+    builder = fixture.get("builder")
+    if not isinstance(builder, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", builder):
+        failures.append(f"{name}: missing valid builder name")
+    else:
+        fixture_builders.add(builder)
+
+    if not isinstance(fixture.get("args"), list):
+        failures.append(f"{name}: args must be an array")
+    if "command" not in fixture:
+        failures.append(f"{name}: missing explicit command expectation")
+        continue
+
+    command = fixture.get("command")
+    if command is None:
+        continue
+
+    family = fixture.get("family")
+    if family not in valid_families:
+        failures.append(f"{name}: family must be one of {sorted(valid_families)}")
+        continue
+
     request = {
         "schemaVersion": 3,
         "requestId": "11111111-1111-4111-8111-111111111111",
         "expectedGeneration": 9,
         "command": {
-            "family": fixture["family"],
-            "command": fixture["command"],
+            "family": family,
+            "command": command,
         },
     }
     try:
         validate(schema, request)
     except ValidationError as error:
-        failures.append(f"{fixture['name']}: {error}")
+        failures.append(f"{name}: {error}")
+
+helpers = {"stableId", "positiveInteger", "normalized", "systemDomain"}
+builder_source = pathlib.Path(builders_path).read_text(encoding="utf-8")
+exported_builders = {
+    match.group(1)
+    for match in re.finditer(r"^function ([A-Za-z_][A-Za-z0-9_]*)\(", builder_source, re.MULTILINE)
+} - helpers
+
+active_builders = set()
+for qml_path in pathlib.Path(services_path).glob("*.qml"):
+    qml_source = qml_path.read_text(encoding="utf-8")
+    active_builders.update(
+        re.findall(r"DesktopCommands\.([A-Za-z_][A-Za-z0-9_]*)\s*\(", qml_source)
+    )
+
+unknown_fixtures = fixture_builders - exported_builders
+missing_exports = exported_builders - fixture_builders
+missing_active = active_builders - fixture_builders
+if unknown_fixtures:
+    failures.append(f"fixtures reference unknown builders: {sorted(unknown_fixtures)}")
+if missing_exports:
+    failures.append(f"exported builders missing from corpus: {sorted(missing_exports)}")
+if missing_active:
+    failures.append(f"active service builders missing from corpus: {sorted(missing_active)}")
 
 if failures:
     for failure in failures:
         print(f"FAIL: {failure}", file=sys.stderr)
     sys.exit(1)
 
-print(f"PASS: {len(fixtures)} desktop command fixtures validate against {schema_path}")
+valid_count = sum(1 for fixture in fixtures if fixture.get("command") is not None)
+print(f"PASS: {valid_count} desktop command builder fixtures validate against {schema_path}")
 PY

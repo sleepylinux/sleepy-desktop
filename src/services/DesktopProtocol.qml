@@ -52,8 +52,715 @@ QtObject {
         return Number.isSafeInteger(value) && value > 0;
     }
 
+    function unsignedInteger(value) {
+        return Number.isSafeInteger(value) && value >= 0;
+    }
+
+    function finitePositive(value) {
+        return Number.isFinite(value) && value > 0;
+    }
+
+    function normalized(value) {
+        return Number.isFinite(value) && value >= 0 && value <= 1;
+    }
+
     function nonEmpty(value) {
         return typeof value === "string" && value.trim() === value && value.length > 0;
+    }
+
+    function validTimestamp(value) {
+        return root.nonEmpty(value)
+            && /^(?!0000)(?:(?:[0-9]{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:[02468][048]|[13579][26])00)-02-29))T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?Z$/.test(value)
+            && !Number.isNaN(Date.parse(value));
+    }
+
+    function validColor(value) {
+        return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+    }
+
+    function oneOf(value, values) {
+        return values.indexOf(value) >= 0;
+    }
+
+    function validArray(value, maximum, validator) {
+        if (!Array.isArray(value) || (maximum >= 0 && value.length > maximum))
+            return false;
+        return value.every(item => validator(item));
+    }
+
+    function validDiagnostic(value) {
+        return root.exact(value, ["message"], [])
+            && root.nonEmpty(value.message);
+    }
+
+    function validUnavailableCapability(value) {
+        return root.exact(value, ["status", "diagnostic"], [])
+            && root.oneOf(value.status, [
+                "unavailable", "unsupported", "permissionDenied",
+                "timeout", "parse", "error"
+            ])
+            && root.validDiagnostic(value.diagnostic);
+    }
+
+    function validCapability(value, validator) {
+        if (root.exact(value, ["status", "data"], [])
+                && value.status === "available")
+            return validator(value.data);
+        return root.validUnavailableCapability(value);
+    }
+
+    function validProducerAvailability(value) {
+        return root.exact(value, ["status"], []) && value.status === "available"
+            || root.validUnavailableCapability(value);
+    }
+
+    function validNetwork(value) {
+        return root.exact(value, ["wifiEnabled", "scanning", "accessPoints", "connections"], [])
+            && typeof value.wifiEnabled === "boolean"
+            && typeof value.scanning === "boolean"
+            && root.validArray(value.accessPoints, 4096, root.validAccessPoint)
+            && root.validArray(value.connections, -1, root.validConnection);
+    }
+
+    function validAccessPoint(value) {
+        return root.exact(value, ["id", "ssid", "signalLevel", "secured"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.ssid)
+            && root.normalized(value.signalLevel)
+            && typeof value.secured === "boolean";
+    }
+
+    function validConnection(value) {
+        return root.exact(value, ["id", "name", "kind", "connected"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.oneOf(value.kind, ["ethernet", "wifi", "vpn"])
+            && typeof value.connected === "boolean";
+    }
+
+    function validBluetooth(value) {
+        return root.exact(value, ["powered", "scanning", "devices"], [])
+            && typeof value.powered === "boolean"
+            && typeof value.scanning === "boolean"
+            && root.validArray(value.devices, 1024, root.validBluetoothDevice);
+    }
+
+    function validBluetoothDevice(value) {
+        return root.exact(value, ["id", "name", "paired", "connected"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && typeof value.paired === "boolean"
+            && typeof value.connected === "boolean";
+    }
+
+    function validAudio(value) {
+        return root.exact(value, ["nodes", "streams"], [])
+            && root.validArray(value.nodes, 4096, root.validAudioNode)
+            && root.validArray(value.streams, 16384, root.validAudioStream);
+    }
+
+    function validAudioNode(value) {
+        return root.exact(value, ["id", "name", "kind", "volume", "muted", "isDefault"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.oneOf(value.kind, ["input", "output"])
+            && root.normalized(value.volume)
+            && typeof value.muted === "boolean"
+            && typeof value.isDefault === "boolean";
+    }
+
+    function validAudioStream(value) {
+        return root.exact(value, ["id", "name", "nodeId", "volume", "muted"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.nonEmpty(value.nodeId)
+            && root.normalized(value.volume)
+            && typeof value.muted === "boolean";
+    }
+
+    function validMedia(value) {
+        return root.exact(value, ["players"], [])
+            && root.validArray(value.players, 256, root.validPlayer);
+    }
+
+    function validPlayer(value) {
+        return root.exact(value, ["id", "identity", "title", "artist", "playing", "progress"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.identity)
+            && typeof value.title === "string"
+            && typeof value.artist === "string"
+            && typeof value.playing === "boolean"
+            && root.normalized(value.progress);
+    }
+
+    function validBattery(value) {
+        return root.exact(value, ["level", "charging"], ["secondsRemaining"])
+            && root.normalized(value.level)
+            && typeof value.charging === "boolean"
+            && (!root.own(value, "secondsRemaining") || root.unsignedInteger(value.secondsRemaining));
+    }
+
+    function validBrightness(value) {
+        return root.exact(value, ["level"], [])
+            && root.normalized(value.level);
+    }
+
+    function validNightLight(value) {
+        return root.exact(value, ["enabled"], [])
+            && typeof value.enabled === "boolean";
+    }
+
+    function validPower(value) {
+        if (!root.exact(value, ["activeProfile", "availableProfiles"], [])
+                || !root.oneOf(value.activeProfile, ["power-saver", "balanced", "performance"])
+                || !Array.isArray(value.availableProfiles) || value.availableProfiles.length < 1)
+            return false;
+        const seen = Object.create(null);
+        for (const profile of value.availableProfiles) {
+            if (!root.oneOf(profile, ["power-saver", "balanced", "performance"])
+                    || root.own(seen, profile))
+                return false;
+            seen[profile] = true;
+        }
+        return true;
+    }
+
+    function validOsd(value) {
+        return root.exact(value, ["history"], ["current"])
+            && (!root.own(value, "current") || root.validOsdEvent(value.current))
+            && root.validArray(value.history, 500, root.validOsdEvent);
+    }
+
+    function validOsdEvent(value) {
+        if (!root.exact(value, ["schemaVersion", "outputId", "kind", "label"], ["level", "muted"])
+                || value.schemaVersion !== 2
+                || !root.nonEmpty(value.outputId)
+                || !root.oneOf(value.kind, ["volume", "microphone", "brightness", "media", "powerProfile"])
+                || !root.nonEmpty(value.label))
+            return false;
+        if (root.oneOf(value.kind, ["volume", "microphone", "brightness"])
+                && (!root.own(value, "level") || !root.normalized(value.level)))
+            return false;
+        if (value.kind === "brightness" && root.own(value, "muted"))
+            return false;
+        return !root.own(value, "muted") || typeof value.muted === "boolean";
+    }
+
+    function validLock(value) {
+        return root.exact(value, ["secure"], [])
+            && typeof value.secure === "boolean";
+    }
+
+    function validSystem(value) {
+        return root.exact(value, [
+            "network", "bluetooth", "audio", "media", "battery",
+            "brightness", "nightLight", "power", "osd", "lock"
+        ], [])
+            && root.validNetworkCapability(value.network)
+            && root.validBluetoothCapability(value.bluetooth)
+            && root.validAudioCapability(value.audio)
+            && root.validMediaCapability(value.media)
+            && root.validBatteryCapability(value.battery)
+            && root.validBrightnessCapability(value.brightness)
+            && root.validNightLightCapability(value.nightLight)
+            && root.validPowerCapability(value.power)
+            && root.validOsdCapability(value.osd)
+            && root.validLockCapability(value.lock);
+    }
+
+    function validNetworkCapability(value) {
+        return root.validCapability(value, root.validNetwork);
+    }
+
+    function validBluetoothCapability(value) {
+        return root.validCapability(value, root.validBluetooth);
+    }
+
+    function validAudioCapability(value) {
+        return root.validCapability(value, root.validAudio);
+    }
+
+    function validMediaCapability(value) {
+        return root.validCapability(value, root.validMedia);
+    }
+
+    function validBatteryCapability(value) {
+        return root.validCapability(value, root.validBattery);
+    }
+
+    function validBrightnessCapability(value) {
+        return root.validCapability(value, root.validBrightness);
+    }
+
+    function validNightLightCapability(value) {
+        return root.validCapability(value, root.validNightLight);
+    }
+
+    function validPowerCapability(value) {
+        return root.validCapability(value, root.validPower);
+    }
+
+    function validOsdCapability(value) {
+        return root.validCapability(value, root.validOsd);
+    }
+
+    function validLockCapability(value) {
+        return root.validCapability(value, root.validLock);
+    }
+
+    function validHyprlandActionCapabilities(value) {
+        const actions = [
+            "focusWindow", "moveWindowToWorkspace", "closeWindow",
+            "focusWorkspace", "moveWorkspaceToMonitor", "toggleFullscreen",
+            "toggleFloating", "togglePinned", "toggleGroup", "exit"
+        ];
+        return root.exact(value, actions, [])
+            && actions.every(action => typeof value[action] === "boolean");
+    }
+
+    function validMonitor(value) {
+        return root.exact(value, ["id", "name", "width", "height", "scale", "focused"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.positiveInteger(value.width)
+            && root.positiveInteger(value.height)
+            && root.finitePositive(value.scale)
+            && typeof value.focused === "boolean";
+    }
+
+    function validWorkspace(value) {
+        return root.exact(value, ["id", "name", "monitorId", "focused"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.nonEmpty(value.monitorId)
+            && typeof value.focused === "boolean";
+    }
+
+    function validWorkspaceCollection(value) {
+        return root.validArray(value, 1024, root.validWorkspace)
+            && value.filter(item => item.focused).length <= 1;
+    }
+
+    function validWindow(value) {
+        return root.exact(value, [
+            "id", "title", "applicationId", "workspaceId", "focused",
+            "fullscreen", "floating", "pinned", "grouped"
+        ], [])
+            && root.nonEmpty(value.id)
+            && typeof value.title === "string"
+            && root.nonEmpty(value.applicationId)
+            && root.nonEmpty(value.workspaceId)
+            && typeof value.focused === "boolean"
+            && typeof value.fullscreen === "boolean"
+            && typeof value.floating === "boolean"
+            && typeof value.pinned === "boolean"
+            && typeof value.grouped === "boolean";
+    }
+
+    function validHyprland(value) {
+        return root.exact(value, ["actionCapabilities", "monitors", "workspaces", "windows"], [])
+            && root.validHyprlandActionCapabilities(value.actionCapabilities)
+            && root.validArray(value.monitors, 64, root.validMonitor)
+            && root.validWorkspaceCollection(value.workspaces)
+            && root.validArray(value.windows, 16384, root.validWindow);
+    }
+
+    function validHyprlandCapability(value) {
+        return root.validCapability(value, root.validHyprland);
+    }
+
+    function validCompositor(value) {
+        return root.exact(value, ["hyprland"], [])
+            && root.validHyprlandCapability(value.hyprland);
+    }
+
+    function validNotificationAction(value) {
+        return root.exact(value, ["id", "label", "state"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.label)
+            && root.oneOf(value.state, ["available", "expired"]);
+    }
+
+    function validNotification(value) {
+        return root.exact(value, [
+            "schemaVersion", "id", "applicationId", "summary", "body",
+            "urgency", "createdAt", "read", "archived", "actions"
+        ], ["timeoutMs"])
+            && value.schemaVersion === 2
+            && root.positiveInteger(value.id)
+            && root.nonEmpty(value.applicationId)
+            && root.nonEmpty(value.summary)
+            && typeof value.body === "string"
+            && root.oneOf(value.urgency, ["low", "normal", "critical"])
+            && root.validTimestamp(value.createdAt)
+            && (!root.own(value, "timeoutMs") || root.unsignedInteger(value.timeoutMs))
+            && typeof value.read === "boolean"
+            && typeof value.archived === "boolean"
+            && root.validArray(value.actions, -1, root.validNotificationAction);
+    }
+
+    function validNotifications(value) {
+        return root.exact(value, ["availability", "dnd", "active"], [])
+            && root.validProducerAvailability(value.availability)
+            && typeof value.dnd === "boolean"
+            && root.validArray(value.active, 500, root.validNotification);
+    }
+
+    function validLauncherEntry(value) {
+        return root.exact(value, ["id", "name", "icon"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.nonEmpty(value.icon);
+    }
+
+    function validLauncher(value) {
+        return root.exact(value, ["availability", "entries"], [])
+            && root.validProducerAvailability(value.availability)
+            && root.validArray(value.entries, -1, root.validLauncherEntry);
+    }
+
+    function validCalendarEvent(value) {
+        return root.exact(value, ["id", "summary", "startsAt", "endsAt", "allDay", "sourceId"], ["location"])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.summary)
+            && root.validTimestamp(value.startsAt)
+            && root.validTimestamp(value.endsAt)
+            && typeof value.allDay === "boolean"
+            && root.nonEmpty(value.sourceId)
+            && (!root.own(value, "location") || typeof value.location === "string");
+    }
+
+    function validCalendarError(value) {
+        return root.exact(value, ["sourceId", "message"], [])
+            && root.nonEmpty(value.sourceId)
+            && root.nonEmpty(value.message);
+    }
+
+    function validCalendarData(value) {
+        return root.exact(value, [
+            "schemaVersion", "providerId", "windowStart", "windowEnd",
+            "events", "sourceErrors"
+        ], [])
+            && value.schemaVersion === 2
+            && root.nonEmpty(value.providerId)
+            && root.validTimestamp(value.windowStart)
+            && root.validTimestamp(value.windowEnd)
+            && root.validArray(value.events, -1, root.validCalendarEvent)
+            && root.validArray(value.sourceErrors, -1, root.validCalendarError);
+    }
+
+    function validCalendar(value) {
+        return root.exact(value, ["availability", "snapshot"], [])
+            && root.validProducerAvailability(value.availability)
+            && root.validCalendarData(value.snapshot);
+    }
+
+    function validWeatherLocation(value) {
+        return root.exact(value, ["displayName", "latitude", "longitude"], [])
+            && root.nonEmpty(value.displayName)
+            && Number.isFinite(value.latitude)
+            && value.latitude >= -90 && value.latitude <= 90
+            && Number.isFinite(value.longitude)
+            && value.longitude >= -180 && value.longitude <= 180;
+    }
+
+    function validForecast(value) {
+        return root.exact(value, ["at", "temperatureC", "symbol"], [])
+            && root.validTimestamp(value.at)
+            && Number.isFinite(value.temperatureC)
+            && root.nonEmpty(value.symbol);
+    }
+
+    function validWeatherData(value) {
+        if (!root.exact(value, [
+                    "schemaVersion", "providerId", "location", "status",
+                    "cache", "attribution", "forecast"
+                ], ["diagnostic"])
+                || value.schemaVersion !== 2
+                || !root.nonEmpty(value.providerId)
+                || !root.validWeatherLocation(value.location)
+                || !root.oneOf(value.status, ["online", "offline", "error"])
+                || !root.oneOf(value.cache, ["fresh", "stale", "missing"])
+                || !root.nonEmpty(value.attribution)
+                || !root.validArray(value.forecast, -1, root.validForecast))
+            return false;
+        if (value.status === "online" && root.own(value, "diagnostic"))
+            return false;
+        if (root.oneOf(value.status, ["offline", "error"])
+                && (!root.own(value, "diagnostic") || !root.validDiagnostic(value.diagnostic)))
+            return false;
+        return true;
+    }
+
+    function validWeather(value) {
+        return root.exact(value, ["availability", "snapshot"], [])
+            && root.validProducerAvailability(value.availability)
+            && root.validWeatherData(value.snapshot);
+    }
+
+    function validThemeColors(value) {
+        return root.exact(value, [
+            "background", "surface", "textPrimary", "textSecondary",
+            "accent", "control"
+        ], [])
+            && root.validColor(value.background)
+            && root.validColor(value.surface)
+            && root.validColor(value.textPrimary)
+            && root.validColor(value.textSecondary)
+            && root.validColor(value.accent)
+            && root.validColor(value.control);
+    }
+
+    function validTheme(value) {
+        return root.exact(value, [
+            "schemaVersion", "id", "name", "origin", "appearance", "effects",
+            "reducedMotion", "opaqueFallback", "colors"
+        ], [])
+            && value.schemaVersion === 1
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.name)
+            && root.oneOf(value.origin, ["builtin", "user"])
+            && root.oneOf(value.appearance, ["dark", "light", "system"])
+            && root.oneOf(value.effects, ["full", "reduced", "none"])
+            && typeof value.reducedMotion === "boolean"
+            && typeof value.opaqueFallback === "boolean"
+            && root.validThemeColors(value.colors);
+    }
+
+    function validAppearance(value) {
+        return root.exact(value, ["availability", "theme", "wallpaperId"], [])
+            && root.validProducerAvailability(value.availability)
+            && root.validTheme(value.theme)
+            && root.nonEmpty(value.wallpaperId);
+    }
+
+    function validResourceSample(value) {
+        return root.exact(value, ["id", "cpuUsage", "memoryUsage", "loadOne"], [])
+            && root.nonEmpty(value.id)
+            && root.normalized(value.cpuUsage)
+            && root.normalized(value.memoryUsage)
+            && Number.isFinite(value.loadOne)
+            && value.loadOne >= 0;
+    }
+
+    function validResources(value) {
+        return root.exact(value, ["availability", "samples"], [])
+            && root.validProducerAvailability(value.availability)
+            && root.validArray(value.samples, -1, root.validResourceSample);
+    }
+
+    function validMenuNode(value) {
+        return root.exact(value, ["id", "label", "enabled", "children"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.label)
+            && typeof value.enabled === "boolean"
+            && root.validArray(value.children, 65535, root.validMenuNode);
+    }
+
+    function validTrayItem(value) {
+        return root.exact(value, ["id", "title", "menu"], [])
+            && root.nonEmpty(value.id)
+            && root.nonEmpty(value.title)
+            && root.validMenuNode(value.menu);
+    }
+
+    function validClipboardEntry(value) {
+        return root.exact(value, ["id", "preview", "mimeType", "byteLength"], [])
+            && root.nonEmpty(value.id)
+            && typeof value.preview === "string"
+            && root.nonEmpty(value.mimeType)
+            && root.unsignedInteger(value.byteLength);
+    }
+
+    function validRecording(value) {
+        if (root.exact(value, ["status"], []) && value.status === "inactive")
+            return true;
+        return root.exact(value, ["status", "recordingId", "outputId"], [])
+            && root.oneOf(value.status, ["recording", "paused"])
+            && root.nonEmpty(value.recordingId)
+            && root.nonEmpty(value.outputId);
+    }
+
+    function validTrayItemsCapability(value) {
+        return root.validCapability(value, function(data) {
+            return root.validArray(data, 1024, root.validTrayItem);
+        });
+    }
+
+    function validClipboardEntriesCapability(value) {
+        return root.validCapability(value, function(data) {
+            return root.validArray(data, 500, root.validClipboardEntry);
+        });
+    }
+
+    function validRecordingCapability(value) {
+        return root.validCapability(value, root.validRecording);
+    }
+
+    function validBooleanCapability(value) {
+        return root.validCapability(value, function(data) {
+            return typeof data === "boolean";
+        });
+    }
+
+    function validUtilities(value) {
+        return root.exact(value, [
+            "trayItems", "clipboardEntries", "recording", "idleInhibited",
+            "gameMode", "screenshot", "colorPicker"
+        ], [])
+            && root.validTrayItemsCapability(value.trayItems)
+            && root.validClipboardEntriesCapability(value.clipboardEntries)
+            && root.validRecordingCapability(value.recording)
+            && root.validBooleanCapability(value.idleInhibited)
+            && root.validBooleanCapability(value.gameMode)
+            && root.validProducerAvailability(value.screenshot)
+            && root.validProducerAvailability(value.colorPicker);
+    }
+
+    function validSnapshot(value) {
+        return root.exact(value, root.topics, [])
+            && root.validSystem(value.system)
+            && root.validCompositor(value.compositor)
+            && root.validNotifications(value.notifications)
+            && root.validLauncher(value.launcher)
+            && root.validCalendar(value.calendar)
+            && root.validWeather(value.weather)
+            && root.validAppearance(value.appearance)
+            && root.validResources(value.resources)
+            && root.validUtilities(value.utilities);
+    }
+
+    function validSystemUpdate(update) {
+        if (!root.exact(update, ["domain", "data"], []))
+            return false;
+        switch (update.domain) {
+        case "network":
+            return root.validNetworkCapability(update.data);
+        case "bluetooth":
+            return root.validBluetoothCapability(update.data);
+        case "audio":
+            return root.validAudioCapability(update.data);
+        case "media":
+            return root.validMediaCapability(update.data);
+        case "battery":
+            return root.validBatteryCapability(update.data);
+        case "brightness":
+            return root.validBrightnessCapability(update.data);
+        case "nightLight":
+            return root.validNightLightCapability(update.data);
+        case "power":
+            return root.validPowerCapability(update.data);
+        case "osd":
+            return root.validOsdCapability(update.data);
+        case "lock":
+            return root.validLockCapability(update.data);
+        default:
+            return false;
+        }
+    }
+
+    function validCompositorUpdate(update) {
+        if (!root.exact(update, ["domain", "data"], []))
+            return false;
+        switch (update.domain) {
+        case "hyprland":
+            return root.validHyprlandCapability(update.data);
+        case "monitors":
+            return root.validArray(update.data, 64, root.validMonitor);
+        case "workspaces":
+            return root.validWorkspaceCollection(update.data);
+        case "windows":
+            return root.validArray(update.data, 16384, root.validWindow);
+        default:
+            return false;
+        }
+    }
+
+    function validUtilityUpdate(update) {
+        if (!root.exact(update, ["domain", "data"], []))
+            return false;
+        switch (update.domain) {
+        case "trayItems":
+            return root.validTrayItemsCapability(update.data);
+        case "clipboardEntries":
+            return root.validClipboardEntriesCapability(update.data);
+        case "recording":
+            return root.validRecordingCapability(update.data);
+        case "idleInhibited":
+            return root.validBooleanCapability(update.data);
+        case "gameMode":
+            return root.validBooleanCapability(update.data);
+        case "screenshot":
+        case "colorPicker":
+            return root.validProducerAvailability(update.data);
+        default:
+            return false;
+        }
+    }
+
+    function validDomainUpdate(update) {
+        if (!root.exact(update, ["topic", "update"], []))
+            return false;
+        switch (update.topic) {
+        case "system":
+            return root.validSystemUpdate(update.update);
+        case "compositor":
+            return root.validCompositorUpdate(update.update);
+        case "notifications":
+            return root.validNotifications(update.update);
+        case "launcher":
+            return root.validLauncher(update.update);
+        case "calendar":
+            return root.validCalendar(update.update);
+        case "weather":
+            return root.validWeather(update.update);
+        case "appearance":
+            return root.validAppearance(update.update);
+        case "resources":
+            return root.validResources(update.update);
+        case "utilities":
+            return root.validUtilityUpdate(update.update);
+        default:
+            return false;
+        }
+    }
+
+    function defaultHyprlandActionCapabilities() {
+        return Object.freeze({
+            "focusWindow": false,
+            "moveWindowToWorkspace": false,
+            "closeWindow": false,
+            "focusWorkspace": false,
+            "moveWorkspaceToMonitor": false,
+            "toggleFullscreen": false,
+            "toggleFloating": false,
+            "togglePinned": false,
+            "toggleGroup": false,
+            "exit": false
+        });
+    }
+
+    function applyCompositorUpdate(next, update) {
+        const compositor = Object.assign({}, next.compositor || {});
+        if (update.domain === "hyprland") {
+            compositor.hyprland = update.data;
+            next.compositor = Object.freeze(compositor);
+            return;
+        }
+
+        const existingCapability = compositor.hyprland || {};
+        const existingData = existingCapability.status === "available"
+            && existingCapability.data && typeof existingCapability.data === "object"
+            && !Array.isArray(existingCapability.data) ? existingCapability.data : {};
+        const data = Object.assign({
+            "actionCapabilities": root.defaultHyprlandActionCapabilities(),
+            "monitors": [],
+            "workspaces": [],
+            "windows": []
+        }, existingData);
+        data[update.domain] = update.data;
+        compositor.hyprland = Object.freeze({"status": "available", "data": Object.freeze(data)});
+        next.compositor = Object.freeze(compositor);
     }
 
     function validCause(cause) {
@@ -230,11 +937,12 @@ QtObject {
     }
 
     function applyDomainUpdate(update) {
-        if (!root.exact(update, ["topic", "update"], [])
-                || root.topics.indexOf(update.topic) < 0)
+        if (!root.validDomainUpdate(update))
             return false;
         const next = Object.assign({}, root.snapshot);
-        if (root.exact(update.update, ["domain", "data"], [])) {
+        if (update.topic === "compositor") {
+            root.applyCompositorUpdate(next, update.update);
+        } else if (root.exact(update.update, ["domain", "data"], [])) {
             const topic = Object.assign({}, next[update.topic] || {});
             topic[update.update.domain] = update.update.data;
             next[update.topic] = Object.freeze(topic);
@@ -263,7 +971,7 @@ QtObject {
             return false;
         switch (payload.type) {
         case "fullSnapshot":
-            if (!payload.data || typeof payload.data !== "object" || Array.isArray(payload.data))
+            if (!root.validSnapshot(payload.data))
                 return false;
             root.snapshot = Object.freeze(Object.assign({}, payload.data));
             return true;

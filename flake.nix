@@ -217,6 +217,7 @@
               pkgs.coreutils
               pkgs.glibc.bin
               pkgs.jq
+              pkgs.python3
               quickshellWithModules
               pkgs.ripgrep
               pkgs.qt6.qtbase
@@ -259,6 +260,7 @@
             export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml
             export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
+            export SLEEPY_SDK_ROOT='${sleepy-sdk}'
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             bash tests/run.sh
             bash scripts/validate-qml.sh

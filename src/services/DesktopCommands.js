@@ -176,7 +176,8 @@ function notificationInvokeAction(notificationId, actionId) {
 
 function launcherLaunch(desktopId, resources, actionId) {
     const id = stableId(desktopId);
-    if (!id)
+    if (!id || id.length > 256
+            || !/^(?!.*\.\.)[^\/\\\x00-\x1f\x7f-\x9f]+\.desktop$/.test(id))
         return null;
     const data = {"schemaVersion": 2, "desktopId": id, "resources": Array.isArray(resources) ? resources : []};
     const action = stableId(actionId || "");

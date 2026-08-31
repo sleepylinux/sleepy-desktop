@@ -1,6 +1,48 @@
 [
   {
+    "name": "network wifi enabled",
+    "builder": "networkSetWifiEnabled",
+    "args": [true],
+    "family": "system",
+    "command": {
+      "domain": "network",
+      "action": { "type": "setWifiEnabled", "data": { "enabled": true } }
+    }
+  },
+  {
+    "name": "network scan wifi",
+    "builder": "networkScanWifi",
+    "args": [],
+    "family": "system",
+    "command": {
+      "domain": "network",
+      "action": { "type": "scanWifi" }
+    }
+  },
+  {
+    "name": "network connect wifi",
+    "builder": "networkConnectWifi",
+    "args": ["ap-1"],
+    "family": "system",
+    "command": {
+      "domain": "network",
+      "action": { "type": "connectWifi", "data": { "accessPointId": "ap-1" } }
+    }
+  },
+  {
+    "name": "network disconnect",
+    "builder": "networkDisconnect",
+    "args": ["wifi-home"],
+    "family": "system",
+    "command": {
+      "domain": "network",
+      "action": { "type": "disconnect", "data": { "connectionId": "wifi-home" } }
+    }
+  },
+  {
     "name": "audio default node",
+    "builder": "audioSetDefaultNode",
+    "args": ["speaker"],
     "family": "system",
     "command": {
       "domain": "audio",
@@ -9,6 +51,8 @@
   },
   {
     "name": "audio node volume",
+    "builder": "audioSetNodeVolume",
+    "args": ["speaker", 0.5],
     "family": "system",
     "command": {
       "domain": "audio",
@@ -17,6 +61,8 @@
   },
   {
     "name": "audio node muted",
+    "builder": "audioSetNodeMuted",
+    "args": ["speaker", true],
     "family": "system",
     "command": {
       "domain": "audio",
@@ -25,6 +71,8 @@
   },
   {
     "name": "audio stream volume",
+    "builder": "audioSetStreamVolume",
+    "args": ["player", 0.25],
     "family": "system",
     "command": {
       "domain": "audio",
@@ -33,6 +81,8 @@
   },
   {
     "name": "audio stream muted",
+    "builder": "audioSetStreamMuted",
+    "args": ["player", false],
     "family": "system",
     "command": {
       "domain": "audio",
@@ -40,36 +90,192 @@
     }
   },
   {
-    "name": "media play pause",
+    "name": "media transport play pause",
+    "builder": "mediaTransport",
+    "args": ["player", "playPause"],
     "family": "system",
     "command": {
       "domain": "media",
-      "action": { "type": "transport", "data": { "playerId": "player", "transport": "playPause" } }
+      "action": {
+        "type": "transport",
+        "data": { "playerId": "player", "transport": "playPause" }
+      }
     }
   },
   {
-    "name": "media next",
+    "name": "media transport next",
+    "builder": "mediaTransport",
+    "args": ["player", "next"],
     "family": "system",
     "command": {
       "domain": "media",
-      "action": { "type": "transport", "data": { "playerId": "player", "transport": "next" } }
+      "action": {
+        "type": "transport",
+        "data": { "playerId": "player", "transport": "next" }
+      }
     }
+  },
+  {
+    "name": "media transport previous",
+    "builder": "mediaTransport",
+    "args": ["player", "previous"],
+    "family": "system",
+    "command": {
+      "domain": "media",
+      "action": {
+        "type": "transport",
+        "data": { "playerId": "player", "transport": "previous" }
+      }
+    }
+  },
+  {
+    "name": "media transport unsupported",
+    "builder": "mediaTransport",
+    "args": ["player", "stop"],
+    "family": "system",
+    "command": null
   },
   {
     "name": "display brightness",
+    "builder": "displaySetBrightness",
+    "args": ["eDP-1", 0.75],
     "family": "system",
     "command": {
       "domain": "display",
-      "action": { "type": "setBrightness", "data": { "outputId": "eDP-1", "level": 0.75 } }
+      "action": {
+        "type": "setBrightness",
+        "data": { "outputId": "eDP-1", "level": 0.75 }
+      }
     }
   },
   {
+    "name": "display night light enabled",
+    "builder": "displaySetNightLightEnabled",
+    "args": [true],
+    "family": "system",
+    "command": {
+      "domain": "display",
+      "action": { "type": "setNightLightEnabled", "data": { "enabled": true } }
+    }
+  },
+  {
+    "name": "power profile",
+    "builder": "powerSetProfile",
+    "args": ["performance"],
+    "family": "system",
+    "command": {
+      "domain": "power",
+      "action": { "type": "setProfile", "data": { "profile": "performance" } }
+    }
+  },
+  {
+    "name": "power profile unsupported",
+    "builder": "powerSetProfile",
+    "args": ["quiet"],
+    "family": "system",
+    "command": null
+  },
+  {
+    "name": "compositor focus window",
+    "builder": "compositor",
+    "args": ["focusWindow", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "focusWindow", "data": { "windowId": "win-1" } }
+  },
+  {
+    "name": "compositor close window",
+    "builder": "compositor",
+    "args": ["closeWindow", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "closeWindow", "data": { "windowId": "win-1" } }
+  },
+  {
+    "name": "compositor toggle fullscreen",
+    "builder": "compositor",
+    "args": ["toggleFullscreen", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "toggleFullscreen", "data": { "windowId": "win-1" } }
+  },
+  {
+    "name": "compositor toggle floating",
+    "builder": "compositor",
+    "args": ["toggleFloating", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "toggleFloating", "data": { "windowId": "win-1" } }
+  },
+  {
+    "name": "compositor toggle pinned",
+    "builder": "compositor",
+    "args": ["togglePinned", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "togglePinned", "data": { "windowId": "win-1" } }
+  },
+  {
+    "name": "compositor toggle group",
+    "builder": "compositor",
+    "args": ["toggleGroup", { "windowId": "win-1" }],
+    "family": "compositor",
+    "command": { "type": "toggleGroup", "data": { "windowId": "win-1" } }
+  },
+  {
     "name": "compositor focus workspace",
+    "builder": "compositor",
+    "args": ["focusWorkspace", { "workspaceId": "1" }],
     "family": "compositor",
     "command": { "type": "focusWorkspace", "data": { "workspaceId": "1" } }
   },
   {
+    "name": "compositor move window to workspace",
+    "builder": "compositor",
+    "args": ["moveWindowToWorkspace", { "windowId": "win-1", "workspaceId": "2" }],
+    "family": "compositor",
+    "command": {
+      "type": "moveWindowToWorkspace",
+      "data": { "windowId": "win-1", "workspaceId": "2" }
+    }
+  },
+  {
+    "name": "compositor move workspace to monitor",
+    "builder": "compositor",
+    "args": ["moveWorkspaceToMonitor", { "workspaceId": "2", "monitorId": "HDMI-A-1" }],
+    "family": "compositor",
+    "command": {
+      "type": "moveWorkspaceToMonitor",
+      "data": { "workspaceId": "2", "monitorId": "HDMI-A-1" }
+    }
+  },
+  {
+    "name": "compositor exit",
+    "builder": "compositor",
+    "args": ["exit", {}],
+    "family": "compositor",
+    "command": { "type": "exit" }
+  },
+  {
+    "name": "compositor unsupported",
+    "builder": "compositor",
+    "args": ["reloadDynamicConfig", {}],
+    "family": "compositor",
+    "command": null
+  },
+  {
+    "name": "notification dnd",
+    "builder": "notificationSetDnd",
+    "args": [true],
+    "family": "notification",
+    "command": { "type": "setDnd", "data": { "enabled": true } }
+  },
+  {
+    "name": "notification archive",
+    "builder": "notificationArchive",
+    "args": [7],
+    "family": "notification",
+    "command": { "type": "archive", "data": { "notificationId": 7 } }
+  },
+  {
     "name": "notification action",
+    "builder": "notificationInvokeAction",
+    "args": [7, "default"],
     "family": "notification",
     "command": {
       "type": "invokeAction",
@@ -77,18 +283,158 @@
     }
   },
   {
+    "name": "launcher launch",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", ["/tmp/example.txt"], ""],
+    "family": "launcher",
+    "command": {
+      "type": "launch",
+      "data": {
+        "schemaVersion": 2,
+        "desktopId": "org.sleepy.Test.desktop",
+        "resources": ["/tmp/example.txt"]
+      }
+    }
+  },
+  {
+    "name": "launcher launch action",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test.desktop", [], "open"],
+    "family": "launcher",
+    "command": {
+      "type": "launch",
+      "data": {
+        "schemaVersion": 2,
+        "desktopId": "org.sleepy.Test.desktop",
+        "resources": [],
+        "actionId": "open"
+      }
+    }
+  },
+  {
+    "name": "launcher launch unsupported desktop id",
+    "builder": "launcherLaunch",
+    "args": ["org.sleepy.Test", [], ""],
+    "family": "launcher",
+    "command": null
+  },
+  {
+    "name": "appearance apply theme",
+    "builder": "appearanceApplyTheme",
+    "args": ["nord"],
+    "family": "appearance",
+    "command": { "type": "applyTheme", "data": { "themeId": "nord" } }
+  },
+  {
     "name": "appearance wallpaper",
+    "builder": "appearanceSetWallpaper",
+    "args": ["moon"],
     "family": "appearance",
     "command": { "type": "setWallpaper", "data": { "wallpaperId": "moon" } }
   },
   {
+    "name": "appearance reduced motion",
+    "builder": "appearanceSetReducedMotion",
+    "args": [true],
+    "family": "appearance",
+    "command": { "type": "setReducedMotion", "data": { "enabled": true } }
+  },
+  {
+    "name": "appearance opaque",
+    "builder": "appearanceSetOpaque",
+    "args": [false],
+    "family": "appearance",
+    "command": { "type": "setOpaque", "data": { "enabled": false } }
+  },
+  {
+    "name": "appearance preview wallpaper unsupported",
+    "builder": "appearancePreviewWallpaper",
+    "args": ["moon"],
+    "family": "appearance",
+    "command": null
+  },
+  {
+    "name": "utility idle inhibited",
+    "builder": "utilitySetIdleInhibited",
+    "args": [true],
+    "family": "utility",
+    "command": { "type": "setIdleInhibited", "data": { "enabled": true } }
+  },
+  {
+    "name": "utility start recording",
+    "builder": "utilityStartRecording",
+    "args": ["eDP-1"],
+    "family": "utility",
+    "command": { "type": "startRecording", "data": { "outputId": "eDP-1" } }
+  },
+  {
+    "name": "utility pause recording",
+    "builder": "utilityPauseRecording",
+    "args": [],
+    "family": "utility",
+    "command": { "type": "pauseRecording" }
+  },
+  {
+    "name": "utility stop recording",
+    "builder": "utilityStopRecording",
+    "args": [],
+    "family": "utility",
+    "command": { "type": "stopRecording" }
+  },
+  {
+    "name": "utility screenshot",
+    "builder": "utilityScreenshot",
+    "args": ["active"],
+    "family": "utility",
+    "command": { "type": "screenshot", "data": { "outputId": "active" } }
+  },
+  {
+    "name": "utility game mode",
+    "builder": "utilitySetGameMode",
+    "args": [false],
+    "family": "utility",
+    "command": { "type": "setGameMode", "data": { "enabled": false } }
+  },
+  {
     "name": "session lock",
+    "builder": "session",
+    "args": ["lock"],
     "family": "session",
     "command": "lock"
   },
   {
-    "name": "utility screenshot",
-    "family": "utility",
-    "command": { "type": "screenshot", "data": { "outputId": "active" } }
+    "name": "session suspend",
+    "builder": "session",
+    "args": ["suspend"],
+    "family": "session",
+    "command": "suspend"
+  },
+  {
+    "name": "session logout",
+    "builder": "session",
+    "args": ["logout"],
+    "family": "session",
+    "command": "logout"
+  },
+  {
+    "name": "session reboot",
+    "builder": "session",
+    "args": ["reboot"],
+    "family": "session",
+    "command": "reboot"
+  },
+  {
+    "name": "session power off",
+    "builder": "session",
+    "args": ["powerOff"],
+    "family": "session",
+    "command": "powerOff"
+  },
+  {
+    "name": "session unlock unsupported",
+    "builder": "session",
+    "args": ["unlock"],
+    "family": "session",
+    "command": null
   }
 ]

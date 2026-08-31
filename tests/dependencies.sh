@@ -137,6 +137,14 @@ if ! rg -Fq 'pkgs.qt6.qtsvg' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must provide the Qt SVG image plugin used by icon fixtures\n' >&2
   exit 1
 fi
+if ! rg -Fq 'pkgs.python3' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must provide Python for desktop command schema validation\n' >&2
+  exit 1
+fi
+if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must validate command fixtures against the pinned sleepy-sdk input\n' >&2
+  exit 1
+fi
 if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must expose pinned Qt declarative libexec tools to static validation\n' >&2
   exit 1
