@@ -72,4 +72,23 @@ if kill -0 "$compositor_pid" 2>/dev/null; then
     exit 1
 fi
 
+if ! rg -Fq 'tests/with-private-wayland.sh' "$repo_root/tests/run.sh"; then
+    printf 'FAIL: full test runner must route real Quickshell host tests through private Wayland\n' >&2
+    exit 1
+fi
+if rg -q -e '^[[:space:]]*bash "\$repo_root/tests/quickshell-core-host\.sh"' \
+        "$repo_root/tests/run.sh"; then
+    printf 'FAIL: full test runner directly targets the inherited Wayland session\n' >&2
+    exit 1
+fi
+if ! rg -Fq 'SKIP: private Wayland compositor is not configured' \
+        "$repo_root/tests/run.sh"; then
+    printf 'FAIL: full test runner must skip the host gate when no private compositor is declared\n' >&2
+    exit 1
+fi
+if ! rg -Fq 'export QT_QPA_PLATFORM=offscreen' "$repo_root/tests/run.sh"; then
+    printf 'FAIL: QML behavior tests must force the offscreen platform\n' >&2
+    exit 1
+fi
+
 printf 'PASS: private Wayland runner isolates the socket, propagates status, and cleans up\n'

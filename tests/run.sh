@@ -31,7 +31,14 @@ else
   exit 1
 fi
 
-export QT_QPA_PLATFORM="${SLEEPY_TEST_QPA_PLATFORM:-offscreen}"
+# QML behavior tests are headless.  Never let them inherit the caller's live
+# Wayland socket or desktop theme: both turn an offscreen test into a session-
+# coupled process and can leave Qt's crash handler waiting for a GUI.
+unset WAYLAND_DISPLAY WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
+unset QT_QPA_PLATFORMTHEME KDE_FULL_SESSION XDG_CURRENT_DESKTOP
+export KDE_DEBUG=1
+export QT_STYLE_OVERRIDE=Fusion
+export QT_QPA_PLATFORM=offscreen
 export QT_QUICK_BACKEND="${SLEEPY_TEST_QUICK_BACKEND:-software}"
 export QML_XHR_ALLOW_FILE_READ=1
 export QML2_IMPORT_PATH="$repo_root/src${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
@@ -59,5 +66,12 @@ for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_su
     -v1
 done
 
-bash "$repo_root/tests/quickshell-core-host.sh" software
-bash "$repo_root/tests/quickshell-core-host.sh" rhi
+private_compositor="${SLEEPY_TEST_WAYLAND_COMPOSITOR:-${SLEEPY_TEST_SWAY:-}}"
+if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then
+  bash "$repo_root/tests/with-private-wayland.sh" \
+    "$repo_root/tests/quickshell-core-host.sh" software
+  bash "$repo_root/tests/with-private-wayland.sh" \
+    "$repo_root/tests/quickshell-core-host.sh" rhi
+else
+  printf 'SKIP: private Wayland compositor is not configured; real Quickshell host gate was not run\n'
+fi
