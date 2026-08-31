@@ -1,67 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Modified for Sleepy on 2026-08-31: compatibility facade over DesktopClient.
 
 import QtQuick 6.0
-import Quickshell.Io
 
 SessionEventModel {
     id: root
-    property string executable: "sleepyctl"
+
     property bool enabled: true
-    property int reconnectAttempt: 0
-    property bool stoppingProcess: false
-    readonly property int reconnectDelayMs: Math.min(10000, 250 * Math.pow(2, reconnectAttempt))
+    property var desktopClient: DesktopClient
 
     function connectStream() {
-        if (!root.enabled || eventProcess.running) return false;
-        root.beginConnection();
-        eventProcess.exec([root.executable, "events", "watch", "--format", "ndjson"]);
-        return true;
-    }
-    function scheduleReconnect(message) {
-        root.disconnected(message);
-        if (root.enabled) reconnectTimer.restart();
-    }
-    function stopProcess() {
-        if (!eventProcess.running) return false;
-        root.stoppingProcess = true;
-        eventProcess.signal(15);
-        processKillTimeout.restart();
-        return true;
-    }
-    Component.onCompleted: if (enabled) Qt.callLater(connectStream)
-    onEnabledChanged: {
-        if (enabled) Qt.callLater(connectStream);
-        else root.stopProcess();
+        root.enabled = true;
+        return root.desktopClient.connectStream();
     }
 
-    readonly property Process eventProcess: Process {
-        stdout: SplitParser {
-            splitMarker: "\n"
-            onRead: data => {
-                if (String(data).trim().length === 0) return;
-                if (root.acceptLine(data)) root.reconnectAttempt = 0;
-                else root.stopProcess();
-            }
-        }
-        stderr: StdioCollector { id: eventErrors; waitForEnd: false }
-        onExited: (exitCode, exitStatus) => {
-            root.processKillTimeout.stop();
-            root.stoppingProcess = false;
-            if (!root.enabled) return;
-            root.reconnectAttempt = Math.min(6, root.reconnectAttempt + 1);
-            const detail = eventErrors.text.trim();
-            root.scheduleReconnect("Event stream exited " + exitCode
-                                   + (detail.length ? ": " + detail : ""));
-        }
+    function stopStream() {
+        root.enabled = false;
+        return root.desktopClient.stopStream("Desktop stream disabled");
     }
-    readonly property Timer processKillTimeout: Timer {
-        interval: 1000
-        repeat: false
-        onTriggered: if (root.eventProcess.running) root.eventProcess.signal(9)
+
+    function syncFromDesktop() {
+        root.connectionState = root.desktopClient.connectionState;
+        root.diagnostic = root.desktopClient.diagnostic;
+        root.generation = root.desktopClient.generation;
+        root.snapshotReceived = root.desktopClient.snapshotReceived;
     }
-    readonly property Timer reconnectTimer: Timer {
-        interval: root.reconnectDelayMs
-        repeat: false
-        onTriggered: root.connectStream()
+
+    Component.onCompleted: root.syncFromDesktop()
+
+    readonly property Connections desktopConnections: Connections {
+        target: root.desktopClient
+        function onEventAccepted(envelope) {
+            root.syncFromDesktop();
+            root.eventAccepted(envelope);
+        }
+        function onConnectionStateChanged() {
+            root.syncFromDesktop();
+        }
+        function onProtocolError(message) {
+            root.syncFromDesktop();
+            root.protocolError(message);
+        }
     }
 }

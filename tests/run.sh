@@ -9,6 +9,9 @@ bash "$repo_root/tests/artwork-manifest.sh"
 bash "$repo_root/tests/motion-contracts.sh"
 bash "$repo_root/tests/ipc-contracts.sh"
 bash "$repo_root/tests/m3-contracts.sh"
+bash "$repo_root/tests/runtime-names.sh"
+bash "$repo_root/tests/service-boundary.sh"
+bash "$repo_root/tests/native-plugin-contracts.sh"
 
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner

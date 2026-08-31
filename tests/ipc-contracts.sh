@@ -20,7 +20,13 @@ done
 grep -Fq 'property bool refreshAfterCurrent: false' "$system_adapter"
 grep -Fq 'if (root.refreshAfterCurrent)' "$system_adapter"
 grep -Fq 'property var requestQueue:' "$ipc"
-grep -Fq 'Drawers.ControlCenterDrawer {' "$shell"
+grep -Fq 'Drawers {}' "$shell"
+grep -Fq 'eventSocketPath: Quickshell.env("XDG_RUNTIME_DIR") + "/sleepy/desktop.sock"' \
+  "$repo_root/src/services/DesktopClient.qml"
+grep -Fq 'controlSocketPath: Quickshell.env("XDG_RUNTIME_DIR") + "/sleepy/desktop-control.sock"' \
+  "$repo_root/src/services/DesktopClient.qml"
+grep -Fq '"schemaVersion": 3' "$repo_root/src/services/CommandClient.qml"
+grep -Fq '"expectedGeneration": DesktopClient.generation' "$repo_root/src/services/CommandClient.qml"
 if rg -n 'QuickSettings(View|Drawer)' "$repo_root/tests/qml"; then
   printf 'FAIL: compatibility tests must exercise the real Control Center\n' >&2
   exit 1

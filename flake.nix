@@ -16,9 +16,19 @@
     sleepy-session = {
       url = "github:sleepylinux/sleepy-session/03eef8fa32595d7887ed36830212f9abc6c01a84";
     };
+
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell?rev=0fed22a2c47d9568ddf13cf61586b3f2ac4378a2";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    m3shapes = {
+      url = "github:soramanew/m3shapes/32ad9ce328bb77ed349b40a3be10ee9ea610b8ab";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, sleepy-sdk, sleepy-artwork, sleepy-session }:
+  outputs = { self, nixpkgs, sleepy-sdk, sleepy-artwork, sleepy-session, quickshell, m3shapes }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
@@ -31,6 +41,44 @@
           sessionPackage = sleepy-session.packages.${system}.sleepy-session;
           artworkRoot = "${artworkPackage}/share/sleepy-artwork";
           artworkManifest = "${artworkRoot}/branding/manifest.json";
+          quickshellPackage = quickshell.packages.${system}.default.override {
+            withX11 = false;
+            withI3 = false;
+          };
+          m3shapesPackage = m3shapes.packages.${system}.default;
+          quickshellWithModules = quickshellPackage.withModules [ pkgs.qt6.qtimageformats m3shapesPackage ];
+          nativePlugin = pkgs.clangStdenv.mkDerivation {
+            pname = "sleepy-qml-plugin";
+            version = "0.2.0";
+            src = pkgs.lib.fileset.toSource {
+              root = ./src;
+              fileset = pkgs.lib.fileset.unions [
+                ./src/CMakeLists.txt
+                ./src/plugin
+              ];
+            };
+            nativeBuildInputs = [
+              pkgs.cmake
+              pkgs.ninja
+              pkgs.pkg-config
+            ];
+            buildInputs = [
+              pkgs.qt6.qtbase
+              pkgs.qt6.qtdeclarative
+              pkgs.qt6.qtshadertools
+              pkgs.qt6.qtquickcontrols2
+            ];
+            dontWrapQtApps = true;
+            cmakeFlags = [
+              (pkgs.lib.cmakeFeature "ENABLE_MODULES" "plugin")
+              (pkgs.lib.cmakeFeature "INSTALL_QMLDIR" pkgs.qt6.qtbase.qtQmlPrefix)
+              (pkgs.lib.cmakeBool "SLEEPY_AUDITED_RENDER_HELPERS_ONLY" true)
+              (pkgs.lib.cmakeFeature "VERSION" "0.2.0")
+              (pkgs.lib.cmakeFeature "GIT_REVISION" (self.rev or self.dirtyRev or "dirty"))
+              (pkgs.lib.cmakeFeature "DISTRIBUTOR" "sleepy-nix-flake")
+            ];
+          };
+          qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
 
           mkDesktopPackage = { pname, runner, runnerFlags }:
             pkgs.stdenvNoCC.mkDerivation {
@@ -93,8 +141,8 @@
 
                 makeWrapper "${runner}" "$out/bin/${pname}" \
                   --set QML_XHR_ALLOW_FILE_READ 1 \
-                  --set QML2_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml" \
-                  --set QML_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml" \
+                  --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
+                  --set QML_IMPORT_PATH "${qtQmlImportPath}" \
                   --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
                   --prefix PATH : "${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
@@ -117,9 +165,11 @@
             };
         in
         rec {
+          sleepy-qml-plugin = nativePlugin;
+
           sleepy-shell = mkDesktopPackage {
             pname = "sleepy-shell";
-            runner = "${pkgs.quickshell}/bin/qs";
+            runner = "${quickshellWithModules}/bin/qs";
             runnerFlags = installPath: "-p ${installPath}/shell.qml";
           };
 
@@ -143,6 +193,14 @@
           sessionPackage = sleepy-session.packages.${system}.sleepy-session;
           artworkRoot = "${artworkPackage}/share/sleepy-artwork";
           artworkManifest = "${artworkRoot}/branding/manifest.json";
+          quickshellPackage = quickshell.packages.${system}.default.override {
+            withX11 = false;
+            withI3 = false;
+          };
+          m3shapesPackage = m3shapes.packages.${system}.default;
+          quickshellWithModules = quickshellPackage.withModules [ pkgs.qt6.qtimageformats m3shapesPackage ];
+          nativePlugin = componentPackages.sleepy-qml-plugin;
+          qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
         in
         {
           qml = pkgs.runCommand "sleepy-desktop-qml-contracts" {
@@ -152,7 +210,7 @@
               pkgs.coreutils
               pkgs.glibc.bin
               pkgs.jq
-              pkgs.quickshell
+              quickshellWithModules
               pkgs.ripgrep
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
@@ -189,10 +247,12 @@
             export SLEEPY_TEST_RHI_BACKEND=vulkan
             export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json
             export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib
-            export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml
-            export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml
+            export QML2_IMPORT_PATH=${qtQmlImportPath}
+            export QML_IMPORT_PATH=${qtQmlImportPath}
+            export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml
             export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
+            test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             bash tests/run.sh
             bash scripts/validate-qml.sh
 
@@ -236,6 +296,7 @@
             test -x "$shell_package/bin/sleepy-shell"
             test -f "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
             test -f "$shell_package/share/doc/sleepy-desktop/NOTICE"
+            test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             if [[ -f "$shell_package/share/sleepy-desktop/LICENSE" ]]; then
               test -f "$shell_package/share/doc/sleepy-desktop/LICENSE"
             fi

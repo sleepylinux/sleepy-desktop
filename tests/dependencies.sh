@@ -93,7 +93,7 @@ if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
   exit 1
 fi
 
-if ! rg -Fq -- '--set QML2_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+if ! rg -Fq -- '--set QML2_IMPORT_PATH "${qtQmlImportPath}"' "$flake"; then
   printf 'FAIL: packaged QML runners must close imports to the pinned Qt and Quickshell roots\n' >&2
   exit 1
 fi
@@ -101,7 +101,7 @@ if rg -Fq -- '--prefix QML2_IMPORT_PATH' "$flake"; then
   printf 'FAIL: packaged QML runners must not retain caller-provided QML imports\n' >&2
   exit 1
 fi
-if ! rg -Fq -- '--set QML_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+if ! rg -Fq -- '--set QML_IMPORT_PATH "${qtQmlImportPath}"' "$flake"; then
   printf 'FAIL: packaged QML runners must close modern imports to the pinned Qt and Quickshell roots\n' >&2
   exit 1
 fi
@@ -153,14 +153,23 @@ if rg -Fq 'lvp_icd.x86_64.json' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must not hard-code an x86-only Mesa lavapipe ICD filename\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml' \
+if ! rg -Fq 'quickshellWithModules' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must use the pinned Quickshell-with-m3shapes package\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export QML2_IMPORT_PATH=${qtQmlImportPath}' \
     <<< "$qml_check_block"; then
   printf 'FAIL: qml check must expose its pinned Qt and Quickshell QML module roots\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml' \
+if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml' \
     <<< "$qml_check_block"; then
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
+    <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must expose the built Sleepy native plugin on the closed import path\n' >&2
   exit 1
 fi
 if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||

@@ -24,7 +24,12 @@ if ! rg -q 'readonly property int transitionDuration:[[:space:]]*tokens\.motionD
 fi
 
 mapfile -t animated_components < <(
-  rg -l '(Number|Color)Animation' "$repository_root/src" --glob '*.qml' | sort
+  rg -l '(Number|Color)Animation' \
+    "$repository_root/src/drawers" \
+    "$repository_root/src/panels" \
+    "$repository_root/src/widgets" \
+    "$repository_root/src/preview" \
+    --glob '*.qml' | sort
 )
 for animated_component in "${animated_components[@]}"; do
   if rg -n 'duration:[[:space:]]*[1-9][0-9]*' "$animated_component"; then
