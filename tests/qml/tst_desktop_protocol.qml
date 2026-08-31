@@ -13,6 +13,14 @@ TestCase {
         Services.DesktopProtocol {}
     }
 
+    Component {
+        id: commandProtocolFactory
+
+        Services.DesktopCommandProtocol {
+            timeoutMs: 20
+        }
+    }
+
     Component { id: signalSpy; SignalSpy {} }
 
     readonly property string requestId: "22222222-2222-4222-8222-222222222222"
@@ -348,6 +356,44 @@ TestCase {
         compare(protocol.connectionState, "error");
     }
 
+    function test_envelope_rejects_noncanonical_timestamp_without_mutating_state_data() {
+        return [
+            {"tag": "calendar date strings are not canonical UTC timestamps", "emittedAt": "August 30, 2026"},
+            {"tag": "normalizing dates are not canonical UTC timestamps", "emittedAt": "2026-02-31T12:00:00Z"},
+            {"tag": "offset timestamps are not the canonical Z form", "emittedAt": "2026-08-31T00:00:00+00:00"}
+        ];
+    }
+
+    function test_envelope_rejects_noncanonical_timestamp_without_mutating_state(data) {
+        const protocol = freshProtocol();
+        const event = envelope(1);
+        event.emittedAt = data.emittedAt;
+
+        verify(!protocol.acceptEnvelope(event));
+
+        compare(protocol.connectionState, "error");
+        verify(!protocol.snapshotReceived);
+        compare(JSON.stringify(protocol.snapshot), "{}");
+    }
+
+    function test_envelope_accepts_canonical_utc_timestamp_boundaries_data() {
+        return [
+            {"tag": "leap day", "emittedAt": "2028-02-29T23:59:59Z"},
+            {"tag": "fractional seconds", "emittedAt": "2026-08-31T00:00:00.123Z"}
+        ];
+    }
+
+    function test_envelope_accepts_canonical_utc_timestamp_boundaries(data) {
+        const protocol = freshProtocol();
+        const event = envelope(1);
+        event.emittedAt = data.emittedAt;
+
+        verify(protocol.acceptEnvelope(event));
+
+        compare(protocol.connectionState, "ready");
+        verify(protocol.snapshotReceived);
+    }
+
     function test_full_snapshot_rejects_missing_top_level_domain() {
         const protocol = freshProtocol();
         const snapshot = validSnapshot();
@@ -473,6 +519,39 @@ TestCase {
         compare(protocol.observedRequestIds[requestId], 2);
     }
 
+    function test_command_result_signal_observes_advanced_generation_and_follow_up_expected_generation() {
+        const protocol = freshProtocol();
+        const commandProtocol = createTemporaryObject(commandProtocolFactory, testCase);
+        commandProtocol.generation = Qt.binding(function() { return protocol.generation; });
+        verify(protocol.acceptEnvelope(envelope(1)));
+        protocol.rememberRequest(otherRequestId, 1);
+        const generationSpy = signalSpy.createObject(protocol, {
+            "target": protocol,
+            "signalName": "daemonGenerationChanged"
+        });
+        let handlerRan = false;
+
+        protocol.commandResultAccepted.connect(function(result) {
+            handlerRan = true;
+            compare(result.requestId, requestId);
+            compare(result.generation, 2);
+            compare(protocol.generation, 2);
+            compare(commandProtocol.generation, 2);
+            compare(generationSpy.count, 1);
+            compare(protocol.observedRequestIds[requestId], 2);
+            verify(!Object.prototype.hasOwnProperty.call(protocol.observedRequestIds, otherRequestId));
+
+            verify(commandProtocol.send("session", "lock", otherRequestId));
+            const request = JSON.parse(commandProtocol.queuedLine);
+            compare(request.expectedGeneration, 2);
+            compare(request.requestId, otherRequestId);
+        });
+
+        verify(protocol.acceptEnvelope(commandResultEnvelope(
+            requestCause(requestId), requestId, 2, 2)));
+        verify(handlerRan);
+    }
+
     function test_command_result_event_rejects_uncorrelated_envelope_without_mutating_data_data() {
         return [
             {
@@ -571,6 +650,14 @@ TestCase {
                 "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[1].id = "monitor-1"; }
             },
             {
+                "tag": "monitor widths must fit u32",
+                "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[0].width = 4294967296; }
+            },
+            {
+                "tag": "monitor heights must fit u32",
+                "mutate": function(snapshot) { snapshot.compositor.hyprland.data.monitors[0].height = 4294967296; }
+            },
+            {
                 "tag": "workspace monitorId must reference a monitor",
                 "mutate": function(snapshot) { snapshot.compositor.hyprland.data.workspaces[0].monitorId = "missing"; }
             },
@@ -657,6 +744,21 @@ TestCase {
         compare(JSON.stringify(protocol.snapshot), "{}");
     }
 
+    function test_monitor_dimensions_accept_u32_maximum_in_full_snapshot() {
+        const protocol = freshProtocol();
+        const snapshot = semanticSnapshot();
+        snapshot.compositor.hyprland.data.monitors[0].width = 4294967295;
+        snapshot.compositor.hyprland.data.monitors[0].height = 4294967295;
+
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": snapshot
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 4294967295);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
+    }
+
     function domainUpdateInvalidCases() {
         return [
             {
@@ -692,10 +794,26 @@ TestCase {
                 }
             },
             {
+                "tag": "compositor hyprland update rejects monitor widths above u32",
+                "update": function() {
+                    const data = validHyprlandData();
+                    data.monitors[0].width = 4294967296;
+                    return {"topic": "compositor", "update": {"domain": "hyprland", "data": {"status": "available", "data": data}}};
+                }
+            },
+            {
                 "tag": "compositor monitors update rejects duplicate ids",
                 "update": function() {
                     const data = validHyprlandData().monitors;
                     data[1].id = "monitor-1";
+                    return {"topic": "compositor", "update": {"domain": "monitors", "data": data}};
+                }
+            },
+            {
+                "tag": "compositor monitors update rejects monitor heights above u32",
+                "update": function() {
+                    const data = validHyprlandData().monitors;
+                    data[0].height = 4294967296;
                     return {"topic": "compositor", "update": {"domain": "monitors", "data": data}};
                 }
             },
@@ -811,6 +929,44 @@ TestCase {
 
         compare(protocol.connectionState, "error");
         compare(JSON.stringify(protocol.snapshot), before);
+    }
+
+    function test_monitor_dimensions_accept_u32_maximum_in_hyprland_update() {
+        const protocol = freshProtocol();
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        const data = validHyprlandData();
+        data.monitors[0].width = 4294967295;
+        data.monitors[0].height = 4294967295;
+
+        verify(protocol.acceptEnvelope(envelope(2, {
+            "type": "domainUpdate",
+            "data": {"topic": "compositor", "update": {"domain": "hyprland", "data": {"status": "available", "data": data}}}
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 4294967295);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
+    }
+
+    function test_monitor_dimensions_accept_u32_maximum_in_standalone_monitor_update() {
+        const protocol = freshProtocol();
+        verify(protocol.acceptEnvelope(envelope(1, {
+            "type": "fullSnapshot",
+            "data": semanticSnapshot()
+        })));
+        const data = validHyprlandData().monitors;
+        data[0].width = 4294967295;
+        data[0].height = 4294967295;
+
+        verify(protocol.acceptEnvelope(envelope(2, {
+            "type": "domainUpdate",
+            "data": {"topic": "compositor", "update": {"domain": "monitors", "data": data}}
+        })));
+
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].width, 4294967295);
+        compare(protocol.snapshot.compositor.hyprland.data.monitors[0].height, 4294967295);
     }
 
     function test_retry_delay_is_bounded_between_protocol_limits() {

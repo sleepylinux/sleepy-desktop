@@ -54,6 +54,10 @@ QtObject {
         return Number.isSafeInteger(value) && value > 0;
     }
 
+    function positiveU32(value) {
+        return Number.isSafeInteger(value) && value > 0 && value <= 4294967295;
+    }
+
     function unsignedInteger(value) {
         return Number.isSafeInteger(value) && value >= 0;
     }
@@ -363,8 +367,8 @@ QtObject {
         return root.exact(value, ["id", "name", "width", "height", "scale", "focused"], [])
             && root.nonEmpty(value.id)
             && root.nonEmpty(value.name)
-            && root.positiveInteger(value.width)
-            && root.positiveInteger(value.height)
+            && root.positiveU32(value.width)
+            && root.positiveU32(value.height)
             && root.finitePositive(value.scale)
             && typeof value.focused === "boolean";
     }
@@ -1099,9 +1103,7 @@ QtObject {
         }
     }
 
-    function applyDomainUpdate(update) {
-        if (!root.validDomainUpdate(update))
-            return false;
+    function publishDomainUpdate(update) {
         const next = Object.assign({}, root.snapshot);
         if (update.topic === "compositor") {
             root.applyCompositorUpdate(next, update.update);
@@ -1114,6 +1116,10 @@ QtObject {
         }
         root.snapshot = Object.freeze(next);
         return true;
+    }
+
+    function applyDomainUpdate(update) {
+        return root.validDomainUpdate(update) && root.publishDomainUpdate(update);
     }
 
     function validCommandResult(result) {
@@ -1136,22 +1142,32 @@ QtObject {
             && envelope.generation === result.generation;
     }
 
-    function applyPayload(envelope) {
+    function validPayload(envelope) {
         const payload = envelope.payload;
         if (!root.exact(payload, ["type", "data"], [])
                 || ["fullSnapshot", "domainUpdate", "commandResult"].indexOf(payload.type) < 0)
             return false;
         switch (payload.type) {
         case "fullSnapshot":
-            if (!root.validSnapshot(payload.data))
-                return false;
+            return root.validSnapshot(payload.data);
+        case "domainUpdate":
+            return root.validDomainUpdate(payload.data);
+        case "commandResult":
+            return root.validCommandResultEnvelope(envelope);
+        default:
+            return false;
+        }
+    }
+
+    function applyPayload(envelope) {
+        const payload = envelope.payload;
+        switch (payload.type) {
+        case "fullSnapshot":
             root.snapshot = Object.freeze(Object.assign({}, payload.data));
             return true;
         case "domainUpdate":
-            return root.applyDomainUpdate(payload.data);
+            return root.publishDomainUpdate(payload.data);
         case "commandResult":
-            if (!root.validCommandResultEnvelope(envelope))
-                return false;
             root.lastCommandResult = Object.freeze(Object.assign({}, payload.data));
             root.rememberRequest(payload.data.requestId, payload.data.generation);
             root.commandResultAccepted(root.lastCommandResult);
@@ -1167,8 +1183,7 @@ QtObject {
                 || envelope.schemaVersion !== 3
                 || !root.positiveInteger(envelope.generation)
                 || !root.canonicalUuid(envelope.eventId)
-                || !root.nonEmpty(envelope.emittedAt)
-                || Number.isNaN(Date.parse(envelope.emittedAt))
+                || !root.validTimestamp(envelope.emittedAt)
                 || !root.validCause(envelope.cause))
             return root.fail("Invalid desktop event envelope");
         if (!root.snapshotReceived && envelope.payload.type !== "fullSnapshot")
@@ -1177,7 +1192,7 @@ QtObject {
             return root.fail("Desktop event generation did not increase");
         if (!root.snapshotReceived && envelope.generation < root.generation)
             return root.fail("Replay generation regressed");
-        if (!root.applyPayload(envelope))
+        if (!root.validPayload(envelope))
             return root.fail("Invalid desktop event payload");
 
         if (envelope.generation !== root.generation) {
@@ -1187,6 +1202,8 @@ QtObject {
         }
         if (envelope.cause.kind === "request")
             root.rememberRequest(envelope.cause.requestId, envelope.generation);
+        if (!root.applyPayload(envelope))
+            return root.fail("Invalid desktop event payload");
         root.snapshotReceived = true;
         root.connectionState = "ready";
         root.diagnostic = "";
