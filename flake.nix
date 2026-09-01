@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/8430c42820bbec16d8571600cfa95e60ce366595";
+      url = "github:sleepylinux/sleepy-session/8430c42652905a298ae4010a15204397fd40dbdd";
     };
 
     quickshell = {
@@ -300,7 +300,7 @@
               passthru = {
                 sdkRevision = "63b2370a39f47f2b361310c12c0333da0faaee9d";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "8430c42820bbec16d8571600cfa95e60ce366595";
+                sessionRevision = "8430c42652905a298ae4010a15204397fd40dbdd";
                 inherit artworkRoot artworkManifest;
               };
 
