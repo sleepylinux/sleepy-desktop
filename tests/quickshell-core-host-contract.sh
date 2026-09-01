@@ -110,6 +110,16 @@ run_host() {
         "$@"
 }
 
+pid_is_running() {
+    local pid=$1 stat_line state
+    kill -0 "$pid" 2>/dev/null || return 1
+    [[ -r "/proc/$pid/stat" ]] || return 0
+    stat_line="$(<"/proc/$pid/stat")"
+    state="${stat_line##*) }"
+    state="${state%% *}"
+    [[ "$state" != Z && "$state" != X ]]
+}
+
 controlled_bare_qs="$test_root/path-bin/qs"
 resolved_bare_qs="$(PATH="$test_root/path-bin:$PATH" command -v qs || true)"
 if [[ "$resolved_bare_qs" != "$controlled_bare_qs" ]]; then
@@ -250,13 +260,13 @@ if [[ ! -s "$qs_child_pid_file" ]]; then
 fi
 qs_child_pid="$(<"$qs_child_pid_file")"
 for _ in $(seq 1 100); do
-    if ! kill -0 "$qs_child_pid" 2>/dev/null; then
+    if ! pid_is_running "$qs_child_pid"; then
         break
     fi
     sleep 0.02
 done
-if kill -0 "$qs_child_pid" 2>/dev/null; then
-    printf 'FAIL: host gate left nested Quickshell descendant %s alive\n' \
+if pid_is_running "$qs_child_pid"; then
+    printf 'FAIL: host gate left nested Quickshell descendant %s running\n' \
         "$qs_child_pid" >&2
     exit 1
 fi
