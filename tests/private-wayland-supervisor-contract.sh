@@ -52,6 +52,7 @@ signal.signal(signal.SIGTERM, stop)
 signal.signal(signal.SIGINT, stop)
 signal.pause()
 PY
+sed -i "1c#!$(command -v python3)" "$fake_compositor"
 chmod 0700 "$fake_compositor"
 
 hold_probe="$test_root/hold-child"
@@ -62,6 +63,7 @@ printf '%s\n' "$SLEEPY_PRIVATE_WAYLAND_ROOT" >"$SLEEPY_TEST_ROOT_FILE"
 printf '%s\n' "$$" >"$SLEEPY_TEST_HOLD_PID_FILE"
 exec sleep 300
 SH
+sed -i "1c#!$BASH" "$hold_probe"
 chmod 0700 "$hold_probe"
 
 wait_for_probe() {

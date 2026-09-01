@@ -27,6 +27,7 @@ signal.signal(signal.SIGTERM, stop)
 signal.signal(signal.SIGINT, stop)
 signal.pause()
 PY
+sed -i "1c#!$(command -v python3)" "$fake_compositor"
 chmod 0700 "$fake_compositor"
 
 aggregate_probe="$test_root/aggregate-probe"
@@ -40,6 +41,7 @@ if [[ "${DISPLAY:-}" != "$SLEEPY_EXPECTED_XVFB_DISPLAY" ]]; then
 fi
 : >"$SLEEPY_AGGREGATE_PROBE_MARKER"
 SH
+sed -i "1c#!$BASH" "$aggregate_probe"
 chmod 0700 "$aggregate_probe"
 
 qml_check_block="$(

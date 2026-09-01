@@ -59,6 +59,7 @@ signal.signal(signal.SIGTERM, stop)
 signal.signal(signal.SIGINT, stop)
 signal.pause()
 PY
+sed -i "1c#!$(command -v python3)" "$fake_compositor"
 chmod 0700 "$fake_compositor"
 
 real_home="$test_root/real-home"
@@ -113,6 +114,7 @@ sleep 300 &
 printf '%s\n' "$!" >"$SLEEPY_TEST_CHILD_PID_FILE"
 exit 23
 SH
+sed -i "1c#!$BASH" "$child_probe"
 chmod 0700 "$child_probe"
 
 set +e
@@ -191,6 +193,7 @@ set -euo pipefail
 printf '%s\n' "$(dirname -- "$2")" >"$SLEEPY_TEST_EARLY_ROOT_FILE"
 exit 72
 SH
+sed -i "1c#!$BASH" "$fake_bin/mkdir"
 chmod 0700 "$fake_bin/mkdir"
 set +e
 PATH="$fake_bin:$PATH" \
