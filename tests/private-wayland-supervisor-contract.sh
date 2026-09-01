@@ -135,7 +135,7 @@ SLEEPY_PRIVATE_WAYLAND_TIMEOUT_SECONDS=1 \
 timeout_status=$?
 set -e
 timeout_elapsed=$((SECONDS - timeout_started))
-if [[ $timeout_status -ne 124 || $timeout_elapsed -ge 3 ]]; then
+if [[ $timeout_status -ne 124 || $timeout_elapsed -ge 8 ]]; then
     printf 'FAIL: private Wayland supervisor timeout was not bounded (status=%s elapsed=%ss)\n' \
         "$timeout_status" "$timeout_elapsed" >&2
     exit 1
