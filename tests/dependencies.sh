@@ -240,8 +240,9 @@ if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; th
   printf 'FAIL: qml check must validate command fixtures against the pinned sleepy-sdk input\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH' <<< "$qml_check_block"; then
-  printf 'FAIL: qml check must expose pinned Qt declarative libexec tools to static validation\n' >&2
+if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/bin:$PATH' <<< "$qml_check_block" ||
+    ! rg -Fq '${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must execute the pinned Qt declarative qmltestrunner output\n' >&2
   exit 1
 fi
 if ! rg -Fq 'export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins' \

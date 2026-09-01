@@ -423,7 +423,7 @@
             export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml
             readonly SLEEPY_TEST_QUICKSHELL=${quickshellWithModules}/bin/qs
             export SLEEPY_TEST_QUICKSHELL
-            export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
+            export PATH=${pkgs.qt6.qtdeclarative}/bin:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
             export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway
@@ -432,7 +432,7 @@
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             unset WAYLAND_DISPLAY
             bash tests/run.sh
-            ${pkgs.qt6.qtdeclarative}/libexec/qmltestrunner \
+            ${pkgs.qt6.qtdeclarative}/bin/qmltestrunner \
               -input tests/qml-native/tst_native_full_plugin.qml \
               -import ${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix} -v1
             SLEEPY_NATIVE_QML_IMPORT_PATH=${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix} \
