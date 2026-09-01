@@ -10,15 +10,14 @@ if [[ $# -gt 1 ]]; then
   exit 2
 fi
 
-if rg -n '^import "modules' "$shell"; then
-  printf 'FAIL: packaged shell must not depend on quarantined module import roots\n' >&2
-  failed=1
-fi
+python3 "$repo_root/tests/active-graph.py" "$shell" || failed=1
 
-if rg -n '^import Sleepy\.(Services|Models)' "$shell" "$repo_root/src/services"; then
-  printf 'FAIL: packaged active graph must not import unbuilt native Sleepy.Services or Sleepy.Models\n' >&2
-  failed=1
-fi
+for module_root in modules modules/drawers modules/background modules/areapicker; do
+  if ! rg -Fq "import \"$module_root\"" "$shell"; then
+    printf 'FAIL: packaged shell is missing reviewed module root: %s\n' "$module_root" >&2
+    failed=1
+  fi
+done
 
 if ! rg -Fq -- '--set QML2_IMPORT_PATH "${qtQmlImportPath}"' "$repo_root/flake.nix" ||
     ! rg -Fq -- '--set QML_IMPORT_PATH "${qtQmlImportPath}"' "$repo_root/flake.nix"; then
@@ -51,4 +50,4 @@ if [[ $failed -ne 0 ]]; then
   exit 1
 fi
 
-printf 'PASS: packaged shell uses the closed Task 6 import path\n'
+printf 'PASS: packaged shell uses the closed reviewed modular import path\n'

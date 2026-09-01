@@ -8,28 +8,25 @@ import re
 import sys
 
 
-FORBIDDEN = (
-    r"import\s+Quickshell\.Hyprland\b",
-    r"import\s+Quickshell\.Bluetooth\b",
-    r"import\s+Quickshell\.Services\.(?:Pipewire|Mpris|Notifications|UPower|SystemTray)\b",
-    r"\b(?:Process|FileView|FileSystemModel|PersistentProperties)\s*\{",
-    r"\bexecDetached\b",
-    r"import\s+Sleepy\.(?:Services|Models)\b",
-    r"\b(?:DBus|DBusInterface|DBusService)\b|org\.freedesktop",
-    r"\b(?:hyprctl|nmcli|bluetoothctl|wpctl|playerctl|brightnessctl|upower|systemctl|loginctl)\b",
+RUNTIME_IDENTITY = re.compile(r"\bcaelestia(?:[-_ ]shell)?\b", re.IGNORECASE)
+SHELL_INTERPRETER = re.compile(
+    r'["\'](?:ba|da|fi|z)?sh["\']\s*,\s*["\']-[cC]["\']', re.IGNORECASE
 )
-FORBIDDEN_TASK_PATH = re.compile(
-    r"/(?:launcher|dashboard|sidebar|notifications|nexus|lock|session|background|areapicker|utilities|drawers)/"
+CREDENTIAL_ARGV = re.compile(
+    r'(?:command\s*:|execDetached\s*\()[\s\S]{0,500}'
+    r'["\'](?:password|passwd|psk|secret|token)["\']', re.IGNORECASE
 )
-RETAINED_TASK10_COMPONENTS = {
-    "src/modules/background/SleepyBackground.qml",
-    "src/modules/session/SleepySession.qml",
-    "src/modules/utilities/SleepyUtilities.qml",
+SLEEPY_IMPORT = re.compile(r'^\s*import\s+(Sleepy(?:\.[A-Za-z_][A-Za-z0-9_]*)?)\b', re.MULTILINE)
+REVIEWED_NATIVE_MODULES = {
+    "Sleepy",
+    "Sleepy.Blobs",
+    "Sleepy.Components",
+    "Sleepy.Config",
+    "Sleepy.Images",
+    "Sleepy.Models",
+    "Sleepy.Services",
+    "Sleepy.Settings",
 }
-HANDWRITTEN_COMMAND_KEY = re.compile(
-    r'(?:^|[,{])\s*(?:["\'](?:family|domain|type)["\']|(?:family|domain|type))\s*:',
-    re.MULTILINE,
-)
 IMPORT = re.compile(
     r'^\s*import\s+(?:"([^"]+)"|(qs(?:\.[A-Za-z_][A-Za-z0-9_]*)+))'
     r'(?:\s+\d+(?:\.\d+)?)?(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?', re.MULTILINE)
@@ -43,15 +40,17 @@ def component_references(text: str) -> tuple[set[str], set[tuple[str, str]]]:
     return unqualified, qualified
 
 
-def resolve_graph(root: pathlib.Path) -> list[pathlib.Path]:
-    repo_src = next((parent / "src" for parent in root.parents if (parent / "src").is_dir()), None)
-    if repo_src is None:
-        repo_src = root.parent
+def resolve_graph(root: pathlib.Path) -> tuple[pathlib.Path, list[pathlib.Path], list[str]]:
+    repo_src = next((parent for parent in root.parents if parent.name == "src"), root.parent)
     pending = [root.resolve()]
     seen: set[pathlib.Path] = set()
+    failures: list[str] = []
     while pending:
         current = pending.pop()
         if current in seen or not current.is_file():
+            continue
+        if not current.is_relative_to(repo_src):
+            failures.append(f"{current}: local import resolves outside the installed Sleepy tree")
             continue
         seen.add(current)
         text = current.read_text(encoding="utf-8")
@@ -90,28 +89,24 @@ def resolve_graph(root: pathlib.Path) -> list[pathlib.Path]:
             for candidate in directory.glob("[A-Z]*.qml"):
                 if re.search(rf"\b{re.escape(candidate.stem)}\b", text):
                     pending.append(candidate)
-    return sorted(seen)
+    return repo_src, sorted(seen), failures
 
 
 def main() -> int:
     root = pathlib.Path(sys.argv[1]).resolve()
-    failures: list[str] = []
-    graph = resolve_graph(root)
+    _repo_src, graph, failures = resolve_graph(root)
     for path in graph:
         text = path.read_text(encoding="utf-8")
         display = str(path)
-        retained_task10 = any(
-            display.endswith(f"/{relative}") for relative in RETAINED_TASK10_COMPONENTS
-        )
-        if FORBIDDEN_TASK_PATH.search(display) and not retained_task10:
-            failures.append(f"{display}: forbidden Task 8/10 module is reachable")
-        for pattern in FORBIDDEN:
-            match = re.search(pattern, text)
-            if match:
-                failures.append(f"{display}: forbidden reachable token: {match.group(0)}")
-        if "/src/core/" in display or display.endswith("/src/shell.qml"):
-            if HANDWRITTEN_COMMAND_KEY.search(text):
-                failures.append(f"{display}: hand-written command payload in active surface graph")
+        if match := RUNTIME_IDENTITY.search(text):
+            failures.append(f"{display}: forbidden runtime identity: {match.group(0)}")
+        if match := SHELL_INTERPRETER.search(text):
+            failures.append(f"{display}: shell interpreter command is forbidden: {match.group(0)}")
+        if match := CREDENTIAL_ARGV.search(text):
+            failures.append(f"{display}: credential-bearing argv is forbidden: {match.group(0)}")
+        for native_import in SLEEPY_IMPORT.findall(text):
+            if native_import not in REVIEWED_NATIVE_MODULES:
+                failures.append(f"{display}: unreviewed native module import: {native_import}")
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1

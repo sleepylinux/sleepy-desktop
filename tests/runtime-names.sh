@@ -11,7 +11,7 @@ check_file() {
   local relative="${file#"$repo_root"/}"
 
   case "$relative" in
-    NOTICE|UPSTREAM.json|src/LICENSE|scripts/import-upstream.sh|tests/runtime-names.sh|tests/upstream-provenance.sh|tests/patch-inventory.json|tests/fixtures/upstream-v2.4.0-parity-inventory.json|tests/lib/parity-validator.sh|tests/parity-validator-test.sh)
+    NOTICE|UPSTREAM.json|src/LICENSE|scripts/import-upstream.sh|tests/runtime-names.sh|tests/upstream-provenance.sh|tests/patch-inventory.json|tests/fixtures/upstream-v2.4.0-parity-inventory.json|tests/lib/parity-validator.sh|tests/parity-validator-test.sh|tests/active-graph.py|tests/fixtures/active-graph-forbidden/*)
       return 0
       ;;
   esac

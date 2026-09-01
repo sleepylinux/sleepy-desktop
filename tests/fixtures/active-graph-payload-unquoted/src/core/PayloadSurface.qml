@@ -1,5 +1,7 @@
 import QtQuick
 
 QtObject {
-    readonly property var forbiddenCommand: ({type: "focusWorkspace", data: {workspaceId: "1"}})
+    function connect(secret) {
+        Quickshell.execDetached(["nmcli", "device", "wifi", "connect", "ssid", "password", secret]);
+    }
 }

@@ -1,5 +1,5 @@
 import QtQuick
 
 QtObject {
-    readonly property var forbiddenCommand: ({"type": "focusWorkspace", "data": {"workspaceId": "1"}})
+    readonly property var forbiddenCommand: ["bash", "-c", "echo unsafe"]
 }

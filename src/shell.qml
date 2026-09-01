@@ -5,8 +5,10 @@
 //@ pragma DefaultEnv QSG_RENDER_LOOP=threaded
 //@ pragma DefaultEnv QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 
-import "theme" as Theme
-import "core" as Core
+import "modules"
+import "modules/drawers"
+import "modules/background"
+import "modules/areapicker"
 import QtQuick
 import Quickshell
 import qs.services
@@ -14,29 +16,36 @@ import qs.services
 ShellRoot {
     id: root
 
-    readonly property bool portalDark: Application.styleHints.colorScheme !== Qt.Light
-
     settings.watchFiles: true
 
-    Theme.EffectsPolicy {
-        id: effects
-        reducedMotion: false
+    Binding {
+        target: ShellState
+        property: "shellRoot"
+        value: root
     }
 
-    Theme.ThemeTokens {
-        id: tokens
-        effectsPolicy: effects
+    GSFLoader {}
+    ServiceLoader {}
+    ShellIpc {
+        objectName: "sleepyIpc"
     }
 
-    Core.CoreDesktopWindows {
-        desktopModel: DesktopModel
-        commandClient: CommandClient
-        tokens: tokens
+    Background {
+        objectName: "background"
     }
-
-    Component.onCompleted: {
-        DesktopClient;
-        DesktopModel;
-        CommandClient;
+    Drawers {
+        objectName: "drawers"
+    }
+    AreaPicker {
+        objectName: "areaPicker"
+    }
+    Shortcuts {
+        objectName: "shortcuts"
+    }
+    BatteryMonitor {
+        objectName: "batteryMonitor"
+    }
+    IdleMonitors {
+        objectName: "idleMonitors"
     }
 }

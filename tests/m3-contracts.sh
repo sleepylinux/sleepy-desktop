@@ -67,10 +67,10 @@ rg -Fq 'eventSource: DesktopClient' "$repo_root/src/services/SystemAdapter.qml"
 rg -Fq 'controlClient: CommandClient' "$repo_root/src/services/SystemAdapter.qml"
 rg -Fq 'CommandClient.appearance' "$repo_root/src/services/SessionAdapter.qml"
 rg -Fq 'Preset mutations are delegated to sleepy-sessiond' "$repo_root/src/services/PresetAdapter.qml"
-rg -Fq 'portalDark: Application.styleHints.colorScheme !== Qt.Light' \
-  "$repo_root/src/shell.qml"
-if rg -n 'appearanceMode.*system.*dark' "$repo_root/src/shell.qml"; then
-  printf 'FAIL: system appearance is hard-coded instead of portal-backed\n' >&2
+rg -Fq 'readonly property var appearanceState: DesktopModel.appearance' \
+  "$repo_root/src/services/Colours.qml"
+if rg -n 'appearanceMode.*system.*dark|portalDark:' "$repo_root/src/shell.qml"; then
+  printf 'FAIL: modular shell appearance must come from the confirmed Sleepy appearance model\n' >&2
   exit 1
 fi
 

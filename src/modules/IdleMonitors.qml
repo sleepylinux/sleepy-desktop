@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 
-import "lock"
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -8,11 +7,11 @@ import Quickshell.Services.UPower
 import Sleepy.Config
 import Sleepy.Services
 import qs.services
+import "../services/DesktopCommands.js" as DesktopCommands
 
 Scope {
     id: root
 
-    required property Lock lock
     readonly property bool hasPlayer: Players.list.some(p => p.isPlaying)
     readonly property bool isCharging: !UPower.onBattery
     readonly property bool enabled: {
@@ -23,14 +22,18 @@ Scope {
         return true;
     }
 
+    function requestSecureLock(): bool {
+        return CommandClient.session(DesktopCommands.session("lock"));
+    }
+
     function handleIdleAction(action: var): void {
         if (!action)
             return;
 
         if (action === "lock")
-            lock.lock.locked = true;
+            root.requestSecureLock();
         else if (action === "unlock")
-            lock.lock.locked = false;
+            return;
         else if (typeof action === "string")
             Hypr.dispatch(Hypr.usingLua && ["dpms off", "dpms on"].includes(action) ? `hl.dsp.dpms({ action = "${action === "dpms off" ? "disable" : "enable"}" })` : action);
         else if (!SessionManager.exec(action))
@@ -40,15 +43,11 @@ Scope {
     Connections {
         function onAboutToSleep(): void {
             if (GlobalConfig.general.idle.lockBeforeSleep)
-                root.lock.lock.locked = true;
+                root.requestSecureLock();
         }
 
         function onLockRequested(): void {
-            root.lock.lock.locked = true;
-        }
-
-        function onUnlockRequested(): void {
-            root.lock.lock.unlock();
+            root.requestSecureLock();
         }
 
         target: SessionManager

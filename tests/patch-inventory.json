@@ -31,16 +31,26 @@
       ]
     },
     {
-      "path": "src/core/**",
+        "path": "src/core/**",
       "upstreamPath": null,
       "category": "compatibility",
       "reason": "Retain the temporary Sleepy protocol-v3 surfaces until the corresponding upstream modules pass full parity gates.",
       "tests": [
         "tests/quickshell-core-host-contract.sh#PASS: production CoreDesktopWindows real PanelWindow lifecycle"
-      ]
+        ]
     },
     {
-      "path": "src/modules/background/SleepyBackground.qml",
+        "path": "src/modules/**",
+        "upstreamPath": "modules/**",
+        "category": "compatibility",
+        "reason": "Keep the complete upstream module graph while applying narrowly tested Sleepy IPC, secure-lock, and fixed-argv compatibility patches.",
+        "tests": [
+            "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected",
+            "tests/service-boundary.sh#Sleepy service boundary gate"
+        ]
+    },
+    {
+        "path": "src/modules/background/SleepyBackground.qml",
       "upstreamPath": null,
       "category": "branding",
       "reason": "Provide the temporary Sleepy-branded background projection pending activation of the upstream background module.",

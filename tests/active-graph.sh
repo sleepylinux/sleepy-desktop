@@ -12,9 +12,9 @@ if python3 "$gate" "$repo_root/tests/fixtures/active-graph-forbidden/shell.qml" 
     exit 1
 fi
 
-if ! rg -Fq 'Quickshell.Hyprland' \
+if ! rg -Fq 'forbidden runtime identity' \
         "${TMPDIR:-/tmp}/sleepy-active-graph-negative.out"; then
-    printf 'FAIL: negative fixture did not report its forbidden reachable import\n' >&2
+    printf 'FAIL: negative fixture did not report its forbidden runtime identity\n' >&2
     exit 1
 fi
 
@@ -23,12 +23,12 @@ for payload_style in quoted unquoted; do
     if python3 "$gate" \
             "$repo_root/tests/fixtures/active-graph-payload-${payload_style}/src/shell.qml" \
             >"$payload_output" 2>&1; then
-        printf 'FAIL: %s hand-written payload fixture passed the active-graph gate\n' \
+        printf 'FAIL: %s unsafe argv fixture passed the active-graph gate\n' \
             "$payload_style" >&2
         exit 1
     fi
-    if ! rg -Fq 'hand-written command payload in active surface graph' "$payload_output"; then
-        printf 'FAIL: %s payload fixture did not report the payload diagnostic\n' \
+    if ! rg -q -e 'shell interpreter command is forbidden|credential-bearing argv is forbidden' "$payload_output"; then
+        printf 'FAIL: %s unsafe argv fixture did not report the safety diagnostic\n' \
             "$payload_style" >&2
         exit 1
     fi

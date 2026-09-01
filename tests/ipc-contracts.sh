@@ -19,10 +19,13 @@ done
 
 grep -Fq 'property bool refreshAfterCurrent: false' "$system_adapter"
 grep -Fq 'if (root.refreshAfterCurrent)' "$system_adapter"
-grep -Fq 'property var requestQueue:' "$ipc"
-grep -Fq 'DesktopClient;' "$shell"
-if rg -n 'Drawers[[:space:]]*\{|Lock[[:space:]]*\{|AreaPicker[[:space:]]*\{' "$shell"; then
-  printf 'FAIL: Task 6 production shell must not instantiate quarantined visual modules\n' >&2
+grep -Fq 'function sessionAction(action: string): bool' "$ipc"
+grep -Fq 'ShellIpc {' "$shell"
+for surface in 'Drawers {' 'AreaPicker {' 'Background {' 'Shortcuts {'; do
+  grep -Fq "$surface" "$shell"
+done
+if rg -n 'CoreDesktopWindows[[:space:]]*\{|Lock[[:space:]]*\{' "$shell"; then
+  printf 'FAIL: reduced core or decorative lock must not be active in the modular shell\n' >&2
   exit 1
 fi
 grep -Fq 'eventSocketPath: Quickshell.env("XDG_RUNTIME_DIR") + "/sleepy/desktop.sock"' \
