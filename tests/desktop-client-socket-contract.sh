@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/tests/lib/qt6-moc-resolver.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-desktop-socket.XXXXXX")"
 stub_root="$test_root/qml-stubs"
 io_module="$stub_root/Quickshell/Io"
@@ -22,25 +23,7 @@ else
     exit 1
 fi
 
-is_qt6_moc() {
-    local candidate="$1"
-    local version
-
-    [[ -n "$candidate" && -x "$candidate" ]] || return 1
-    version="$("$candidate" -v 2>&1 || true)"
-    [[ "$version" == "moc 6."* ]]
-}
-
-moc_binary="$(command -v moc || true)"
-if ! is_qt6_moc "$moc_binary"; then
-    moc_binary=""
-    for candidate in /usr/lib/qt6/libexec/moc /usr/lib/qt6/bin/moc /usr/lib/qt6/moc /usr/bin/moc; do
-        if is_qt6_moc "$candidate"; then
-            moc_binary="$candidate"
-            break
-        fi
-    done
-fi
+moc_binary="$(resolve_qt6_moc || true)"
 if [[ -z "$moc_binary" ]] || ! command -v c++ >/dev/null 2>&1 \
         || ! pkg-config --exists Qt6Core Qt6Qml; then
     printf 'FAIL: Qt 6 moc, C++ compiler, and Qt6Qml pkg-config metadata are required\n' >&2

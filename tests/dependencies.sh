@@ -163,9 +163,27 @@ if ! rg -Fq 'packages = socketContractNativeInputs pkgs;' <<< "$dev_shell_block"
   printf 'FAIL: default dev shell must consume the complete socket contract native input set\n' >&2
   exit 1
 fi
-if ! rg -Fq 'moc_binary="$(command -v moc || true)"' \
-    "$repository_root/tests/desktop-client-socket-contract.sh"; then
+socket_moc_resolver="$repository_root/tests/lib/qt6-moc-resolver.sh"
+if ! rg -Fq 'candidate="$(command -v moc || true)"' \
+    "$socket_moc_resolver"; then
   printf 'FAIL: socket contract runner must discover the Nix-provided moc through PATH\n' >&2
+  exit 1
+fi
+if ! rg -Fq '"$qtpaths_binary" --query QT_INSTALL_LIBEXECS' \
+    "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must discover Nix moc through Qt libexec metadata\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkg-config --variable=libexecdir Qt6Core' \
+    "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must retain Qt6Core libexec metadata fallback\n' >&2
+  exit 1
+fi
+if ! rg -Fq '[[ -n "$libexec_dir" && "$libexec_dir" == /* ]] || return 1' \
+    "$socket_moc_resolver" \
+    || ! rg -Fq '[[ "$libexec_dir" != *$'\''\n'\''* && "$libexec_dir" != *$'\''\r'\''* ]] || return 1' \
+      "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must reject empty, relative, and multiline Qt metadata\n' >&2
   exit 1
 fi
 if ! rg -Fq 'bash "$repo_root/tests/dependencies.sh"' "$repository_root/tests/run.sh"; then

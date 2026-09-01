@@ -12,23 +12,28 @@ repository_copy="$test_root/repository"
 cp -a "$repo_root" "$repository_copy"
 cp "$repo_root/flake.nix" "$test_root/flake.nix"
 cp "$repo_root/tests/desktop-client-socket-contract.sh" "$test_root/socket-contract.sh"
+cp "$repo_root/tests/lib/qt6-moc-resolver.sh" "$test_root/moc-resolver.sh"
 
 reset_copy() {
     cp "$test_root/flake.nix" "$repository_copy/flake.nix"
     cp "$test_root/socket-contract.sh" \
         "$repository_copy/tests/desktop-client-socket-contract.sh"
+    cp "$test_root/moc-resolver.sh" \
+        "$repository_copy/tests/lib/qt6-moc-resolver.sh"
 }
 
 mutate() {
     local mode="$1"
     python3 - "$repository_copy/flake.nix" \
-        "$repository_copy/tests/desktop-client-socket-contract.sh" "$mode" <<'PY'
+        "$repository_copy/tests/desktop-client-socket-contract.sh" \
+        "$repository_copy/tests/lib/qt6-moc-resolver.sh" "$mode" <<'PY'
 from pathlib import Path
 import sys
 
 flake_path = Path(sys.argv[1])
 runner_path = Path(sys.argv[2])
-mode = sys.argv[3]
+resolver_path = Path(sys.argv[3])
+mode = sys.argv[4]
 
 dependencies = {
     "compiler": "        pkgs.stdenv.cc\n",
@@ -38,6 +43,7 @@ dependencies = {
 }
 flake_text = flake_path.read_text(encoding="utf-8")
 runner_text = runner_path.read_text(encoding="utf-8")
+resolver_text = resolver_path.read_text(encoding="utf-8")
 
 if mode in dependencies:
     needle = dependencies[mode]
@@ -61,15 +67,31 @@ elif mode == "dev-shell-consumer":
         raise SystemExit("expected one dev-shell socket input consumer")
     flake_text = flake_text.replace(needle, "packages = [];", 1)
 elif mode == "path-moc":
-    needle = 'moc_binary="$(command -v moc || true)"'
-    if runner_text.count(needle) != 1:
+    needle = 'candidate="$(command -v moc || true)"'
+    if resolver_text.count(needle) != 1:
         raise SystemExit("expected one PATH moc discovery")
-    runner_text = runner_text.replace(needle, 'moc_binary=""', 1)
+    resolver_text = resolver_text.replace(needle, 'candidate=""', 1)
+elif mode == "qtpaths-libexec":
+    needle = '"$qtpaths_binary" --query QT_INSTALL_LIBEXECS'
+    if resolver_text.count(needle) != 1:
+        raise SystemExit("expected one qtpaths libexec discovery")
+    resolver_text = resolver_text.replace(needle, 'printf %s ""', 1)
+elif mode == "pkgconfig-libexec":
+    needle = "pkg-config --variable=libexecdir Qt6Core"
+    if resolver_text.count(needle) != 1:
+        raise SystemExit("expected one pkg-config libexec discovery")
+    resolver_text = resolver_text.replace(needle, 'printf %s ""', 1)
+elif mode == "metadata-validation":
+    needle = '[[ -n "$libexec_dir" && "$libexec_dir" == /* ]] || return 1'
+    if resolver_text.count(needle) != 1:
+        raise SystemExit("expected one metadata validation guard")
+    resolver_text = resolver_text.replace(needle, ":", 1)
 else:
     raise SystemExit(f"unknown mutation: {mode}")
 
 flake_path.write_text(flake_text, encoding="utf-8")
 runner_path.write_text(runner_text, encoding="utf-8")
+resolver_path.write_text(resolver_text, encoding="utf-8")
 PY
 }
 
@@ -80,7 +102,10 @@ for mode in \
     qt-qml \
     qml-consumer \
     dev-shell-consumer \
-    path-moc; do
+    path-moc \
+    qtpaths-libexec \
+    pkgconfig-libexec \
+    metadata-validation; do
     reset_copy
     mutate "$mode"
     set +e
@@ -94,4 +119,4 @@ for mode in \
     fi
 done
 
-printf 'PASS: dependency validator rejects missing socket build inputs and PATH moc discovery\n'
+printf 'PASS: dependency validator rejects missing socket inputs and unsafe moc discovery\n'
