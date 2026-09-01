@@ -73,6 +73,10 @@ if rg -n '(property string (password|secret|text)|IpcHandler|GlobalShortcut|Cust
     "$locker/qml/SleepyLockView.qml"; then
   fail 'lock view must remain presentation-only and receive no secret or authority'
 fi
+if rg -n 'property[[:space:]]+[[:alnum:]<>]+[[:space:]]+on[A-Z]' \
+    "$locker/qml/SleepyLockView.qml"; then
+  fail 'lock view properties must not collide with QML onSignal handler syntax'
+fi
 if rg -n '(IpcHandler|CustomShortcut|GlobalShortcut)' "$locker"; then
   fail 'locker must not expose Quickshell IPC or shortcut authority'
 fi

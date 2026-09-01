@@ -18,7 +18,7 @@ Item {
     signal authenticateRequested()
 
     readonly property color surface: "#dfe3eb"
-    readonly property color onSurface: "#171c23"
+    readonly property color surfaceText: "#171c23"
     readonly property color surfaceContainer: "#bcc4cf"
     readonly property color secondaryContainer: "#c4c6e9"
     readonly property color error: "#ba1a1a"
@@ -79,7 +79,7 @@ Item {
 
                 Text {
                     text: weather.temperature || "—°"
-                    color: root.onSurface
+                    color: root.surfaceText
                     font.pixelSize: 46
                     font.weight: Font.DemiBold
                 }
@@ -99,7 +99,7 @@ Item {
                         anchors.margins: 18
                         spacing: 7
                         Text { text: qsTr("NOW PLAYING"); color: "#53566f"; font.pixelSize: 11; font.weight: Font.Bold }
-                        Text { width: parent.width; elide: Text.ElideRight; text: media.title || qsTr("Nothing playing"); color: root.onSurface; font.pixelSize: 18 }
+                        Text { width: parent.width; elide: Text.ElideRight; text: media.title || qsTr("Nothing playing"); color: root.surfaceText; font.pixelSize: 18 }
                         Text { width: parent.width; elide: Text.ElideRight; text: media.artist || "Sleepy Linux"; color: "#5a616c"; font.pixelSize: 14 }
                     }
                 }
@@ -122,7 +122,7 @@ Item {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.clockText
-                    color: root.onSurface
+                    color: root.surfaceText
                     font.pixelSize: Math.max(72, lockContent.height * 0.15)
                     font.weight: Font.Light
                 }
@@ -167,7 +167,7 @@ Item {
                                 width: 9
                                 height: 9
                                 radius: 5
-                                color: root.onSurface
+                                color: root.surfaceText
                             }
                         }
                         Text {
@@ -217,7 +217,7 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 13
                             Text { text: modelData[0]; color: "#626a75"; font.pixelSize: 10; font.weight: Font.Bold }
-                            Text { text: modelData[1]; color: root.onSurface; font.pixelSize: 17 }
+                            Text { text: modelData[1]; color: root.surfaceText; font.pixelSize: 17 }
                         }
                     }
                 }
