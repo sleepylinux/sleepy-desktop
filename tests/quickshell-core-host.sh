@@ -8,6 +8,21 @@ case "$backend" in
     software|rhi) ;;
     *) printf 'FAIL: quickshell host backend must be software or rhi\n' >&2; exit 1 ;;
 esac
+quickshell="${2:-}"
+if [[ -z "$quickshell" || "$quickshell" != /* \
+        || ! -f "$quickshell" || ! -x "$quickshell" ]]; then
+    printf 'FAIL: production CoreDesktopWindows test requires an explicit executable Quickshell path\n' >&2
+    exit 1
+fi
+
+private_guard="${SLEEPY_PRIVATE_WAYLAND_GUARD:-}"
+if [[ -z "${XDG_RUNTIME_DIR:-}" || -z "$private_guard" \
+        || "$private_guard" != "$XDG_RUNTIME_DIR/.sleepy-private-wayland.guard" \
+        || -L "$private_guard" || ! -f "$private_guard" \
+        || "$(<"$private_guard")" != "$XDG_RUNTIME_DIR" ]]; then
+    printf 'FAIL: production CoreDesktopWindows test requires the private Wayland runner guard\n' >&2
+    exit 1
+fi
 
 if [[ -z "${WAYLAND_DISPLAY:-}" || -z "${XDG_RUNTIME_DIR:-}" \
         || ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]]; then
@@ -42,7 +57,7 @@ trap cleanup EXIT
 setsid env QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM=wayland \
     QT_QUICK_BACKEND="$backend" QSG_RHI_BACKEND=opengl LIBGL_ALWAYS_SOFTWARE=1 \
     timeout --signal=TERM --kill-after=5s 45s \
-    quickshell --no-color --path \
+    "$quickshell" --no-color --path \
         "$repo_root/tst_core_desktop_windows.qml" \
         >"$host_log" 2>&1 &
 runner_pid=$!

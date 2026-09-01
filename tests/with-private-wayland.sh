@@ -3,11 +3,19 @@ set -euo pipefail
 
 if [[ "${1:-}" == "--session" ]]; then
     shift
-    runtime_dir="$1"
+    runner_root="$1"
     compositor="$2"
     compositor_config="$3"
     compositor_log="$4"
     shift 4
+
+    runtime_dir="$runner_root/runtime"
+    private_home="$runner_root/home"
+    private_cache="$runner_root/cache"
+    private_config="$runner_root/config"
+    private_data="$runner_root/data"
+    private_state="$runner_root/state"
+    private_guard="$runtime_dir/.sleepy-private-wayland.guard"
 
     compositor_pid=""
     cleanup_compositor() {
@@ -25,9 +33,14 @@ if [[ "${1:-}" == "--session" ]]; then
     trap 'exit 143' TERM
     trap 'exit 130' INT
 
-    env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET -u DISPLAY \
+    env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET -u DISPLAY -u XAUTHORITY \
         -u HYPRLAND_INSTANCE_SIGNATURE -u SWAYSOCK -u I3SOCK \
-        XDG_RUNTIME_DIR="$runtime_dir" WLR_BACKENDS=headless \
+        HOME="$private_home" XDG_RUNTIME_DIR="$runtime_dir" \
+        XDG_CACHE_HOME="$private_cache" XDG_CONFIG_HOME="$private_config" \
+        XDG_DATA_HOME="$private_data" XDG_STATE_HOME="$private_state" \
+        SLEEPY_PRIVATE_WAYLAND_ROOT="$runner_root" \
+        SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
+        WLR_BACKENDS=headless \
         WLR_HEADLESS_OUTPUTS=2 WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman \
         "$compositor" --unsupported-gpu --config "$compositor_config" \
             --verbose >"$compositor_log" 2>&1 &
@@ -54,9 +67,17 @@ if [[ "${1:-}" == "--session" ]]; then
         exit 1
     fi
 
+    export HOME="$private_home"
     export XDG_RUNTIME_DIR="$runtime_dir"
+    export XDG_CACHE_HOME="$private_cache"
+    export XDG_CONFIG_HOME="$private_config"
+    export XDG_DATA_HOME="$private_data"
+    export XDG_STATE_HOME="$private_state"
+    export SLEEPY_PRIVATE_WAYLAND_ROOT="$runner_root"
+    export SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard"
     export WAYLAND_DISPLAY="$wayland_socket"
     unset WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
+    unset DISPLAY XAUTHORITY
     set +e
     "$@"
     child_status=$?
@@ -89,27 +110,40 @@ fi
 
 runner_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-private-wayland.XXXXXX")"
 runtime_dir="$runner_root/runtime"
+private_home="$runner_root/home"
+private_cache="$runner_root/cache"
+private_config="$runner_root/config"
+private_data="$runner_root/data"
+private_state="$runner_root/state"
+private_guard="$runtime_dir/.sleepy-private-wayland.guard"
 compositor_config="$runner_root/sway.conf"
 compositor_log="$runner_root/sway.log"
-mkdir -p "$runtime_dir"
-chmod 0700 "$runtime_dir"
+mkdir -p "$runtime_dir" "$private_home" "$private_cache" "$private_config" \
+    "$private_data" "$private_state"
+chmod 0700 "$runner_root" "$runtime_dir" "$private_home" "$private_cache" \
+    "$private_config" "$private_data" "$private_state"
+printf '%s\n' "$runtime_dir" >"$private_guard"
+chmod 0600 "$private_guard"
 printf 'xwayland disable\nseat seat0 fallback true\noutput * resolution 1280x720\n' \
     >"$compositor_config"
 
 session_pid=""
 session_pgid=""
+owns_session_group=false
 cleanup_session() {
-    if [[ -n "$session_pid" ]] && kill -0 "$session_pid" 2>/dev/null; then
-        if [[ "$session_pgid" == "$session_pid" ]]; then
+    if [[ "$owns_session_group" == true && -n "$session_pgid" ]]; then
+        if kill -0 -- "-$session_pgid" 2>/dev/null; then
             kill -TERM -- "-$session_pgid" 2>/dev/null || true
             for _ in $(seq 1 40); do
-                kill -0 "$session_pid" 2>/dev/null || break
+                kill -0 -- "-$session_pgid" 2>/dev/null || break
                 sleep 0.05
             done
             kill -KILL -- "-$session_pgid" 2>/dev/null || true
-        else
-            kill -TERM "$session_pid" 2>/dev/null || true
         fi
+    elif [[ -n "$session_pid" ]] && kill -0 "$session_pid" 2>/dev/null; then
+        kill -TERM "$session_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$session_pid" ]]; then
         wait "$session_pid" 2>/dev/null || true
     fi
     rm -rf -- "$runner_root"
@@ -119,9 +153,10 @@ trap 'exit 143' TERM
 trap 'exit 130' INT
 
 unset WAYLAND_DISPLAY WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
+unset DISPLAY XAUTHORITY SLEEPY_PRIVATE_WAYLAND_ROOT SLEEPY_PRIVATE_WAYLAND_GUARD
 setsid timeout --signal=TERM --kill-after=5s "$timeout_seconds" \
     dbus-run-session -- bash "$0" --session \
-        "$runtime_dir" "$compositor" "$compositor_config" "$compositor_log" \
+        "$runner_root" "$compositor" "$compositor_config" "$compositor_log" \
         "$@" &
 session_pid=$!
 session_pgid="$(ps -o pgid= -p "$session_pid" | tr -d '[:space:]')"
@@ -129,13 +164,15 @@ if [[ "$session_pgid" != "$session_pid" ]]; then
     printf 'FAIL: private Wayland supervisor did not receive its own process group\n' >&2
     exit 1
 fi
+owns_session_group=true
 
 set +e
 wait "$session_pid"
 status=$?
 set -e
-session_pid=""
 if [[ $status -ne 0 ]]; then
     cat "$compositor_log" >&2
 fi
+cleanup_session
+trap - EXIT
 exit "$status"

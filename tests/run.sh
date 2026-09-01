@@ -81,11 +81,12 @@ done
 validate_parity_evidence_results "$parity_manifest" "$evidence_results"
 
 private_compositor="${SLEEPY_TEST_WAYLAND_COMPOSITOR:-${SLEEPY_TEST_SWAY:-}}"
+SLEEPY_TEST_QUICKSHELL="${SLEEPY_TEST_QUICKSHELL:-}"
 if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then
   bash "$repo_root/tests/with-private-wayland.sh" \
-    "$repo_root/tests/quickshell-core-host.sh" software
+    "$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"
   bash "$repo_root/tests/with-private-wayland.sh" \
-    "$repo_root/tests/quickshell-core-host.sh" rhi
+    "$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"
 else
   printf 'SKIP: private Wayland compositor is not configured; real Quickshell host gate was not run\n'
 fi

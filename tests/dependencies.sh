@@ -217,6 +217,15 @@ if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/q
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
   exit 1
 fi
+if ! rg -Fq 'export SLEEPY_TEST_QUICKSHELL=${quickshellWithModules}/bin/qs' \
+    <<< "$qml_check_block" ||
+    ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"' \
+      "$repository_root/tests/run.sh" ||
+    ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: real host gates must receive the exact pinned Quickshell qs executable explicitly\n' >&2
+  exit 1
+fi
 if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
     <<< "$qml_check_block"; then
   printf 'FAIL: qml check must expose the built Sleepy native plugin on the closed import path\n' >&2

@@ -325,6 +325,7 @@
             export QML2_IMPORT_PATH=${qtQmlImportPath}
             export QML_IMPORT_PATH=${qtQmlImportPath}
             export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml
+            export SLEEPY_TEST_QUICKSHELL=${quickshellWithModules}/bin/qs
             export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
