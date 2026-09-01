@@ -108,6 +108,14 @@ if ! rg -Fq 'bash tests/packaged-full-shell-smoke.sh' "$flake"; then
   printf 'FAIL: Nix QML check must run the empty-home complete closure smoke\n' >&2
   exit 1
 fi
+if ! rg -Fq 'QT_QUICK_BACKEND=software' "$repository_root/tests/packaged-full-shell-smoke.sh"; then
+  printf 'FAIL: empty-home full-shell smoke must use a deterministic software scenegraph\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'Quickshell.env("SHELL") || ""' "$repository_root/src/utils/SysInfo.qml"; then
+  printf 'FAIL: system info must tolerate SHELL being absent from a clean environment\n' >&2
+  exit 1
+fi
 
 if ! rg -Fq 'sleepy-artwork.checks.${system}.assets' "$flake"; then
   printf 'FAIL: desktop checks must consume exact sleepy-artwork checks.<system>.assets\n' >&2

@@ -54,6 +54,7 @@ env -i \
   XDG_STATE_HOME="$smoke_root/state" \
   XDG_DATA_HOME="$smoke_root/data" \
   QT_QPA_PLATFORM=wayland \
+  QT_QUICK_BACKEND=software \
   "$timeout_bin" --signal=TERM --kill-after=5s 7 "$shell_executable" \
     >"$smoke_root/shell.log" 2>&1
 status=$?
