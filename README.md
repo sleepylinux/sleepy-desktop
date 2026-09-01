@@ -72,12 +72,38 @@ visible geometric fallback when resolution or manifest validation fails.
 The pinned `sleepy-sdk` settings, preset, system, desktop-event-v3, and
 desktop-command-v3 schemas are installed alongside the QML.
 
-Task 6 packages intentionally run a minimal daemon-backed shell graph while
-the imported visual modules are audited in later porting tasks. Quarantined
-source remains in the repository for provenance, but the production shell does
-not import `src/modules/**`, native `Sleepy.Services`, or native
-`Sleepy.Models`, and production installs remove `modules/lock` plus
-`assets/pam.d`.
+## Full shell graph
+
+The production entry point loads the complete modular shell graph: bar and
+popouts, launcher modes, dashboard tabs, sidebar, notifications, Nexus pages
+and dialogs, OSDs, session controls, utilities, window information,
+wallpaper/style controls and the secure lock presentation. The source remains
+split under `src/modules`, `src/services`, `src/components`, and `src/config`;
+Sleepy-specific transport adapters are separate from the visual components, so
+a provider or individual surface can be changed without forking a monolithic
+entry point.
+
+The visual and interaction baseline is Caelestia Shell v2.4.0. Production files
+are Sleepy-owned and import only Sleepy QML modules and packages. There is no
+runtime Caelestia executable, configuration directory, IPC service, plugin, or
+network bootstrap. The only intentional visible differences are Sleepy names
+and branding; deterministic reference tests mask only those declared regions.
+
+`ServiceLoader.qml` composes the provider layer. Compositor state and dispatch
+use `Quickshell.Hyprland` and fixed `hyprctl` queries; network uses fixed-argv
+`nmcli`; audio, media, tray, notifications and power telemetry use native
+Quickshell Qt/D-Bus models. Brightness and VPN adapters select one installed
+backend and read it back after mutation. Wallpaper and colour-scheme state use
+the modular `sleepy` appearance CLI. The complete executable map is substituted
+to immutable Nix store paths when the package is built, so an empty XDG home
+cannot accidentally resolve a Caelestia helper from `PATH`.
+
+Protected actions are deliberately outside that direct-provider layer.
+Recording lifecycle and confined deletion, idle inhibition, game mode, lock,
+suspend, logout, reboot and power-off are typed `sleepy-sessiond` requests.
+The lock view receives redacted presentation state only; `sleepy-locker` owns
+the ext-session-lock protocol and PAM conversation, and no QML API can unlock
+the session.
 
 ## Validate
 
@@ -90,6 +116,8 @@ hard failure.
 
 ```sh
 bash tests/run.sh
+bash tests/packaged-full-shell-smoke.sh
+bash tests/reference-contract.sh
 bash tests/dependencies.sh
 bash tests/validate-qml-paths.sh
 bash scripts/validate-qml.sh
@@ -101,6 +129,10 @@ The behavior tests use Qt's real QML test runner; they do not inspect QML source
 text. Their negative fixtures cover unknown settings keys and malformed JSON.
 The main suite uses the Qt Quick software backend, then performs a focused RHI
 pass with Mesa software rendering for the real `MultiEffect` pixel assertion.
+The reference comparator additionally checks exact RGBA pixels outside the
+Sleepy branding mask, surface bounds and ordered animation frames/timestamps.
+Real reference captures and the real virt-manager acceptance remain separate
+environment gates; unit fixtures do not stand in for those gates.
 
 ## Preview
 
