@@ -99,23 +99,23 @@
     },
     {
       "path": "src/modules/background/Background.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell ShellScreen variants, Sleepy config/theme tokens, and approved wallpaper projection",
+      "degradedState": "Missing wallpaper renders the original explicit wallpaper-selection state; other outputs remain operational",
       "tests": [
-        "tests/qml/tst_parity.qml#test_background_respects_confirmed_effects_and_monitor_scale"
+        "tests/qml/tst_full_bar_background_osd.qml#test_two_output_background_and_hotplug_are_native_screen_variants"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/background/DesktopClock.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell ShellScreen variants, Sleepy config/theme tokens, and approved wallpaper projection",
+      "degradedState": "Missing wallpaper renders the original explicit wallpaper-selection state; other outputs remain operational",
       "tests": [
-        "tests/qml/tst_parity.qml#test_background_respects_confirmed_effects_and_monitor_scale"
+        "tests/qml/tst_full_bar_background_osd.qml#test_two_output_background_and_hotplug_are_native_screen_variants"
       ],
       "behaviorStatus": "verified"
     },
@@ -132,365 +132,395 @@
     },
     {
       "path": "src/modules/background/Visualiser.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell ShellScreen variants, Sleepy config/theme tokens, and approved wallpaper projection",
+      "degradedState": "Missing wallpaper renders the original explicit wallpaper-selection state; other outputs remain operational",
       "tests": [
-        "tests/qml/tst_parity.qml#test_background_respects_confirmed_effects_and_monitor_scale"
+        "tests/qml/tst_full_bar_background_osd.qml#test_two_output_background_and_hotplug_are_native_screen_variants"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/background/Wallpaper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell ShellScreen variants, Sleepy config/theme tokens, and approved wallpaper projection",
+      "degradedState": "Missing wallpaper renders the original explicit wallpaper-selection state; other outputs remain operational",
       "tests": [
-        "tests/qml/tst_parity.qml#test_background_respects_confirmed_effects_and_monitor_scale"
+        "tests/qml/tst_full_bar_background_osd.qml#test_two_output_background_and_hotplug_are_native_screen_variants"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Arbitrary wallpaper image rendering is unavailable because desktop protocol v3 exposes only a semantic wallpaper identifier and no approved image handle"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/Bar.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/BarWrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/ActiveWindow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/Clock.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/OsIcon.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/Power.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/StatusIcons.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/Tray.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/TrayItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/status/BatteryStatus.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/status/BluetoothStatus.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/status/LockStatus.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/workspaces/ActiveIndicator.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/workspaces/OccupiedBg.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/workspaces/SpecialWorkspaces.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/workspaces/Workspace.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/components/workspaces/Workspaces.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/ActiveWindow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/AudioPopout.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/Battery.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/Bluetooth.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/ClipWrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/LockStatus.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/Network.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/PopoutState.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/TrayMenu.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/WirelessPassword.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/kblayout/KbLayout.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/bar/popouts/kblayout/KbLayoutModel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland/SystemTray/DBusMenu/PipeWire/UPower providers and fixed-argv brightness tools",
+      "degradedState": "Provider-local unavailable state; unrelated bar controls remain operational",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_workspaces_are_per_monitor_and_focus_uses_exact_builder"
+        "tests/qml/tst_full_bar_background_osd.qml#test_bar_hover_fullscreen_title_tray_and_scroll_contracts",
+        "tests/qml/tst_full_bar_background_osd.qml#test_workspaces_keep_active_occupied_special_and_per_monitor_rules"
       ],
       "behaviorStatus": "verified"
     },
@@ -1948,23 +1978,23 @@
     },
     {
       "path": "src/modules/osd/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell PipeWire state and fixed-argv brightness provider",
+      "degradedState": "Unavailable microphone or brightness hides only that OSD control",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_osd_routes_exact_supported_commands_without_optimistic_state"
+        "tests/qml/tst_full_bar_background_osd.qml#test_osd_uses_observed_audio_brightness_and_original_transitions"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/osd/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell PipeWire state and fixed-argv brightness provider",
+      "degradedState": "Unavailable microphone or brightness hides only that OSD control",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_osd_routes_exact_supported_commands_without_optimistic_state"
+        "tests/qml/tst_full_bar_background_osd.qml#test_osd_uses_observed_audio_brightness_and_original_transitions"
       ],
       "behaviorStatus": "verified"
     },
