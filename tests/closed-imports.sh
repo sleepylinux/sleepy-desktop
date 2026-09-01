@@ -5,6 +5,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 shell="$repo_root/src/shell.qml"
 failed=0
 
+if [[ $# -gt 1 ]]; then
+  printf 'usage: %s [searcher-source-root]\n' "$0" >&2
+  exit 2
+fi
+
 if rg -n '^import "modules' "$shell"; then
   printf 'FAIL: packaged shell must not depend on quarantined module import roots\n' >&2
   failed=1
@@ -28,13 +33,19 @@ if ! rg -Fq 'rm -rf "$out/${installRoot}/modules/lock" "$out/${installRoot}/asse
   failed=1
 fi
 
+searcher_source_root="${1:-$repo_root/src}"
 while IFS= read -r searcher_consumer; do
-  if ! rg -q '^import qs\.utils([[:space:]]|$)' "$searcher_consumer"; then
+  if ! awk '
+    /^[[:space:]]*import[[:space:]]+qs[.]utils([[:space:]]+[0-9]+[.][0-9]+)?[[:space:]]*(\/\/.*)?$/ {
+      found = 1
+    }
+    END { exit found ? 0 : 1 }
+  ' "$searcher_consumer"; then
     printf 'FAIL: Searcher consumer must import its owning qs.utils module: %s\n' \
-      "${searcher_consumer#"$repo_root"/}" >&2
+      "${searcher_consumer#"$searcher_source_root"/}" >&2
     failed=1
   fi
-done < <(rg -l '^[[:space:]]*Searcher[[:space:]]*\{' "$repo_root/src" -g '*.qml')
+done < <(rg -l '^[[:space:]]*Searcher[[:space:]]*\{' "$searcher_source_root" -g '*.qml')
 
 if [[ $failed -ne 0 ]]; then
   exit 1
