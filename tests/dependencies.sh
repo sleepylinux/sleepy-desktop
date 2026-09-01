@@ -73,6 +73,19 @@ if ! rg -Fq 'sessionPackage = sleepy-session.packages.${system}.sleepy-session;'
   exit 1
 fi
 
+if rg -Fq 'pkgs.qt6.qtquickcontrols2' "$flake"; then
+  printf 'FAIL: pinned nixpkgs provides Qt Quick Controls 2 through qt6.qtdeclarative, not qt6.qtquickcontrols2\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkgs.qt6.qtdeclarative' "$flake"; then
+  printf 'FAIL: native plugin must retain the Qt declarative/Quick Controls dependency\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'cmakeDir = "../locker";' "$flake"; then
+  printf 'FAIL: out-of-source CMake must resolve the locker directory from the build directory\n' >&2
+  exit 1
+fi
+
 for contract in desktop-event-v3.schema.json desktop-command-v3.schema.json; do
   if ! rg -Fq "\"\${sleepy-sdk}/schemas/$contract\"" "$flake" ||
       ! rg -Fq "\"\$out/\${installRoot}/contracts/$contract\"" "$flake"; then

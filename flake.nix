@@ -66,7 +66,6 @@
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
               pkgs.qt6.qtshadertools
-              pkgs.qt6.qtquickcontrols2
             ];
             dontWrapQtApps = true;
             cmakeFlags = [
@@ -88,7 +87,7 @@
                 ./tests/locker_native.cpp
               ];
             };
-            cmakeDir = "locker";
+            cmakeDir = "../locker";
             nativeBuildInputs = [
               pkgs.cmake
               pkgs.makeWrapper
