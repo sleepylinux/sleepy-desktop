@@ -358,6 +358,71 @@ TestCase {
         compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
     }
 
+    function throwingProjectionRecord(identifier) {
+        const record = {"id": identifier};
+        Object.defineProperty(record, "ssid", {
+            "enumerable": true,
+            "get": function() {
+                throw new Error("synthetic projection record failure");
+            }
+        });
+        return record;
+    }
+
+    function test_failed_reconciliation_never_retains_staged_new_handles() {
+        const model = loadProductionModelWithTrackedCellMap();
+        verify(model.applyFullSnapshot(snapshot(), 1));
+        const beforeSize = testCase.trackedCellMap.size;
+        const beforeRows = model.accessPoints;
+
+        for (let iteration = 0; iteration < 100; ++iteration) {
+            let threw = false;
+            try {
+                model.reconcileRows("accessPoints", [
+                    {"id": "new-" + iteration, "ssid": "New", "signalLevel": 0.4,
+                        "secured": false},
+                    throwingProjectionRecord("throwing-" + iteration)
+                ], "id");
+            } catch (_error) {
+                threw = true;
+            }
+            verify(threw, "iteration " + iteration);
+            compare(model.accessPoints, beforeRows, "iteration " + iteration);
+            if (typeof gc === "function" && iteration % 10 === 0)
+                gc();
+        }
+
+        compare(testCase.trackedCellMap.size, beforeSize);
+    }
+
+    function test_failed_reconciliation_never_partially_updates_existing_cells() {
+        const model = loadProductionModelWithTrackedCellMap();
+        verify(model.applyFullSnapshot(snapshot(), 1));
+        const home = model.accessPoints[0];
+        const beforeRows = model.accessPoints;
+        const beforeSize = testCase.trackedCellMap.size;
+
+        let threw = false;
+        try {
+            model.reconcileRows("accessPoints", [
+                {"id": "new-before-failure", "ssid": "New", "signalLevel": 0.4,
+                    "secured": false},
+                {"id": "ap-home", "ssid": "Partially updated", "signalLevel": 0.01,
+                    "secured": true},
+                throwingProjectionRecord("throwing-after-existing")
+            ], "id");
+        } catch (_error) {
+            threw = true;
+        }
+
+        verify(threw);
+        compare(model.accessPoints, beforeRows);
+        compare(model.accessPoints[0], home);
+        compare(home.ssid, "Home");
+        compare(home.signalLevel, 0.8);
+        compare(testCase.trackedCellMap.size, beforeSize);
+    }
+
     function reachableRowBacking(row) {
         const candidates = [row];
         const visited = [];

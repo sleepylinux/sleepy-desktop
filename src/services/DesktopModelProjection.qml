@@ -166,16 +166,23 @@ QtObject {
                     }
                 });
             }
-            cells.set(target, cell);
-            return Object.freeze(target);
+            return {
+                "cell": cell,
+                "created": true,
+                "target": Object.freeze(target)
+            };
         }
 
         function replaceRecord(propertyName, target, source) {
             const cell = cells.get(target);
             if (!cell || Object.keys(source).some(key => !root.own(target, key)))
                 return createRow(propertyName, source);
-            cell.record = root.deepFreeze(root.deepClone(source));
-            return target;
+            return {
+                "cell": cell,
+                "created": false,
+                "record": root.deepFreeze(root.deepClone(source)),
+                "target": target
+            };
         }
 
         return function(propertyName, records, keyName) {
@@ -189,12 +196,21 @@ QtObject {
             }
 
             const next = [];
+            const staged = [];
             for (const record of source) {
                 if (!record || !root.own(record, key))
                     continue;
                 const identifier = String(record[key]);
                 const item = root.own(byId, identifier) ? byId[identifier] : null;
-                next.push(replaceRecord(propertyName, item, record));
+                const replacement = replaceRecord(propertyName, item, record);
+                staged.push(replacement);
+                next.push(replacement.target);
+            }
+            for (const replacement of staged) {
+                if (replacement.created)
+                    cells.set(replacement.target, replacement.cell);
+                else
+                    replacement.cell.record = replacement.record;
             }
             for (const item of previous) {
                 if (next.indexOf(item) < 0)
