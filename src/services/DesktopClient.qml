@@ -88,6 +88,7 @@ DesktopProtocol {
             }
         }
         onError: {
+            root.desktopSocket.connected = false;
             root.scheduleReconnect("Desktop stream unavailable", true);
         }
     }

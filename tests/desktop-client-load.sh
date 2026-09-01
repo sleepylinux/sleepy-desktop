@@ -21,6 +21,7 @@ export KDE_DEBUG=1
 export QT_STYLE_OVERRIDE=Fusion
 export QT_QPA_PLATFORM=offscreen
 export QT_QUICK_BACKEND=software
+export QML_XHR_ALLOW_FILE_READ=1
 export QML2_IMPORT_PATH="$repo_root/tests/qml-stubs:$repo_root/src"
 
 timeout --signal=TERM --kill-after=5s 30s \
