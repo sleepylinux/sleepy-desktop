@@ -194,7 +194,7 @@ Loader {
                         text: qsTr("Delete")
                         type: TextButton.Text
                         onClicked: {
-                            CUtils.deleteFile(Qt.resolvedUrl(root.props.recordingConfirmDelete));
+                            Recorder.deleteRecording(root.props.recordingConfirmDelete);
                             root.props.recordingConfirmDelete = "";
                         }
                     }

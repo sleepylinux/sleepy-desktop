@@ -450,7 +450,7 @@ QtObject {
     function startRecording() {
         if (!root.recordingAvailable || root.busy)
             return false;
-        const command = DesktopCommands.utilityStartRecording(root.outputId);
+        const command = DesktopCommands.utilityStartRecording(root.outputId, false);
         return command ? root.sendTrackedAction("utility:recording", function() {
             return root.commandClient.utility(command);
         }) : false;

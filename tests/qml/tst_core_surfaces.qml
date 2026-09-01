@@ -593,7 +593,7 @@ TestCase {
 
         compare(JSON.stringify(commands.sent), JSON.stringify([
             {"family":"utility","command":{"type":"setIdleInhibited","data":{"enabled":true}}},
-            {"family":"utility","command":{"type":"startRecording","data":{"outputId":"DP-1"}}},
+            {"family":"utility","command":{"type":"startRecording","data":{"outputId":"DP-1","audio":false}}},
             {"family":"utility","command":{"type":"screenshot","data":{"outputId":"DP-1"}}},
             {"family":"utility","command":{"type":"pickColor"}},
             {"family":"utility","command":{"type":"setGameMode","data":{"enabled":true}}},

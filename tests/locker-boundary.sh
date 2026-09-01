@@ -17,6 +17,7 @@ for path in \
   "$locker/secureprompt.hpp" \
   "$locker/secureprompt.cpp" \
   "$locker/qml/LockRoot.qml" \
+  "$locker/qml/SleepyLockView.qml" \
   "$repo_root/tests/packaged-locker-smoke.sh" \
   "$repo_root/tests/locker_native.cpp"; do
   [[ -f "$path" ]] || fail "missing locker source: ${path#"$repo_root/"}"
@@ -61,8 +62,16 @@ rg -Fq 'prompt.forceActiveFocus()' "$locker/qml/LockRoot.qml" \
   || fail 'the native secure prompt must receive keyboard focus after lock activation'
 
 if rg -n '\b(unlock|Unlock)\b' "$locker" \
-    | rg -v 'PAM result|authenticated|unlock-and-destroy|sessionLock\.unlock\(\)'; then
+    | rg -v 'PAM result|authenticated|unlock-and-destroy|sessionLock\.unlock\(\)|unlockAnimation'; then
   fail 'locker must not expose a public or generic unlock path'
+fi
+rg -Fq 'SleepyLockView' "$locker/qml/LockRoot.qml" \
+  || fail 'secure prompt must host the complete Sleepy lock view'
+rg -Fq 'inputLength: prompt.inputLength' "$locker/qml/LockRoot.qml" \
+  || fail 'lock view may receive only redacted credential length'
+if rg -n '(property string (password|secret|text)|IpcHandler|GlobalShortcut|CustomShortcut)' \
+    "$locker/qml/SleepyLockView.qml"; then
+  fail 'lock view must remain presentation-only and receive no secret or authority'
 fi
 if rg -n '(IpcHandler|CustomShortcut|GlobalShortcut)' "$locker"; then
   fail 'locker must not expose Quickshell IPC or shortcut authority'

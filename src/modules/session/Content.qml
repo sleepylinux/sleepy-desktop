@@ -86,8 +86,7 @@ Column {
         required property list<string> command
 
         function exec(): void {
-            if (!SessionManager.exec(command))
-                Quickshell.execDetached(command);
+            SessionManager.exec(command);
         }
 
         implicitWidth: Tokens.sizes.session.button

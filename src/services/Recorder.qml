@@ -17,11 +17,21 @@ Singleton {
     property real elapsed: 0
 
     function start(extraArgs = []): void {
-        const outputId = extraArgs.indexOf("-s") >= 0 ? "selection" : "active";
-        const command = DesktopCommands.utilityStartRecording(outputId);
+        const region = extraArgs.some(arg => arg.includes("r"));
+        const withAudio = extraArgs.some(arg => arg.includes("s"));
+        const outputId = region ? "selection" : "active";
+        const command = DesktopCommands.utilityStartRecording(outputId, withAudio);
         if (command && CommandClient.utility(command)) {
             root.elapsed = 0;
         }
+    }
+
+    function deleteRecording(path: string): void {
+        const encodedName = String(path).split("/").pop();
+        const recordingId = decodeURIComponent(encodedName || "");
+        const command = DesktopCommands.utilityDeleteRecording(recordingId);
+        if (command)
+            CommandClient.utility(command);
     }
 
     function stop(): void {

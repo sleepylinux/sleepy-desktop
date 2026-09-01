@@ -497,9 +497,16 @@
   {
     "name": "utility start recording",
     "builder": "utilityStartRecording",
-    "args": ["eDP-1"],
+    "args": ["eDP-1", false],
     "family": "utility",
-    "command": { "type": "startRecording", "data": { "outputId": "eDP-1" } }
+    "command": { "type": "startRecording", "data": { "outputId": "eDP-1", "audio": false } }
+  },
+  {
+    "name": "utility delete recording",
+    "builder": "utilityDeleteRecording",
+    "args": ["recording_20260901_12-34-56.mp4"],
+    "family": "utility",
+    "command": { "type": "deleteRecording", "data": { "recordingId": "recording_20260901_12-34-56.mp4" } }
   },
   {
     "name": "utility pause recording",

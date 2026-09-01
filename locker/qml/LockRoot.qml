@@ -58,44 +58,12 @@ Scope {
                         sessionLock.unlock();
                 }
 
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: Math.min(parent.width - 48, 420)
-                    height: 196
-                    radius: 28
-                    color: "#20242b"
-                    border.color: "#5f6b7a"
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 22
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            color: "#f1f3f5"
-                            font.pixelSize: 25
-                            text: qsTr("Sleepy is locked")
-                            textFormat: Text.PlainText
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            color: "#ccd3dc"
-                            font.pixelSize: 22
-                            text: "●".repeat(prompt.inputLength)
-                            textFormat: Text.PlainText
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            color: prompt.authState === AuthState.Rejected ? "#ffb4ab" : "#bac2cf"
-                            font.pixelSize: 15
-                            text: prompt.authState === AuthState.Authenticating ? qsTr("Checking…")
-                                : prompt.authState === AuthState.Rejected ? qsTr("Authentication failed")
-                                : qsTr("Type your password and press Enter")
-                            textFormat: Text.PlainText
-                        }
-                    }
+                SleepyLockView {
+                    anchors.fill: parent
+                    inputLength: prompt.inputLength
+                    authState: prompt.authState
+                    outputSize: Qt.size(lockSurface.width, lockSurface.height)
+                    onAuthenticateRequested: prompt.authenticate()
                 }
             }
         }

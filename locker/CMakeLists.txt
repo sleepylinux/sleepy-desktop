@@ -72,6 +72,7 @@ install(FILES
     "${CMAKE_BINARY_DIR}/Sleepy/Locker/Native/qmldir"
     "${CMAKE_BINARY_DIR}/Sleepy/Locker/Native/sleepy-locker-native.qmltypes"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/qt6/qml/Sleepy/Locker/Native")
-install(FILES qml/LockRoot.qml DESTINATION "${CMAKE_INSTALL_DATADIR}/sleepy-locker")
+install(FILES qml/LockRoot.qml qml/SleepyLockView.qml
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/sleepy-locker")
 install(TARGETS sleepy-locker-supervisor
     RUNTIME DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/sleepy-locker")

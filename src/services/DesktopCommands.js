@@ -356,9 +356,18 @@ function utilityInvokeTrayMenu(itemId, menuId) {
     } : null;
 }
 
-function utilityStartRecording(outputId) {
+function utilityStartRecording(outputId, withAudio) {
     const id = stableId(outputId);
-    return id ? {"type": "startRecording", "data": {"outputId": id}} : null;
+    const audio = booleanValue(withAudio);
+    return id && audio !== null ? {
+        "type": "startRecording", "data": {"outputId": id, "audio": audio}
+    } : null;
+}
+
+function utilityDeleteRecording(recordingId) {
+    const id = stableId(recordingId);
+    return id && /^recording_[A-Za-z0-9_.-]+\.mp4$/.test(id) && id.length <= 96
+        ? {"type": "deleteRecording", "data": {"recordingId": id}} : null;
 }
 
 function utilityPauseRecording() {
@@ -610,8 +619,16 @@ function validUtilityCommand(command) {
     case "setGameMode":
         return validEnabledData(command.data);
     case "startRecording":
+        return exact(command.data, ["outputId", "audio"], [])
+            && validStableId(command.data.outputId)
+            && typeof command.data.audio === "boolean";
     case "screenshot":
         return validStableField(command.data, "outputId");
+    case "deleteRecording":
+        return exact(command.data, ["recordingId"], [])
+            && typeof command.data.recordingId === "string"
+            && command.data.recordingId.length <= 96
+            && /^recording_[A-Za-z0-9_.-]+\.mp4$/.test(command.data.recordingId);
     default:
         return false;
     }
