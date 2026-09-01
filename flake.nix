@@ -69,15 +69,21 @@
               pkgs.pkg-config
             ];
             buildInputs = [
+              pkgs.aubio
+              pkgs.fftw
+              pkgs.pipewire
+              pkgs.libcava
+              pkgs.lm_sensors
+              pkgs.libqalculate
               pkgs.qt6.qtbase
               pkgs.qt6.qtdeclarative
+              pkgs.qt6.qtimageformats
               pkgs.qt6.qtshadertools
             ];
             dontWrapQtApps = true;
             cmakeFlags = [
               (pkgs.lib.cmakeFeature "ENABLE_MODULES" "plugin")
               (pkgs.lib.cmakeFeature "INSTALL_QMLDIR" pkgs.qt6.qtbase.qtQmlPrefix)
-              (pkgs.lib.cmakeBool "SLEEPY_AUDITED_RENDER_HELPERS_ONLY" true)
               (pkgs.lib.cmakeFeature "VERSION" "0.2.0")
               (pkgs.lib.cmakeFeature "GIT_REVISION" (self.rev or self.dirtyRev or "dirty"))
               (pkgs.lib.cmakeFeature "DISTRIBUTOR" "sleepy-nix-flake")
@@ -349,6 +355,9 @@
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             unset WAYLAND_DISPLAY
             bash tests/run.sh
+            ${pkgs.qt6.qtdeclarative}/libexec/qmltestrunner \
+              -input tests/qml-native/tst_native_full_plugin.qml \
+              -import ${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix} -v1
             bash scripts/validate-qml.sh
 
             production_shell=${componentPackages.sleepy-shell}

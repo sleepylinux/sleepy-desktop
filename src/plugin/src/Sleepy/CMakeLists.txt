@@ -4,10 +4,14 @@ qml_module(sleepy-core
         cutils.cpp
         toaster.cpp
         circularbuffer.cpp
+        qalculator.cpp
+        requests.cpp
     LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Concurrent
+        Qt::Network
+        PkgConfig::Qalculate
         sleepy-util
 )
 
@@ -25,3 +29,5 @@ add_subdirectory(Config)
 add_subdirectory(Components)
 add_subdirectory(Blobs)
 add_subdirectory(Images)
+add_subdirectory(Models)
+add_subdirectory(Services)

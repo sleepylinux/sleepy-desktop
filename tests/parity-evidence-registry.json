@@ -22,7 +22,7 @@
     {
       "id": "shell-native-plugin-contracts",
       "path": "tests/native-plugin-contracts.sh",
-      "passIdentity": "PASS: native plugin packaging is pinned and limited to audited render helpers"
+      "passIdentity": "PASS: complete renamed native plugin graph and dependencies are declared"
     }
   ]
 }

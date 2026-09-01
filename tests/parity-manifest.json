@@ -2287,7 +2287,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2298,7 +2298,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2309,7 +2309,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2320,7 +2320,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2331,7 +2331,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2342,7 +2342,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2353,7 +2353,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2364,7 +2364,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2375,7 +2375,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2386,7 +2386,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2397,7 +2397,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2408,7 +2408,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2419,7 +2419,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2430,7 +2430,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2441,7 +2441,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2452,7 +2452,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2463,7 +2463,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2474,7 +2474,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2485,7 +2485,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2496,7 +2496,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2507,7 +2507,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2518,7 +2518,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2529,7 +2529,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2540,7 +2540,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2551,7 +2551,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2562,7 +2562,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2573,7 +2573,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2584,7 +2584,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2595,7 +2595,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2606,7 +2606,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2617,7 +2617,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2628,7 +2628,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2639,7 +2639,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2650,7 +2650,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2661,7 +2661,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2672,7 +2672,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2683,7 +2683,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2694,7 +2694,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2705,7 +2705,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2716,7 +2716,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2727,7 +2727,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2738,7 +2738,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2749,7 +2749,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2760,7 +2760,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2771,7 +2771,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2782,7 +2782,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2793,7 +2793,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2804,7 +2804,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2815,7 +2815,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2826,7 +2826,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2837,7 +2837,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2848,7 +2848,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2859,7 +2859,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2870,7 +2870,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2881,7 +2881,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2892,7 +2892,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2903,7 +2903,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2914,7 +2914,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2925,7 +2925,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2936,7 +2936,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2947,7 +2947,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2958,7 +2958,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2969,7 +2969,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2980,7 +2980,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -2991,7 +2991,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3002,7 +3002,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3013,7 +3013,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3025,7 +3025,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3037,7 +3037,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3049,7 +3049,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3061,7 +3061,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3073,7 +3073,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3085,7 +3085,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3097,7 +3097,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3109,7 +3109,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3121,7 +3121,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3133,7 +3133,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3145,7 +3145,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3157,7 +3157,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3169,7 +3169,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3181,7 +3181,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3193,7 +3193,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3205,7 +3205,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3217,7 +3217,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3229,7 +3229,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3241,7 +3241,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3253,7 +3253,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3265,7 +3265,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3277,7 +3277,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "The shell-side lyrics service is intentionally omitted because desktop protocol v3 provides no lyrics body and QML/native code may not regain network or filesystem authority",
       "behaviorStatus": "approved-deviation"
@@ -3289,7 +3289,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "The shell-side lyrics service is intentionally omitted because desktop protocol v3 provides no lyrics body and QML/native code may not regain network or filesystem authority",
       "behaviorStatus": "approved-deviation"
@@ -3301,7 +3301,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "The shell-side lyrics service is intentionally omitted because desktop protocol v3 provides no lyrics body and QML/native code may not regain network or filesystem authority",
       "behaviorStatus": "approved-deviation"
@@ -3313,7 +3313,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "The shell-side lyrics service is intentionally omitted because desktop protocol v3 provides no lyrics body and QML/native code may not regain network or filesystem authority",
       "behaviorStatus": "approved-deviation"
@@ -3325,7 +3325,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3337,7 +3337,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3349,7 +3349,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3361,7 +3361,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3373,7 +3373,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3385,7 +3385,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3397,7 +3397,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3409,7 +3409,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3421,7 +3421,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3433,7 +3433,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3445,7 +3445,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3457,7 +3457,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3469,7 +3469,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3481,7 +3481,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3493,7 +3493,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3505,7 +3505,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3517,7 +3517,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3529,7 +3529,7 @@
       "protocol": "excluded from the native plugin build",
       "degradedState": "No in-shell system authority; strict desktop-v3 service diagnostics remain visible",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "approvedDeviation": "Native Models/Services duplicated daemon-owned filesystem, DBus, media, hardware, or network authority",
       "behaviorStatus": "approved-deviation"
@@ -3541,7 +3541,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3552,7 +3552,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3563,7 +3563,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3574,7 +3574,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3585,7 +3585,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3596,7 +3596,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3607,7 +3607,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3618,7 +3618,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3629,7 +3629,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3640,7 +3640,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3651,7 +3651,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3662,7 +3662,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3673,7 +3673,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3684,7 +3684,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3695,7 +3695,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3706,7 +3706,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3717,7 +3717,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3728,7 +3728,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3739,7 +3739,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3750,7 +3750,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3761,7 +3761,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3772,7 +3772,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3783,7 +3783,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3794,7 +3794,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3805,7 +3805,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3816,7 +3816,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3827,7 +3827,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3838,7 +3838,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3849,7 +3849,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3860,7 +3860,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3871,7 +3871,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },
@@ -3882,7 +3882,7 @@
       "protocol": "visual/config helper only; no daemon-owned state",
       "degradedState": "Unknown or unavailable assets render bounded visual fallbacks",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ],
       "behaviorStatus": "verified"
     },

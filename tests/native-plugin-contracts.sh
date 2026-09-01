@@ -29,8 +29,9 @@ rg -Fq 'nativePlugin = pkgs.clangStdenv.mkDerivation {' "$flake" \
   || fail 'flake must build the renamed native QML plugin'
 rg -Fq 'pname = "sleepy-qml-plugin";' "$flake" \
   || fail 'native plugin package must be Sleepy-named'
-rg -Fq '(pkgs.lib.cmakeBool "SLEEPY_AUDITED_RENDER_HELPERS_ONLY" true)' "$flake" \
-  || fail 'native plugin build must request the audited render-helper profile'
+if rg -Fq '(pkgs.lib.cmakeBool "SLEEPY_AUDITED_RENDER_HELPERS_ONLY" true)' "$flake"; then
+  fail 'native plugin build must not request the obsolete render-helper-only profile'
+fi
 rg -Fq 'qtQmlImportPath =' "$flake" \
   || fail 'flake must centralize the closed QML import path'
 rg -Fq '${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}' "$flake" \
@@ -44,30 +45,39 @@ if rg -n '[c]aelestia-cli|with-cli|pkgs\.quickshell|[c]aelestia-shell' "$flake";
   fail 'desktop flake must not depend on the upstream CLI or ambient nixpkgs Quickshell'
 fi
 
-if rg -n 'pkg_check_modules|Qt::DBus|Qt::Network|Qt::Sql|PkgConfig::(Qalculate|Pipewire|Aubio|Cava)|Sensors::Sensors' \
-    "$plugin_cmake" "$core_cmake"; then
-  fail 'active native plugin CMake must not compile daemon-owned system service dependencies'
-fi
+for dependency in aubio fftw pipewire libcava lm_sensors libqalculate; do
+  rg -Fq "pkgs.$dependency" "$flake" \
+    || fail "native plugin build is missing dependency: $dependency"
+done
+for dependency in qtimageformats qtshadertools; do
+  rg -Fq "pkgs.qt6.$dependency" "$flake" \
+    || fail "native plugin build is missing Qt dependency: $dependency"
+done
 
-for required in Settings Config Components Blobs Images; do
+for required in Settings Config Components Blobs Images Models Services; do
   if ! rg -n "add_subdirectory\\($required\\)" "$core_cmake" >/dev/null; then
-    fail "active native plugin must keep audited Sleepy.$required visual/config helpers"
+    fail "active native plugin must build Sleepy.$required"
   fi
 done
 
-for forbidden in Models Services; do
-  if rg -n "add_subdirectory\\($forbidden\\)" "$core_cmake"; then
-    fail "active native plugin must not build daemon-owned Sleepy.$forbidden helpers"
-  fi
+for source in qalculator.cpp requests.cpp; do
+  rg -Fq "$source" "$core_cmake" \
+    || fail "native Sleepy core must expose imported helper: $source"
 done
 
-if rg -n 'qalculator\.cpp|requests\.cpp' "$core_cmake"; then
-  fail 'native Sleepy core must not expose calculator or raw network request helpers'
-fi
+for linkage in Qt::DBus Qt::Network Qt::Sql PkgConfig::Qalculate PkgConfig::Pipewire PkgConfig::Aubio PkgConfig::Cava Sensors::Sensors; do
+  rg -Fq "$linkage" "$plugin_cmake" "$core_cmake" \
+    "$repo_root/src/plugin/src/Sleepy/Services/CMakeLists.txt" \
+    "$repo_root/src/plugin/src/Sleepy/Models/CMakeLists.txt" \
+    || fail "native plugin is missing required linkage: $linkage"
+done
+
+test -f "$repo_root/tests/qml-native/tst_native_full_plugin.qml" \
+  || fail 'full native plugin QML load test is missing'
 
 if rg -n 'Q_INVOKABLE.*(saveItem|copyFile|deleteFile)|CUtils::(saveItem|copyFile|deleteFile)' \
     "$cutils_header" "$cutils_source"; then
   fail 'native CUtils must not expose direct file mutation helpers'
 fi
 
-printf 'PASS: native plugin packaging is pinned and limited to audited render helpers\n'
+printf 'PASS: complete renamed native plugin graph and dependencies are declared\n'

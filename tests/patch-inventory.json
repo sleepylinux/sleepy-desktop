@@ -8,7 +8,7 @@
       "category": "packaging",
       "reason": "Install the fork under the Sleepy QML, library, and Quickshell paths and exclude unaudited PAM assets.",
       "tests": [
-        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+        "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared"
       ]
     },
     {
@@ -104,7 +104,17 @@
       ]
     },
     {
-      "path": "src/plugin/src/Sleepy/Config/userpaths.hpp",
+        "path": "src/plugin/**",
+        "upstreamPath": "plugin/**",
+        "category": "compatibility",
+        "reason": "Build the complete upstream native QML surface under renamed Sleepy URIs with pinned dependencies.",
+        "tests": [
+            "tests/native-plugin-contracts.sh#PASS: complete renamed native plugin graph and dependencies are declared",
+            "tests/qml-native/tst_native_full_plugin.qml#test_core_and_resource_singletons_are_ready"
+        ]
+    },
+    {
+        "path": "src/plugin/src/Sleepy/Config/userpaths.hpp",
       "upstreamPath": "plugin/src/Caelestia/Config/userpaths.hpp",
       "category": "identity",
       "reason": "Resolve configuration, state, cache, and data beneath Sleepy XDG paths.",
