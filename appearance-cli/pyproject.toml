@@ -19,5 +19,10 @@ only-include = [
     "src",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/sleepy",
+]
+
 [tool.ruff]
 line-length = 120

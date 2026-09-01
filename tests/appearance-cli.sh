@@ -30,6 +30,14 @@ if rg -n 'shell[[:space:]]*=[[:space:]]*True' "$repo_root/appearance-cli/src"; t
   printf 'FAIL: appearance helper executes shell strings\n' >&2
   exit 1
 fi
+python3 - "$repo_root/appearance-cli/pyproject.toml" <<'PY'
+import pathlib
+import sys
+import tomllib
+
+project = tomllib.loads(pathlib.Path(sys.argv[1]).read_text())
+assert project["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"] == ["src/sleepy"]
+PY
 
 sleepy_cli scheme list >"$scratch/schemes.json"
 python3 - "$scratch/schemes.json" <<'PY'
