@@ -22,6 +22,10 @@ target_link_libraries(sleepy-locker-secure
 target_compile_options(sleepy-locker-secure PRIVATE
     -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror)
 
+add_executable(sleepy-locker-supervisor supervisor.cpp)
+target_compile_options(sleepy-locker-supervisor PRIVATE
+    -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror)
+
 qt_add_qml_module(sleepy-locker-native
     SHARED
     URI Sleepy.Locker.Native
@@ -54,6 +58,9 @@ if(BUILD_TESTING)
     set_tests_properties(sleepy-locker-native-tests PROPERTIES
         TIMEOUT 20
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QT_QPA_PLATFORMTHEME=;KDE_FULL_SESSION=;XDG_CURRENT_DESKTOP=;KDE_DEBUG=1;QT_STYLE_OVERRIDE=Fusion")
+    add_test(NAME sleepy-locker-supervisor-rejects-clean-child
+        COMMAND sleepy-locker-supervisor /usr/bin/true)
+    set_tests_properties(sleepy-locker-supervisor-rejects-clean-child PROPERTIES WILL_FAIL TRUE)
 endif()
 
 install(TARGETS sleepy-locker-native sleepy-locker-nativeplugin
@@ -63,3 +70,5 @@ install(FILES
     "${CMAKE_BINARY_DIR}/Sleepy/Locker/Native/sleepy-locker-native.qmltypes"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/qt6/qml/Sleepy/Locker/Native")
 install(FILES qml/LockRoot.qml DESTINATION "${CMAKE_INSTALL_DATADIR}/sleepy-locker")
+install(TARGETS sleepy-locker-supervisor
+    RUNTIME DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/sleepy-locker")

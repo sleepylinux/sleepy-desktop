@@ -114,12 +114,12 @@
               runHook postCheck
             '';
             postInstall = ''
-              makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-locker" \
+              makeWrapper "$out/libexec/sleepy-locker/sleepy-locker-supervisor" "$out/bin/sleepy-locker" \
                 --set QML2_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
                 --set QML_IMPORT_PATH "$out/lib/qt6/qml:${quickshellWithModules}/lib/qt-6/qml" \
-                --add-flags "-p $out/share/sleepy-locker/LockRoot.qml"
-              makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-locker-control" \
-                --add-flags "kill"
+                --add-flags "${quickshellWithModules}/bin/qs" \
+                --add-flags "-p" \
+                --add-flags "$out/share/sleepy-locker/LockRoot.qml"
             '';
             meta = {
               description = "Fail-secure Sleepy ext-session-lock-v1 locker";

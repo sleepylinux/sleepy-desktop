@@ -13,6 +13,7 @@ fail() {
 for path in \
   "$locker/CMakeLists.txt" \
   "$locker/main.cpp" \
+  "$locker/supervisor.cpp" \
   "$locker/secureprompt.hpp" \
   "$locker/secureprompt.cpp" \
   "$locker/qml/LockRoot.qml" \
@@ -81,8 +82,11 @@ rg -Fq 'runner = "${quickshellWithModules}/bin/qs"' "$flake" \
   || fail 'locker must run inside the pinned Quickshell engine'
 rg -Fq 'LockRoot.qml' "$flake" \
   || fail 'packaged locker must start only its immutable lock configuration'
-rg -Fq 'sleepy-locker-control' "$flake" \
-  || fail 'packaged locker must expose an exact-instance graceful stop command'
+rg -Fq 'sleepy-locker-supervisor' "$flake" \
+  || fail 'packaged locker must fail when its Quickshell child exits unexpectedly'
+if rg -Fq 'sleepy-locker-control' "$flake"; then
+  fail 'same-UID callers must not have a clean-exit locker control wrapper'
+fi
 rg -Fq 'packaged-locker-smoke.sh' "$flake" \
   || fail 'Nix gate must acquire a real lock on the private two-output compositor'
 rg -Fq 'sleepy-locker = lockerPackage;' "$flake" \

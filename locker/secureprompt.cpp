@@ -37,6 +37,10 @@ static_assert(std::atomic<bool>::is_always_lock_free);
 
 std::array<SignalSecretSlot, kSecretSlotCount> signalSecretSlots;
 std::once_flag signalHandlersInstalled;
+#ifdef SLEEPY_LOCKER_TESTING
+std::atomic<int> signalAuditFd{-1};
+static_assert(std::atomic<int>::is_always_lock_free);
+#endif
 
 void wipeProcessSecrets() noexcept
 {
@@ -52,10 +56,30 @@ void wipeProcessSecrets() noexcept
     }
 }
 
-[[noreturn]] void terminationSignalHandler(int signalNumber) noexcept
+void terminationSignalHandler(int signalNumber) noexcept
 {
     wipeProcessSecrets();
-    ::_exit(128 + signalNumber);
+#ifdef SLEEPY_LOCKER_TESTING
+    unsigned char allZero = 1;
+    for (auto &slot : signalSecretSlots) {
+        const volatile char *const bytes = slot.bytes.load(std::memory_order_relaxed);
+        if (bytes == nullptr) {
+            continue;
+        }
+        for (std::size_t index = 0; index < kSecretCapacity; ++index) {
+            if (bytes[index] != 0) {
+                allZero = 0;
+            }
+        }
+    }
+    const int auditDescriptor = signalAuditFd.load(std::memory_order_relaxed);
+    if (auditDescriptor >= 0) {
+        static_cast<void>(::write(auditDescriptor, &allZero, sizeof(allZero)));
+    }
+#endif
+    if (::kill(::getpid(), signalNumber) != 0) {
+        ::_exit(128 + signalNumber);
+    }
 }
 
 void installTerminationSignalHandlers()
@@ -64,7 +88,7 @@ void installTerminationSignalHandlers()
         struct sigaction action {};
         action.sa_handler = terminationSignalHandler;
         ::sigemptyset(&action.sa_mask);
-        action.sa_flags = 0;
+        action.sa_flags = static_cast<int>(SA_RESETHAND);
         for (const int signalNumber : {SIGTERM, SIGINT, SIGHUP}) {
             if (::sigaction(signalNumber, &action, nullptr) != 0) {
                 throw std::system_error(errno, std::generic_category(),
@@ -471,6 +495,11 @@ bool SecurePrompt::secretStorageIsZeroForTesting() const noexcept
 void SecurePrompt::zeroizeProcessSecretsForTesting() noexcept
 {
     wipeProcessSecrets();
+}
+
+void SecurePrompt::setSignalAuditFdForTesting(int descriptor) noexcept
+{
+    signalAuditFd.store(descriptor, std::memory_order_relaxed);
 }
 #endif
 

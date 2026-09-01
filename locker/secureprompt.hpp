@@ -42,6 +42,7 @@ public:
 #ifdef SLEEPY_LOCKER_TESTING
     [[nodiscard]] bool secretStorageIsZeroForTesting() const noexcept;
     static void zeroizeProcessSecretsForTesting() noexcept;
+    static void setSignalAuditFdForTesting(int descriptor) noexcept;
 #endif
 
 signals:

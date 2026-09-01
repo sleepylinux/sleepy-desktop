@@ -126,17 +126,27 @@ private slots:
 
         SecurePrompt signalPrompt(&auth);
         type(signalPrompt, QStringLiteral("second secret"));
+        int auditPipe[2] = {-1, -1};
+        QCOMPARE(::pipe(auditPipe), 0);
+        SecurePrompt::setSignalAuditFdForTesting(auditPipe[1]);
         const pid_t child = ::fork();
         QVERIFY(child >= 0);
         if (child == 0) {
+            ::close(auditPipe[0]);
             ::raise(SIGTERM);
             ::_exit(99);
         }
+        ::close(auditPipe[1]);
 
         int status = 0;
         QCOMPARE(::waitpid(child, &status, 0), child);
-        QVERIFY(WIFEXITED(status));
-        QCOMPARE(WEXITSTATUS(status), 128 + SIGTERM);
+        QVERIFY(WIFSIGNALED(status));
+        QCOMPARE(WTERMSIG(status), SIGTERM);
+        unsigned char signalWipedStorage = 0;
+        QCOMPARE(::read(auditPipe[0], &signalWipedStorage, sizeof(signalWipedStorage)), 1);
+        QCOMPARE(signalWipedStorage, static_cast<unsigned char>(1));
+        ::close(auditPipe[0]);
+        SecurePrompt::setSignalAuditFdForTesting(-1);
     }
 
     void inputMethodIsPrivateAndHonorsReplacementRanges()
