@@ -349,6 +349,7 @@
         let
           pkgs = import nixpkgs { inherit system; };
           componentPackages = packagesFor system;
+          installRoot = "share/sleepy-desktop";
           artworkPackage = sleepy-artwork.packages.${system}.sleepy-artwork;
           sessionPackage = sleepy-session.packages.${system}.sleepy-session;
           artworkRoot = "${artworkPackage}/share/sleepy-artwork";

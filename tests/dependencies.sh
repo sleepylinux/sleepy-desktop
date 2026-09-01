@@ -298,6 +298,10 @@ if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
   printf 'FAIL: qml check must expose the built Sleepy native plugin on the closed import path\n' >&2
   exit 1
 fi
+if [[ $(rg -Fxc '          installRoot = "share/sleepy-desktop";' "$flake") -ne 2 ]]; then
+  printf 'FAIL: package and check scopes must each define the installed shell root\n' >&2
+  exit 1
+fi
 if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||
     ! rg -Fq "grep -Fq 'Failed to load configuration'" \
       "$repository_root/tests/packaged-shell-smoke.sh" ||
