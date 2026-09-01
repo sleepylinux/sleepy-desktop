@@ -8,7 +8,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$test_root/property-id" "$test_root/js-object" "$test_root/real-duplicate"
+mkdir -p "$test_root/property-id" "$test_root/js-object" "$test_root/real-duplicate" \
+    "$test_root/multiline-property-id" "$test_root/multiline-real-duplicate"
 
 cat >"$test_root/property-id/PropertyId.qml" <<'QML'
 import QtQuick
@@ -22,6 +23,19 @@ Item {
 }
 QML
 
+cat >"$test_root/multiline-property-id/MultilinePropertyId.qml" <<'QML'
+import QtQuick
+
+Item {
+    Item { id: modelData }
+
+    component PropertyOnly: QtObject {
+        readonly property string
+            id: modelData
+    }
+}
+QML
+
 cat >"$test_root/js-object/JsObject.qml" <<'QML'
 import QtQuick
 
@@ -30,6 +44,20 @@ Item {
 
     component LabelItem: QtObject {
         id: label
+    }
+}
+QML
+
+cat >"$test_root/multiline-real-duplicate/MultilineRealDuplicate.qml" <<'QML'
+import QtQuick
+
+Item {
+    Item { id: actualDuplicate }
+
+    component DuplicateItem: QtObject {
+        id: actualDuplicate
+        readonly property string
+            id: modelData
     }
 }
 QML
@@ -75,8 +103,11 @@ run_case() {
 }
 
 run_case property-named-id 0 "$test_root/property-id"
+run_case multiline-property-named-id 0 "$test_root/multiline-property-id"
 run_case js-object-literal 0 "$test_root/js-object"
 run_case duplicate-with-decoys 1 "$test_root/real-duplicate" "'actualDuplicate'"
+run_case multiline-duplicate-with-decoy 1 "$test_root/multiline-real-duplicate" \
+    "'actualDuplicate'"
 
 if [[ $failures -ne 0 ]]; then
     printf 'FAIL: QML id validator mishandled %s syntax-context fixture(s)\n' \

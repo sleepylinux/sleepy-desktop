@@ -103,7 +103,17 @@ def qml_contexts(tokens):
     return contexts
 
 
-def is_qml_id_member(source: str, tokens, contexts, index: int) -> bool:
+def current_member_is_property(tokens, index: int) -> bool:
+    for candidate in range(index - 1, -1, -1):
+        token = tokens[candidate][0]
+        if token in {"{", "}", ":", ";"}:
+            return False
+        if token == "property":
+            return True
+    return False
+
+
+def is_qml_id_member(tokens, contexts, index: int) -> bool:
     if (
         tokens[index][0] != "id"
         or index + 2 >= len(tokens)
@@ -114,10 +124,7 @@ def is_qml_id_member(source: str, tokens, contexts, index: int) -> bool:
         return False
     if index + 3 < len(tokens) and tokens[index + 3][0] == ".":
         return False
-    position = tokens[index][1]
-    line_start = source.rfind("\n", 0, position) + 1
-    declaration_prefix = source[line_start:position]
-    return re.search(r"\bproperty\b", declaration_prefix) is None
+    return not current_member_is_property(tokens, index)
 
 
 failures = []
@@ -152,7 +159,7 @@ for qml_file in sorted(source_root.rglob("*.qml")):
                     close_index = candidate
                     break
             elif depth == 1 and is_qml_id_member(
-                masked_source, tokens, contexts, candidate
+                tokens, contexts, candidate
             ):
                 root_id = tokens[candidate + 2][0]
                 root_id_position = tokens[candidate + 2][1]
@@ -169,7 +176,7 @@ for qml_file in sorted(source_root.rglob("*.qml")):
     for index in range(len(tokens) - 2):
         if index in inline_token_indexes:
             continue
-        if is_qml_id_member(masked_source, tokens, contexts, index):
+        if is_qml_id_member(tokens, contexts, index):
             outer_ids.setdefault(tokens[index + 2][0], []).append(tokens[index + 2][1])
 
     for _, _, root_id, root_id_position in inline_components:
