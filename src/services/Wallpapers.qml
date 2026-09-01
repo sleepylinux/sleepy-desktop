@@ -8,6 +8,7 @@ import Quickshell
 import Quickshell.Io
 import Sleepy.Config
 import qs.services
+import qs.utils
 import "DesktopCommands.js" as DesktopCommands
 
 Searcher {

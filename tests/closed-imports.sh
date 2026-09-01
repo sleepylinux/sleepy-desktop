@@ -28,6 +28,14 @@ if ! rg -Fq 'rm -rf "$out/${installRoot}/modules/lock" "$out/${installRoot}/asse
   failed=1
 fi
 
+while IFS= read -r searcher_consumer; do
+  if ! rg -q '^import qs\.utils([[:space:]]|$)' "$searcher_consumer"; then
+    printf 'FAIL: Searcher consumer must import its owning qs.utils module: %s\n' \
+      "${searcher_consumer#"$repo_root"/}" >&2
+    failed=1
+  fi
+done < <(rg -l '^[[:space:]]*Searcher[[:space:]]*\{' "$repo_root/src" -g '*.qml')
+
 if [[ $failed -ne 0 ]]; then
   exit 1
 fi
