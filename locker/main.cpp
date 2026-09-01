@@ -215,6 +215,11 @@ void LockerEndpoint::acknowledgePending()
         socket->write("locked\n");
         socket->flush();
         if (socket->property("suspendHold").toBool()) {
+            if ((socket->bytesToWrite() > 0 && !socket->waitForBytesWritten(1000))
+                || ::shutdown(static_cast<int>(socket->socketDescriptor()), SHUT_WR) != 0) {
+                socket->disconnectFromServer();
+                continue;
+            }
             const bool wasAllowed = unlockAllowed();
             suspendHolds_.append(socket);
             if (wasAllowed != unlockAllowed()) {

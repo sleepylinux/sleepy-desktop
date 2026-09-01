@@ -8,6 +8,7 @@
 #include <QtTest>
 
 #include <csignal>
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
@@ -265,6 +266,9 @@ private slots:
             QTRY_VERIFY(suspend.canReadLine());
             QCOMPARE(suspend.readLine(), QByteArrayLiteral("locked\n"));
             QCOMPARE(suspend.state(), QLocalSocket::ConnectedState);
+            char trailing = 0;
+            QCOMPARE(::recv(static_cast<int>(suspend.socketDescriptor()), &trailing,
+                            sizeof(trailing), MSG_DONTWAIT), 0);
             QVERIFY(!endpoint.unlockAllowed());
             QCOMPARE(holdChanged.count(), 1);
 
