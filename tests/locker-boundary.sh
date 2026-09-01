@@ -45,6 +45,9 @@ for hint in ImhHiddenText ImhSensitiveData ImhNoPredictiveText; do
   rg -Fq "$hint" "$locker/secureprompt.cpp" \
     || fail "secure input must publish the $hint IME hint"
 done
+if rg -Fq 'pam_acct_mgmt' "$locker/secureprompt.cpp"; then
+  fail 'an unprivileged screen locker must not run login-time PAM account management'
+fi
 
 rg -Fq 'WlSessionLock' "$locker/qml/LockRoot.qml" \
   || fail 'locker must own ext-session-lock through Quickshell WlSessionLock'

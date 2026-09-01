@@ -201,10 +201,14 @@ public:
             return false;
         }
         const int auth = ::pam_authenticate(handle, PAM_SILENT | PAM_DISALLOW_NULL_AUTHTOK);
-        const int accountResult = auth == PAM_SUCCESS
-            ? ::pam_acct_mgmt(handle, PAM_SILENT) : auth;
-        const bool accepted = auth == PAM_SUCCESS && accountResult == PAM_SUCCESS;
-        ::pam_end(handle, accepted ? PAM_SUCCESS : accountResult);
+        // This process is the already-authenticated user's screen locker, not
+        // a login authority. The default pam_unix account stack attempts a
+        // privileged setuid transition and correctly fails in this
+        // unprivileged process. Authentication still rejects disabled or
+        // invalid password credentials; login-time account/session policy
+        // remains owned by ReGreet.
+        const bool accepted = auth == PAM_SUCCESS;
+        ::pam_end(handle, auth);
         return accepted;
     }
 };
