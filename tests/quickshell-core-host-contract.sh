@@ -60,6 +60,7 @@ cat >"$test_root/path-bin/quickshell" <<'SH'
 : >"$SLEEPY_PATH_MARKER"
 printf 'TASK7B_HOST_PASS\n'
 SH
+sed -i "1c#!$BASH" "$test_root/path-bin/quickshell"
 chmod 0700 "$test_root/path-bin/quickshell"
 
 cat >"$test_root/path-bin/qs" <<'SH'
@@ -72,6 +73,7 @@ for private_path in "$HOME" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" \
 done
 printf 'TASK7B_HOST_PASS\n'
 SH
+sed -i "1c#!$BASH" "$test_root/path-bin/qs"
 chmod 0700 "$test_root/path-bin/qs"
 
 cat >"$test_root/explicit-bin/qs" <<'SH'
@@ -83,6 +85,7 @@ if [[ -n "${SLEEPY_FAKE_QS_CHILD_PID_FILE:-}" ]]; then
 fi
 printf 'TASK7B_HOST_PASS\n'
 SH
+sed -i "1c#!$BASH" "$test_root/explicit-bin/qs"
 chmod 0700 "$test_root/explicit-bin/qs"
 
 non_executable_qs="$test_root/explicit-bin/not-executable-qs"
