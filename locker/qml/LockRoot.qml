@@ -30,6 +30,15 @@ Scope {
             id: lockSurface
             color: "#111318"
 
+            // The surface delegate is created only when a lock is requested.
+            // Component completion can therefore run before its Wayland window
+            // is visible and able to accept keyboard focus. Reacquire focus
+            // after the compositor maps each output's secure surface.
+            onVisibleChanged: {
+                if (visible)
+                    Qt.callLater(() => prompt.forceActiveFocus());
+            }
+
             SecurePrompt {
                 id: prompt
                 objectName: "securePrompt"

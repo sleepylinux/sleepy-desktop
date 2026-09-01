@@ -52,6 +52,10 @@ rg -Fq 'WlSessionLockSurface' "$locker/qml/LockRoot.qml" \
   || fail 'locker must create a lock surface for every compositor output'
 rg -Fq 'secure' "$locker/qml/LockRoot.qml" \
   || fail 'locked acknowledgement must be driven by secure session-lock state'
+rg -Fq 'onVisibleChanged: {' "$locker/qml/LockRoot.qml" \
+  || fail 'each newly visible lock surface must reacquire keyboard focus'
+rg -Fq 'prompt.forceActiveFocus()' "$locker/qml/LockRoot.qml" \
+  || fail 'the native secure prompt must receive keyboard focus after lock activation'
 
 if rg -n '\b(unlock|Unlock)\b' "$locker" \
     | rg -v 'PAM result|authenticated|unlock-and-destroy|sessionLock\.unlock\(\)'; then
