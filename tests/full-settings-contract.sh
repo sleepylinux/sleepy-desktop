@@ -9,10 +9,18 @@ if [[ -z "$qml_import_path" || ! -d "$qml_import_path/Sleepy" ]]; then
   exit 1
 fi
 
-if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
+if [[ -n "${SLEEPY_QML_TEST_RUNNER:-}" ]]; then
+  if [[ "$SLEEPY_QML_TEST_RUNNER" != /* || ! -x "$SLEEPY_QML_TEST_RUNNER" ]]; then
+    printf 'FAIL: SLEEPY_QML_TEST_RUNNER must be an absolute executable path\n' >&2
+    exit 1
+  fi
+  qml_test_runner="$SLEEPY_QML_TEST_RUNNER"
+elif [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner
 elif command -v qmltestrunner-qt6 >/dev/null 2>&1; then
   qml_test_runner="$(command -v qmltestrunner-qt6)"
+elif command -v qmltestrunner >/dev/null 2>&1; then
+  qml_test_runner="$(command -v qmltestrunner)"
 else
   printf 'FAIL: Qt 6 qmltestrunner is required for settings validation\n' >&2
   exit 1

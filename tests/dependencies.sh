@@ -241,7 +241,9 @@ if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; th
   exit 1
 fi
 if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/bin:$PATH' <<< "$qml_check_block" ||
-    ! rg -Fq '${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' <<< "$qml_check_block"; then
+    ! rg -Fq '${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' <<< "$qml_check_block" ||
+    ! rg -Fq 'SLEEPY_QML_TEST_RUNNER=${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' \
+      <<< "$qml_check_block"; then
   printf 'FAIL: qml check must execute the pinned Qt declarative qmltestrunner output\n' >&2
   exit 1
 fi
