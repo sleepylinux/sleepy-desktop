@@ -528,269 +528,265 @@
     },
     {
       "path": "src/modules/dashboard/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/Dash.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/Media.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/Performance.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/Tabs.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/WeatherTab.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/Calendar.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/DateTime.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/Media.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/Resources.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/SmallWeather.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/dash/User.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/BackgroundShapes.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/CoverVisualiser.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Artwork and lyrics rendering are unavailable because desktop protocol v3 exposes metadata and transport but no approved artwork handle or lyrics body"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/Details.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/LyricList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Artwork and lyrics rendering are unavailable because desktop protocol v3 exposes metadata and transport but no approved artwork handle or lyrics body"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/LyricsAndSelector.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Artwork and lyrics rendering are unavailable because desktop protocol v3 exposes metadata and transport but no approved artwork handle or lyrics body"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/media/LyricsInfo.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Artwork and lyrics rendering are unavailable because desktop protocol v3 exposes metadata and transport but no approved artwork handle or lyrics body"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/performance/BatteryTank.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/performance/HeroCard.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/performance/MemoryCard.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/performance/NetworkCard.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/dashboard/performance/StorageCard.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native MPRIS, weather HTTP/cache, system telemetry, and complete upstream dashboard composition",
+      "degradedState": "Each missing player, weather, artwork, lyrics, or telemetry provider degrades only its own original widget",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
       "behaviorStatus": "verified"
     },
@@ -1270,751 +1266,749 @@
     },
     {
       "path": "src/modules/nexus/NavPane.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/Nexus.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/NexusState.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/PageCompRegistry.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/PageRegistry.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/Pages.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/WindowFactory.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/AnimatedLogo.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/AudioDeviceList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/BlobPopup.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/ConnectedRect.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/DialogRowButton.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/DialogSelectButton.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/EthernetSection.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/InfoRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/ItemList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/ListEditor.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/NavRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/NetworkList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/PageBase.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/PopupRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/RowButton.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/SectionHeader.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/SelectRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/SliderRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/StackPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/StepperRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/TextFieldRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/ToggleRow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/common/WallItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/navpane/NavLocations.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/AboutPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/AppsPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/AudioPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/BluetoothPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/LanguageAndRegion.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/NetworkPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/PanelsPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/ServicesPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/WallpaperAndStyle.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/apps/AllApps.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/apps/AppInfo.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/audio/AppVolumes.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/bluetooth/BluetoothPairing.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/bluetooth/BtDeviceInfo.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/AddNetworkPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/AddVpnPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/AllNetworksPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/EthernetDetailPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/NetworkDetailPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/network/SavedNetworksPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/DashboardPanel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/LauncherPanel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/SidebarPanel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/TaskbarPanel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/UtilitiesPanel.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/taskbar/BarActiveWindow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/taskbar/BarClock.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/taskbar/BarStatusIcons.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/taskbar/BarTray.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/panels/taskbar/BarWorkspaces.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/services/NotificationsPage.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/wallandstyle/ColourSelect.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/wallandstyle/WallpaperCategory.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Arbitrary wallpaper image rendering is unavailable because desktop protocol v3 exposes only a semantic wallpaper identifier and no approved image handle"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/nexus/pages/wallandstyle/WallpaperSelect.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native NetworkManager, Bluetooth, PipeWire, applications, settings, wallpaper, and panel configuration providers",
+      "degradedState": "Each missing hardware or service provider disables only its corresponding original Nexus page or control",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_nexus_capabilities_degrade_independently_and_render_ids_as_plain_text"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_nexus_keeps_network_audio_bluetooth_apps_panels_and_style_pages"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Arbitrary wallpaper image rendering is unavailable because desktop protocol v3 exposes only a semantic wallpaper identifier and no approved image handle"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/notifications/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_notification_center_routes_dnd_actions_and_archive_without_optimism"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/notifications/Notification.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_notification_center_routes_dnd_actions_and_archive_without_optimism"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/notifications/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_notification_center_routes_dnd_actions_and_archive_without_optimism"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
@@ -2076,100 +2070,100 @@
     },
     {
       "path": "src/modules/sidebar/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/Notif.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/NotifActionList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/NotifDock.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/NotifDockList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/NotifGroup.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/NotifGroupList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/Props.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/sidebar/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native freedesktop notification server, persisted history, grouped actions, popup and DND state",
+      "degradedState": "Unavailable notification service leaves empty original surfaces without affecting other shell modules",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_dashboard_producer_failures_are_independent"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
       "behaviorStatus": "verified"
     },
@@ -4228,15 +4222,15 @@
     },
     {
       "path": "src/services/Nmcli.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "nmcli fixed argv with secrets delivered only over stdin",
+      "degradedState": "Network controls expose provider-local unavailable/error state",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_wifi_secrets_never_enter_process_argv_or_logs",
+        "tests/direct-integrations.sh#PASS: 14 direct providers are registered and 271 active files use safe reviewed mechanisms"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/NotifData.qml",
@@ -4276,15 +4270,14 @@
     },
     {
       "path": "src/services/Notifs.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Quickshell.Services.Notifications with XDG Sleepy history",
+      "degradedState": "Unavailable notification server leaves empty notification surfaces",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_sidebar_and_overlay_keep_grouping_actions_dnd_and_animation"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/OsdClient.qml",
@@ -4312,15 +4305,14 @@
     },
     {
       "path": "src/services/Players.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Quickshell.Services.Mpris",
+      "degradedState": "No active player yields the original no-media state",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_dashboard_keeps_all_tabs_players_lyrics_weather_and_resources"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/PresetAdapter.qml",
@@ -4564,15 +4556,14 @@
     },
     {
       "path": "src/services/VPN.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "reviewed provider argv adapters, nmcli monitor, and validated fixed-argv interface telemetry",
+      "degradedState": "Missing provider command or service reports disconnected/error without degrading networking",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_weather_and_vpn_are_complete_direct_providers"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/Wallpapers.qml",
@@ -4588,15 +4579,14 @@
     },
     {
       "path": "src/services/Weather.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Quickshell asynchronous HTTP requests with XDG cache",
+      "degradedState": "Failed lookup preserves cached state or renders the original no-weather state",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_weather_and_vpn_are_complete_direct_providers"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/WorkspaceEventService.qml",

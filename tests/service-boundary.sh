@@ -23,7 +23,7 @@ for integration in \
   fi
 done
 
-for provider in Hypr.qml Nmcli.qml Audio.qml Brightness.qml Players.qml Notifs.qml Colours.qml Wallpapers.qml; do
+for provider in Hypr.qml Nmcli.qml Audio.qml Brightness.qml Players.qml Notifs.qml Colours.qml Wallpapers.qml Weather.qml VPN.qml; do
   if rg -n 'DesktopModel|CommandClient\.|DesktopCommands\.' "$repo_root/src/services/$provider"; then
     printf 'FAIL: direct provider %s must not proxy through sleepy-sessiond\n' "$provider" >&2
     failed=1
@@ -33,7 +33,7 @@ done
 if ! jq -e '
   [.providers[].id] | sort ==
     ["appearance", "applications", "audio", "brightness", "clipboard", "hyprland", "media",
-     "network", "notifications", "power", "screenshot", "tray"]
+     "network", "notifications", "power", "screenshot", "tray", "vpn", "weather"]
 ' "$repo_root/tests/direct-integrations.json" >/dev/null; then
   printf 'FAIL: reviewed direct provider registry is incomplete\n' >&2
   failed=1

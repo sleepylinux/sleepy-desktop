@@ -33,6 +33,11 @@
       "id": "shell-appearance-cli",
       "path": "tests/appearance-cli.sh",
       "passIdentity": "PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
+    },
+    {
+      "id": "shell-direct-integrations",
+      "path": "tests/direct-integrations.sh",
+      "passIdentity": "PASS: 14 direct providers are registered and 271 active files use safe reviewed mechanisms"
     }
   ]
 }

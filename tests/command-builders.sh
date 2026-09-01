@@ -9,7 +9,7 @@ if [[ ! -f "$repo_root/src/services/DesktopCommands.js" ]]; then
   failed=1
 fi
 
-for direct_provider in Hypr.qml Nmcli.qml Audio.qml Brightness.qml Players.qml Notifs.qml Colours.qml Wallpapers.qml; do
+for direct_provider in Hypr.qml Nmcli.qml Audio.qml Brightness.qml Players.qml Notifs.qml Colours.qml Wallpapers.qml Weather.qml VPN.qml; do
   if rg -n 'CommandClient\.|DesktopCommands\.' "$repo_root/src/services/$direct_provider"; then
     printf 'FAIL: %s is registered as direct and must not use the sleepy-sessiond command builder\n' \
       "$direct_provider" >&2
