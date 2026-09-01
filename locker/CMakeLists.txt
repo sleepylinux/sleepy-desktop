@@ -44,6 +44,7 @@ target_compile_options(sleepy-locker-native PRIVATE
 set_target_properties(sleepy-locker-native PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 if(BUILD_TESTING)
+    add_executable(sleepy-locker-supervisor-clean-child supervisor_clean_child.cpp)
     qt_add_executable(sleepy-locker-tests
         ../tests/locker_native.cpp
         main.cpp
@@ -59,8 +60,10 @@ if(BUILD_TESTING)
         TIMEOUT 20
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QT_QPA_PLATFORMTHEME=;KDE_FULL_SESSION=;XDG_CURRENT_DESKTOP=;KDE_DEBUG=1;QT_STYLE_OVERRIDE=Fusion")
     add_test(NAME sleepy-locker-supervisor-rejects-clean-child
-        COMMAND sleepy-locker-supervisor /usr/bin/true)
-    set_tests_properties(sleepy-locker-supervisor-rejects-clean-child PROPERTIES WILL_FAIL TRUE)
+        COMMAND "${CMAKE_COMMAND}"
+            "-DSUPERVISOR=$<TARGET_FILE:sleepy-locker-supervisor>"
+            "-DCLEAN_CHILD=$<TARGET_FILE:sleepy-locker-supervisor-clean-child>"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/supervisor_test.cmake")
 endif()
 
 install(TARGETS sleepy-locker-native sleepy-locker-nativeplugin
