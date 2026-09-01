@@ -2,9 +2,9 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-sdk_revision=d935d3d83ef3c01627cd315230607c4b04554d42
+sdk_revision=63b2370a39f47f2b361310c12c0333da0faaee9d
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
-session_revision=25c83eaa618570681d9e5f442f0c2bff727ae0ce
+session_revision=07fa0e3d20c7a39293023c75408782447a6520fc
 flake="$repository_root/flake.nix"
 workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
@@ -94,8 +94,18 @@ for contract in desktop-event-v3.schema.json desktop-command-v3.schema.json; do
   fi
 done
 
-if ! rg -Fq -- '--prefix PATH : "${appearanceCli}/bin:${sessionPackage}/bin"' "$flake"; then
-  printf 'FAIL: packaged runners must expose the Sleepy appearance helper and pinned sleepyctl on PATH\n' >&2
+if ! rg -Fq -- '--prefix PATH : "${directRuntimePath}"' "$flake"; then
+  printf 'FAIL: packaged runners must expose the complete reviewed direct runtime PATH\n' >&2
+  exit 1
+fi
+for marker in runtimeCommandManifest FONTCONFIG_FILE SLEEPY_XKB_RULES_PATH material-symbols nerd-fonts.caskaydia-cove; do
+  if ! rg -Fq "$marker" "$flake"; then
+    printf 'FAIL: complete shell closure is missing %s\n' "$marker" >&2
+    exit 1
+  fi
+done
+if ! rg -Fq 'bash tests/packaged-full-shell-smoke.sh' "$flake"; then
+  printf 'FAIL: Nix QML check must run the empty-home complete closure smoke\n' >&2
   exit 1
 fi
 

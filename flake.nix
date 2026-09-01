@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/d935d3d83ef3c01627cd315230607c4b04554d42";
+      url = "github:sleepylinux/sleepy-sdk/63b2370a39f47f2b361310c12c0333da0faaee9d";
       flake = false;
     };
 
@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/25c83eaa618570681d9e5f442f0c2bff727ae0ce";
+      url = "github:sleepylinux/sleepy-session/07fa0e3d20c7a39293023c75408782447a6520fc";
     };
 
     quickshell = {
@@ -53,6 +53,51 @@
           };
           m3shapesPackage = m3shapes.packages.${system}.default;
           quickshellWithModules = quickshellPackage.withModules [ pkgs.qt6.qtimageformats m3shapesPackage ];
+          runtimeCommandPackages = {
+            hyprctl = pkgs.hyprland;
+            xmllint = pkgs.libxml2;
+            nmcli = pkgs.networkmanager;
+            cat = pkgs.coreutils;
+            brightnessctl = pkgs.brightnessctl;
+            ddcutil = pkgs.ddcutil;
+            notify-send = pkgs.libnotify;
+            swappy = pkgs.swappy;
+            sleepy = appearanceCli;
+            ping = pkgs.iputils;
+            ip = pkgs.iproute2;
+            pkexec = pkgs.polkit;
+            wg-quick = pkgs.wireguard-tools;
+            ghostty = pkgs.ghostty;
+          }
+          // pkgs.lib.optionalAttrs (pkgs ? asdbctl) { asdbctl = pkgs.asdbctl; }
+          // pkgs.lib.optionalAttrs (pkgs ? netbird) { netbird = pkgs.netbird; }
+          // pkgs.lib.optionalAttrs (pkgs ? tailscale) { tailscale = pkgs.tailscale; };
+          directRuntimePackages = pkgs.lib.unique (
+            builtins.attrValues runtimeCommandPackages ++ [
+              sessionPackage
+              pkgs.bluez
+              pkgs.wireplumber
+              pkgs.pipewire
+              pkgs.power-profiles-daemon
+              pkgs.upower
+              pkgs.wl-clipboard
+              pkgs.libqalculate
+              pkgs.lm_sensors
+            ]
+          );
+          directRuntimePath = pkgs.lib.makeBinPath directRuntimePackages;
+          runtimeCommandManifest = pkgs.writeText "sleepy-runtime-command-paths.json" (
+            builtins.toJSON (pkgs.lib.mapAttrs
+              (command: package: "${package}/bin/${command}")
+              runtimeCommandPackages)
+          );
+          fontconfig = pkgs.makeFontsConf {
+            fontDirectories = [
+              pkgs.material-symbols
+              pkgs.rubik
+              pkgs.nerd-fonts.caskaydia-cove
+            ];
+          };
           appearanceCli = pkgs.python3Packages.buildPythonApplication {
             pname = "sleepy-appearance-cli";
             version = "0.2.0";
@@ -193,6 +238,10 @@
                 install -Dm644 \
                   "${sleepy-sdk}/schemas/desktop-command-v3.schema.json" \
                   "$out/${installRoot}/contracts/desktop-command-v3.schema.json"
+                install -Dm644 tests/direct-integrations.json \
+                  "$out/${installRoot}/direct-integrations.json"
+                install -Dm644 "${runtimeCommandManifest}" \
+                  "$out/${installRoot}/runtime-command-paths.json"
 
                 test "$(jq -er '.version' '${artworkManifest}')" = 1
                 primary_mark_relative="$(jq -er '.assets["branding.primaryMark"]' '${artworkManifest}')"
@@ -231,7 +280,9 @@
                   --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
                   --set QML_IMPORT_PATH "${qtQmlImportPath}" \
                   --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
-                  --prefix PATH : "${appearanceCli}/bin:${sessionPackage}/bin" \
+                  --set FONTCONFIG_FILE "${fontconfig}" \
+                  --set SLEEPY_XKB_RULES_PATH "${pkgs.xkeyboard-config}/share/xkeyboard-config-2/rules/base.lst" \
+                  --prefix PATH : "${directRuntimePath}" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
                 ${pkgs.lib.optionalString withIpcClient ''
@@ -247,9 +298,9 @@
               '';
 
               passthru = {
-                sdkRevision = "d935d3d83ef3c01627cd315230607c4b04554d42";
+                sdkRevision = "63b2370a39f47f2b361310c12c0333da0faaee9d";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "25c83eaa618570681d9e5f442f0c2bff727ae0ce";
+                sessionRevision = "07fa0e3d20c7a39293023c75408782447a6520fc";
                 inherit artworkRoot artworkManifest;
               };
 
@@ -387,6 +438,10 @@
             bash tests/with-private-wayland.sh \
               bash tests/packaged-shell-smoke.sh \
                 "$production_shell/bin/sleepy-shell"
+            bash tests/with-private-wayland.sh \
+              bash tests/packaged-full-shell-smoke.sh \
+                "$production_shell/bin/sleepy-shell" \
+                "$production_shell/${installRoot}/runtime-command-paths.json"
 
             production_locker=${componentPackages.sleepy-locker}
             bash tests/with-private-wayland.sh \
@@ -416,6 +471,8 @@
             test -f "$locker_package/share/sleepy-locker/LockRoot.qml"
             test -f "$locker_package/lib/qt6/qml/Sleepy/Locker/Native/qmldir"
             test -f "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
+            test -f "$shell_package/share/sleepy-desktop/direct-integrations.json"
+            test -f "$shell_package/share/sleepy-desktop/runtime-command-paths.json"
             test -f "$shell_package/share/doc/sleepy-desktop/NOTICE"
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             if [[ -f "$shell_package/share/sleepy-desktop/LICENSE" ]]; then

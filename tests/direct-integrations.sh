@@ -39,6 +39,9 @@ for provider in providers:
         raise SystemExit(f"FAIL: provider {provider['id']} has an empty ownership field")
     if not isinstance(provider["commands"], list) or not isinstance(provider["tests"], list) or not provider["tests"]:
         raise SystemExit(f"FAIL: provider {provider['id']} has invalid commands/tests")
+    optional = provider.get("optionalCommands", [])
+    if not isinstance(optional, list) or not set(optional).issubset(provider["commands"]):
+        raise SystemExit(f"FAIL: provider {provider['id']} has invalid optionalCommands")
     registered_commands.update(provider["commands"])
 
 spec = importlib.util.spec_from_file_location("active_graph", repo / "tests/active-graph.py")
