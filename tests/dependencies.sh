@@ -208,8 +208,10 @@ if ! rg -Fq 'pkgs.qt6.qtsvg' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must provide the Qt SVG image plugin used by icon fixtures\n' >&2
   exit 1
 fi
-if ! rg -Fq 'pkgs.python3' <<< "$qml_check_block"; then
-  printf 'FAIL: qml check must provide Python for desktop command schema validation\n' >&2
+if ! rg -Fq 'referencePython' <<< "$qml_check_block" ||
+    ! rg -Fq 'pythonPackages.numpy' "$flake" ||
+    ! rg -Fq 'pythonPackages.pillow' "$flake"; then
+  printf 'FAIL: qml check must provide Python, Pillow, and NumPy for schemas and pixel comparison\n' >&2
   exit 1
 fi
 if ! rg -Fq 'pkgs.util-linux' <<< "$qml_check_block" ||

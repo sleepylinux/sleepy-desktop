@@ -42,6 +42,8 @@ bash "$repo_root/tests/shell-ipc-wrapper.sh"
 run_parity_shell_evidence "$evidence_registry" "$repo_root" "$evidence_results"
 bash "$repo_root/tests/parity-validator-test.sh"
 bash "$repo_root/tests/parity.sh"
+bash "$repo_root/tests/reference-contract.sh"
+python3 -m unittest "$repo_root/tests/reference/test_compare.py"
 
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner

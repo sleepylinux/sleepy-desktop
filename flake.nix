@@ -361,6 +361,10 @@
           quickshellWithModules = quickshellPackage.withModules [ pkgs.qt6.qtimageformats m3shapesPackage ];
           nativePlugin = componentPackages.sleepy-qml-plugin;
           qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
+          referencePython = pkgs.python3.withPackages (pythonPackages: [
+            pythonPackages.numpy
+            pythonPackages.pillow
+          ]);
         in
         {
           locker = componentPackages.sleepy-locker;
@@ -374,7 +378,7 @@
               pkgs.glibc.bin
               pkgs.jq
               pkgs.procps
-              pkgs.python3
+              referencePython
               pkgs.util-linux
               quickshellWithModules
               pkgs.ripgrep
