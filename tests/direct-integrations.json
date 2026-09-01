@@ -92,12 +92,12 @@
     {
       "id": "clipboard",
       "owner": "sleepy-shell",
-      "mechanism": "Wayland clipboard fixed argv",
-      "commands": ["wl-copy", "cliphist"],
-      "stateSource": "cliphist database",
-      "mutationSource": "wl-copy stdin",
-      "reconciliation": "clipboard history refresh after copy",
-      "secretPolicy": "clipboard payload is stdin only, never argv",
+      "mechanism": "Qt platform clipboard",
+      "commands": [],
+      "stateSource": "Qt Wayland clipboard",
+      "mutationSource": "QClipboard text/image setters",
+      "reconciliation": "Qt clipboard ownership change",
+      "secretPolicy": "clipboard payload never crosses process argv",
       "tests": ["tests/direct-integrations.sh"]
     },
     {
@@ -112,10 +112,21 @@
       "tests": ["tests/direct-integrations.sh"]
     },
     {
+      "id": "appearance",
+      "owner": "sleepy-shell plus the modular sleepy-appearance-cli package",
+      "mechanism": "FileSystemModel/FileView with fixed-argv Sleepy appearance helper",
+      "commands": ["sleepy"],
+      "stateSource": "XDG Sleepy scheme/wallpaper state and wallpaper directory",
+      "mutationSource": "sleepy scheme/wallpaper fixed argv",
+      "reconciliation": "watched atomic scheme and wallpaper state files",
+      "secretPolicy": "no credentials accepted; optional wallpaper hook must be an argv array",
+      "tests": ["tests/appearance-cli.sh", "tests/direct-integrations.sh"]
+    },
+    {
       "id": "applications",
       "owner": "sleepy-shell",
       "mechanism": "Quickshell DesktopEntries",
-      "commands": ["ghostty", "sleepy"],
+      "commands": ["ghostty"],
       "stateSource": "freedesktop desktop-entry index",
       "mutationSource": "DesktopEntry.execute or configured terminal argv",
       "reconciliation": "launch completion is intentionally fire-and-forget",

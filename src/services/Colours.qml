@@ -3,26 +3,27 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Sleepy.Config
+import Sleepy.Images
 import qs.services
-import "DesktopCommands.js" as DesktopCommands
+import qs.utils
 
 Singleton {
     id: root
 
-    readonly property var appearanceState: DesktopModel.appearance || ({})
     property bool showPreview
-    property string scheme: appearanceState.schemeName || appearanceState.themeName || ""
-    property string flavour: appearanceState.schemeFlavour || appearanceState.themeFlavour || ""
+    property string scheme
+    property string flavour
     readonly property bool light: showPreview ? previewLight : currentLight
-    property bool currentLight: appearanceState.mode === "light"
+    property bool currentLight
     property bool previewLight
     readonly property M3Palette palette: showPreview ? preview : current
     readonly property M3TPalette tPalette: M3TPalette {}
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
     readonly property Transparency transparency: Transparency {}
-    readonly property real wallLuminance: appearanceState.wallpaperLuminance ?? 0.5
+    readonly property alias wallLuminance: analyser.luminance
 
     property bool cooldownPending
     property real lastBaseTransparency
@@ -61,8 +62,6 @@ Singleton {
     function load(data: string, isPreview: bool): void {
         const colours = isPreview ? preview : current;
         const scheme = JSON.parse(data);
-        if (!scheme || !scheme.colours)
-            return;
 
         if (!isPreview) {
             root.scheme = scheme.name;
@@ -80,13 +79,19 @@ Singleton {
     }
 
     function setMode(mode: string): void {
-        const command = DesktopCommands.appearanceApplyTheme(mode);
-        if (command)
-            CommandClient.appearance(command);
+        Quickshell.execDetached(["sleepy", "scheme", "set", "--notify", "-m", mode]);
     }
 
     function reloadHyprRules(): void {
-        // Runtime compositor policy is owned by sleepy-sessiond.
+        let rule, trEnabled;
+        if (Hypr.usingLua) {
+            rule = `eval hl.layer_rule({ match = { namespace = "sleepy-drawers" }, %1 = %2 })`;
+            trEnabled = transparency.enabled;
+        } else {
+            rule = "keyword layerrule %1 %2, match:namespace sleepy-drawers";
+            trEnabled = transparency.enabled ? 1 : 0;
+        }
+        Hypr.extras.batchMessage([rule.arg("blur").arg(trEnabled), rule.arg("ignore_alpha").arg(Math.max(0, transparency.base - 0.03))]);
     }
 
     function requestReloadHyprRules(): void {
@@ -98,22 +103,28 @@ Singleton {
         }
     }
 
-    function loadDesktopTheme(): void {
-        const theme = root.appearanceState.schemeJson || root.appearanceState.scheme || root.appearanceState.theme || null;
-        if (!theme)
-            return;
-        if (typeof theme === "string") {
-            root.load(theme, false);
-        } else {
-            root.load(JSON.stringify(theme), false);
+    Component.onCompleted: root.requestReloadHyprRules()
+
+    Connections {
+        function onConfigReloaded(): void {
+            root.reloadHyprRules();
         }
+
+        target: Hypr
     }
 
-    Component.onCompleted: {
-        root.loadDesktopTheme();
-        root.requestReloadHyprRules();
+    FileView {
+        path: `${Paths.state}/scheme.json`
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: root.load(text(), false)
     }
-    onAppearanceStateChanged: root.loadDesktopTheme()
+
+    ImageAnalyser {
+        id: analyser
+
+        source: Wallpapers.current
+    }
 
     Timer {
         id: cooldownTimer

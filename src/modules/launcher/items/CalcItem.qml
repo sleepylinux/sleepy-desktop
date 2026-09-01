@@ -13,7 +13,7 @@ Item {
     readonly property string math: list.search.text.slice(`${GlobalConfig.launcher.actionPrefix}calc `.length)
 
     function onClicked(): void {
-        Quickshell.execDetached(["wl-copy", Qalculator.rawResult]);
+        CUtils.copyTextToClipboard(Qalculator.rawResult);
         root.list.screenState.launcher = false;
     }
 

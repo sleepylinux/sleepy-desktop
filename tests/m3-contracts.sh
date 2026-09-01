@@ -67,8 +67,10 @@ rg -Fq 'eventSource: DesktopClient' "$repo_root/src/services/SystemAdapter.qml"
 rg -Fq 'controlClient: CommandClient' "$repo_root/src/services/SystemAdapter.qml"
 rg -Fq 'CommandClient.appearance' "$repo_root/src/services/SessionAdapter.qml"
 rg -Fq 'Preset mutations are delegated to sleepy-sessiond' "$repo_root/src/services/PresetAdapter.qml"
-rg -Fq 'readonly property var appearanceState: DesktopModel.appearance' \
+rg -Fq 'path: `${Paths.state}/scheme.json`' \
   "$repo_root/src/services/Colours.qml"
+rg -Fq 'FileSystemModel {' "$repo_root/src/services/Wallpapers.qml"
+rg -Fq 'path: Paths.wallsdir' "$repo_root/src/services/Wallpapers.qml"
 if rg -n 'appearanceMode.*system.*dark|portalDark:' "$repo_root/src/shell.qml"; then
   printf 'FAIL: modular shell appearance must come from the confirmed Sleepy appearance model\n' >&2
   exit 1

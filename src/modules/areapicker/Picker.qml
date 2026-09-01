@@ -72,18 +72,18 @@ MouseArea {
     }
 
     function save(): void {
-        const tmpfile = Qt.resolvedUrl(`/tmp/sleepy-picker-${Quickshell.processId}-${Date.now()}.png`);
-        CUtils.saveItem(screencopy, tmpfile, Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh)), path => {
-            if (root.loader.clipboardOnly) {
-                CommandClient.utility({
-                    "type": "screenshot",
-                    "data": {"outputId": path}
-                });
-            } else {
+        const selectionRect = Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh));
+        if (root.loader.clipboardOnly) {
+            CUtils.copyItemToClipboard(screencopy, selectionRect, () => {
+                Toaster.toast(qsTr("Screenshot taken"), qsTr("Screenshot copied to clipboard"), "screenshot_region");
+                closeAnim.start();
+            });
+        } else {
+            CUtils.saveItemToTemp(screencopy, selectionRect, path => {
                 Quickshell.execDetached(["swappy", "-f", path]);
-            }
-            closeAnim.start();
-        });
+                closeAnim.start();
+            });
+        }
     }
 
     onClientsChanged: checkClientRects(mouseX, mouseY)

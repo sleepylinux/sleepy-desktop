@@ -23,6 +23,16 @@
       "id": "shell-native-plugin-contracts",
       "path": "tests/native-plugin-contracts.sh",
       "passIdentity": "PASS: complete renamed native plugin graph and dependencies are declared"
+    },
+    {
+      "id": "shell-selection-capture-contract",
+      "path": "tests/selection-capture-contract.sh",
+      "passIdentity": "PASS: area selection uses constrained native clipboard and temporary-image helpers"
+    },
+    {
+      "id": "shell-appearance-cli",
+      "path": "tests/appearance-cli.sh",
+      "passIdentity": "PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
     }
   ]
 }

@@ -94,8 +94,8 @@ for contract in desktop-event-v3.schema.json desktop-command-v3.schema.json; do
   fi
 done
 
-if ! rg -Fq -- '--prefix PATH : "${sessionPackage}/bin"' "$flake"; then
-  printf 'FAIL: packaged runners must expose pinned sleepyctl on PATH\n' >&2
+if ! rg -Fq -- '--prefix PATH : "${appearanceCli}/bin:${sessionPackage}/bin"' "$flake"; then
+  printf 'FAIL: packaged runners must expose the Sleepy appearance helper and pinned sleepyctl on PATH\n' >&2
   exit 1
 fi
 

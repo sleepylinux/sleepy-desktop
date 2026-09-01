@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/caelestia-dots/cli",
+  "revision": "7401d9e3a371e583bc0b42dc1a139d01e278e6c1",
+  "license": "GPL-3.0-only",
+  "modified": "2026-09-01",
+  "scope": "Scheme generation, wallpaper analysis and shell IPC mechanics only; renamed to the Sleepy namespace and stripped of dotfile installer/update authority."
+}

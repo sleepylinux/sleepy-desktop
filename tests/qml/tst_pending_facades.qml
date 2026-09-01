@@ -13,21 +13,21 @@ TestCase {
         return request.responseText;
     }
 
-    function test_wallpaper_set_does_not_mutate_confirmed_current_locally() {
+    function test_wallpaper_set_updates_direct_state_and_invokes_sleepy_helper() {
         const qml = source("../../src/services/Wallpapers.qml");
 
-        verify(qml.indexOf("readonly property string actualCurrent:") >= 0);
-        verify(qml.indexOf("root.pendingWallpaper = path") >= 0);
-        verify(qml.indexOf("actualCurrent =") < 0);
-        verify(qml.indexOf("root.current =") < 0);
+        verify(qml.indexOf("property string actualCurrent") >= 0);
+        verify(qml.indexOf("actualCurrent = path") >= 0);
+        verify(qml.indexOf('["sleepy", "wallpaper", "-f", path') >= 0);
+        verify(qml.indexOf("DesktopCommands") < 0);
     }
 
     function test_wallpaper_preview_is_local_pending_state_only() {
         const qml = source("../../src/services/Wallpapers.qml");
 
-        verify(qml.indexOf("readonly property string current: showPreview ? pendingPreview : actualCurrent") >= 0);
-        verify(qml.indexOf("root.pendingPreview = path") >= 0);
-        verify(qml.indexOf("DesktopCommands.appearancePreviewWallpaper") < 0);
+        verify(qml.indexOf("readonly property string current: showPreview ? previewPath : actualCurrent") >= 0);
+        verify(qml.indexOf("previewPath = path") >= 0);
+        verify(qml.indexOf("Colours.showPreview = true") >= 0);
     }
 
     function test_brightness_set_tracks_pending_without_mutating_confirmed_level() {

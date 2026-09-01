@@ -53,6 +53,25 @@
           };
           m3shapesPackage = m3shapes.packages.${system}.default;
           quickshellWithModules = quickshellPackage.withModules [ pkgs.qt6.qtimageformats m3shapesPackage ];
+          appearanceCli = pkgs.python3Packages.buildPythonApplication {
+            pname = "sleepy-appearance-cli";
+            version = "0.2.0";
+            src = ./appearance-cli;
+            pyproject = true;
+            build-system = [ pkgs.python3Packages.hatchling ];
+            dependencies = with pkgs.python3Packages; [ pillow materialyoucolor ];
+            pythonImportsCheck = [ "sleepy" ];
+            postInstall = ''
+              install -Dm644 LICENSE "$out/share/doc/sleepy-appearance-cli/LICENSE"
+              install -Dm644 UPSTREAM.json "$out/share/doc/sleepy-appearance-cli/UPSTREAM.json"
+            '';
+            meta = {
+              description = "Modular Sleepy scheme, wallpaper, and shell IPC helper";
+              license = pkgs.lib.licenses.gpl3Only;
+              mainProgram = "sleepy";
+              platforms = pkgs.lib.platforms.linux;
+            };
+          };
           nativePlugin = pkgs.clangStdenv.mkDerivation {
             pname = "sleepy-qml-plugin";
             version = "0.2.0";
@@ -212,7 +231,7 @@
                   --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
                   --set QML_IMPORT_PATH "${qtQmlImportPath}" \
                   --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
-                  --prefix PATH : "${sessionPackage}/bin" \
+                  --prefix PATH : "${appearanceCli}/bin:${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
                 ${pkgs.lib.optionalString withIpcClient ''
@@ -244,6 +263,7 @@
         rec {
           sleepy-qml-plugin = nativePlugin;
           sleepy-locker = lockerPackage;
+          sleepy-appearance-cli = appearanceCli;
 
           sleepy-shell = mkDesktopPackage {
             pname = "sleepy-shell";
@@ -352,6 +372,7 @@
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
             export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway
             export SLEEPY_TEST_WAYLAND_COMPOSITOR=${pkgs.sway}/bin/sway
+            export SLEEPY_APPEARANCE_CLI=${componentPackages.sleepy-appearance-cli}/bin/sleepy
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             unset WAYLAND_DISPLAY
             bash tests/run.sh
@@ -387,8 +408,10 @@
           } ''
             shell_package=${componentPackages.sleepy-shell}
             locker_package=${componentPackages.sleepy-locker}
+            appearance_cli=${componentPackages.sleepy-appearance-cli}
             test -x "$shell_package/bin/sleepy-shell"
             test -x "$shell_package/bin/sleepy-shell-ipc"
+            test -x "$appearance_cli/bin/sleepy"
             test -x "$locker_package/bin/sleepy-locker"
             test -f "$locker_package/share/sleepy-locker/LockRoot.qml"
             test -f "$locker_package/lib/qt6/qml/Sleepy/Locker/Native/qmldir"

@@ -1,14 +1,102 @@
 #include "cutils.hpp"
 
+#include <QtConcurrent/qtconcurrentrun.h>
+#include <QtGui/qclipboard.h>
+#include <QtGui/qguiapplication.h>
+#include <QtQuick/qquickitemgrabresult.h>
+#include <QtQuick/qquickwindow.h>
+#include <qdir.h>
+#include <qcoreapplication.h>
+#include <qfileinfo.h>
+#include <qfuturewatcher.h>
 #include <qloggingcategory.h>
 #include <qmetaobject.h>
 #include <qregularexpression.h>
+#include <qstandardpaths.h>
+#include <quuid.h>
+#include <qqmlengine.h>
 
 #include "util/metaenum.hpp"
 
 Q_LOGGING_CATEGORY(lcCUtils, "sleepy.cutils", QtInfoMsg)
 
 namespace sleepy {
+
+void CUtils::copyTextToClipboard(const QString& text) {
+    QGuiApplication::clipboard()->setText(text);
+}
+
+namespace {
+
+QRect scaledSelection(QQuickItem* target, const QRect& rect) {
+    if (!rect.isValid() || !target || !target->window()) {
+        return rect;
+    }
+    const qreal scale = target->window()->devicePixelRatio();
+    if (qFuzzyCompare(scale + 1.0, 2.0)) {
+        return rect;
+    }
+    return QRectF(rect.left() * scale, rect.top() * scale, rect.width() * scale, rect.height() * scale).toRect();
+}
+
+QImage selectedImage(const QSharedPointer<const QQuickItemGrabResult>& result, const QRect& rect) {
+    QImage image = result->image();
+    return rect.isValid() ? image.copy(rect) : image;
+}
+
+} // namespace
+
+void CUtils::copyItemToClipboard(QQuickItem* target, const QRect& rect, QJSValue onCopied) {
+    if (!target || !target->window()) {
+        qCWarning(lcCUtils) << "copyItemToClipboard: a window-backed target is required";
+        return;
+    }
+
+    const QRect selection = scaledSelection(target, rect);
+    const QSharedPointer<const QQuickItemGrabResult> result = target->grabToImage();
+    QObject::connect(result.data(), &QQuickItemGrabResult::ready, this, [result, selection, onCopied]() mutable {
+        const QImage image = selectedImage(result, selection);
+        if (image.isNull()) {
+            qCWarning(lcCUtils) << "copyItemToClipboard: captured image is empty";
+            return;
+        }
+        QGuiApplication::clipboard()->setImage(image);
+        if (onCopied.isCallable()) {
+            onCopied.call();
+        }
+    });
+}
+
+void CUtils::saveItemToTemp(QQuickItem* target, const QRect& rect, QJSValue onSaved) {
+    if (!target || !target->window()) {
+        qCWarning(lcCUtils) << "saveItemToTemp: a window-backed target is required";
+        return;
+    }
+
+    const QString path = QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
+                             .filePath(QStringLiteral("sleepy-picker-%1-%2.png")
+                                           .arg(QCoreApplication::applicationPid())
+                                           .arg(QUuid::createUuid().toString(QUuid::WithoutBraces)));
+    const QRect selection = scaledSelection(target, rect);
+    const QSharedPointer<const QQuickItemGrabResult> result = target->grabToImage();
+    QObject::connect(result.data(), &QQuickItemGrabResult::ready, this,
+        [result, selection, path, onSaved, this]() mutable {
+            const auto future = QtConcurrent::run([result, selection, path]() {
+                const QImage image = selectedImage(result, selection);
+                return !image.isNull() && QDir().mkpath(QFileInfo(path).absolutePath()) && image.save(path);
+            });
+            auto* watcher = new QFutureWatcher<bool>(this);
+            QObject::connect(watcher, &QFutureWatcher<bool>::finished, this, [watcher, path, onSaved]() mutable {
+                if (watcher->result() && onSaved.isCallable()) {
+                    onSaved.call({QJSValue(path)});
+                } else if (!watcher->result()) {
+                    qCWarning(lcCUtils) << "saveItemToTemp: failed to save selection";
+                }
+                watcher->deleteLater();
+            });
+            watcher->setFuture(future);
+        });
+}
 
 QString CUtils::toLocalFile(const QUrl& url) {
     if (!url.isLocalFile()) {

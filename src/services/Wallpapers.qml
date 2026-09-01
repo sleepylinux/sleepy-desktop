@@ -1,92 +1,70 @@
-// SPDX-License-Identifier: GPL-3.0-only
-// Modified for Sleepy on 2026-08-31: wallpaper inventory and persistence are daemon-owned.
-
 pragma Singleton
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import Sleepy.Config
+import Sleepy.Models
 import qs.services
 import qs.utils
-import "DesktopCommands.js" as DesktopCommands
 
 Searcher {
     id: root
 
-    readonly property var appearanceState: DesktopModel.appearance || ({})
-    readonly property string fallback: ""
+    readonly property string currentNamePath: `${Paths.state}/wallpaper/path.txt`
+    readonly property list<string> smartArg: GlobalConfig.services.smartScheme ? [] : ["--no-smart"]
+    readonly property string fallback: Quickshell.shellPath("assets/logo.svg")
+
     property bool showPreview: false
-    readonly property string current: showPreview ? pendingPreview : actualCurrent
-    property string pendingPreview: ""
-    readonly property string actualCurrent: appearanceState.wallpaperId || appearanceState.wallpaperPath || fallback
-    property string pendingWallpaper: ""
-    property bool previewColourLock: false
-    property bool pendingPreviewClear: false
+    readonly property string current: showPreview ? previewPath : actualCurrent
+    property string previewPath
+    property string actualCurrent
+    property bool previewColourLock
+    property bool pendingPreviewClear
 
-    function wallpaperRecords(): list<var> {
-        return (appearanceState.wallpapers || []).map(wallpaper => Object.assign({
-            "id": wallpaper.id || wallpaper.path || "",
-            "path": wallpaper.path || wallpaper.id || "",
-            "relativePath": wallpaper.relativePath || wallpaper.name || wallpaper.id || wallpaper.path || "",
-            "name": wallpaper.name || wallpaper.relativePath || wallpaper.id || "",
-            "parentDir": wallpaper.parentDir || wallpaper.category || ""
-        }, wallpaper));
+    function getCategoryFor(w: FileSystemEntry): string {
+        let category = w.parentDir.slice(Paths.wallsdir.length + 1);
+        if (category.includes("/"))
+            category = category.slice(0, category.indexOf("/"));
+        return category;
     }
 
-    function getCategoryFor(w: var): string {
-        const category = w?.category || w?.parentDir || "";
-        if (!category || category.indexOf("/") < 0)
-            return category;
-        return category.slice(0, category.indexOf("/"));
+    function setRandom(): void {
+        Quickshell.execDetached(["sleepy", "wallpaper", "-r", ...smartArg]);
     }
 
-    function setRandom(): bool {
-        const entries = root.list || [];
-        if (!entries.length)
-            return false;
-        return root.setWallpaper(entries[Math.floor(Math.random() * entries.length)].path);
+    function setWallpaper(path: string): void {
+        actualCurrent = path;
+        Quickshell.execDetached(["sleepy", "wallpaper", "-f", path, ...smartArg]);
     }
 
-    function setWallpaper(path: string): bool {
-        if (!path || path.length === 0)
-            return false;
-        const command = DesktopCommands.appearanceSetWallpaper(path);
-        if (!command)
-            return false;
-        const sent = CommandClient.appearance(command);
-        if (sent)
-            root.pendingWallpaper = path;
-        return sent;
+    function preview(path: string): void {
+        previewPath = path;
+        showPreview = true;
+
+        if (Colours.scheme === "dynamic")
+            getPreviewColoursProc.running = true;
     }
 
-    function preview(path: string): bool {
-        if (!path || path.length === 0)
-            return false;
-        root.pendingPreview = path;
-        root.showPreview = true;
-        return true;
+    function stopPreview(): void {
+        showPreview = false;
+        if (previewColourLock)
+            pendingPreviewClear = true;
+        else
+            Colours.showPreview = false;
     }
 
-    function stopPreview(): bool {
-        root.showPreview = false;
-        Colours.showPreview = false;
-        root.pendingPreview = "";
-        return true;
+    onPreviewColourLockChanged: {
+        if (!previewColourLock && pendingPreviewClear)
+            Colours.showPreview = false;
     }
 
-    onAppearanceStateChanged: if (root.pendingWallpaper.length)
-        root.pendingWallpaper = ""
-
-    Connections {
-        target: CommandClient
-        function onCommandFailed() { root.pendingWallpaper = ""; }
-    }
-
-    list: wallpaperRecords()
+    list: wallpapers.entries
     key: "relativePath"
     useFuzzy: GlobalConfig.launcher.useFuzzy.wallpapers
-    extraOpts: useFuzzy ? ({}) : ({forward: false})
+    extraOpts: useFuzzy ? ({}) : ({
+            forward: false
+        })
 
     IpcHandler {
         function get(): string {
@@ -102,5 +80,46 @@ Searcher {
         }
 
         target: "wallpaper"
+    }
+
+    FileView {
+        path: root.currentNamePath
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            let wall = text().trim();
+            if (!wall) {
+                wall = root.fallback;
+                Quickshell.execDetached(["sleepy", "wallpaper", "-f", root.fallback, ...root.smartArg]);
+            }
+            root.actualCurrent = wall;
+            root.previewColourLock = false;
+        }
+        onLoadFailed: {
+            root.actualCurrent = root.fallback;
+            root.previewColourLock = false;
+            Quickshell.execDetached(["sleepy", "wallpaper", "-f", root.fallback, ...root.smartArg]);
+        }
+    }
+
+    FileSystemModel {
+        id: wallpapers
+
+        recursive: true
+        path: Paths.wallsdir
+        filter: FileSystemModel.Images
+    }
+
+    Process {
+        id: getPreviewColoursProc
+
+        command: ["sleepy", "wallpaper", "-p", root.previewPath, ...root.smartArg]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                Colours.load(text, true);
+                Colours.showPreview = true;
+            }
+        }
     }
 }

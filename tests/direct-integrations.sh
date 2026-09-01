@@ -19,6 +19,7 @@ data = json.loads(registry_path.read_text())
 expected = {
     "hyprland", "network", "audio", "brightness", "media", "notifications",
     "tray", "power", "clipboard", "screenshot", "applications",
+    "appearance",
 }
 providers = data.get("providers", [])
 ids = [provider.get("id") for provider in providers]

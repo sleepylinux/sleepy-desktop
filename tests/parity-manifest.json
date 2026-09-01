@@ -77,23 +77,25 @@
     },
     {
       "path": "src/modules/areapicker/AreaPicker.qml",
-      "disposition": "move",
-      "sleepyOwner": "sleepy-session",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "native Quickshell screencopy, Qt clipboard, constrained temporary image helper, fixed-argv hyprctl/swappy",
+      "degradedState": "Capture failure leaves the picker open without issuing an unrelated session command",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_recording_lifecycle_and_area_selection_follow_confirmed_v3_state"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_area_picker_uses_hypr_cursor_and_constrained_native_capture",
+        "tests/selection-capture-contract.sh#PASS: area selection uses constrained native clipboard and temporary-image helpers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/areapicker/Picker.qml",
-      "disposition": "move",
-      "sleepyOwner": "sleepy-session",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "native Quickshell screencopy, Qt clipboard, constrained temporary image helper, fixed-argv hyprctl/swappy",
+      "degradedState": "Capture failure leaves the picker open without issuing an unrelated session command",
       "tests": [
-        "tests/qml/tst_core_surfaces.qml#test_recording_lifecycle_and_area_selection_follow_confirmed_v3_state"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_area_picker_uses_hypr_cursor_and_constrained_native_capture",
+        "tests/selection-capture-contract.sh#PASS: area selection uses constrained native clipboard and temporary-image helpers"
       ],
       "behaviorStatus": "verified"
     },
@@ -794,239 +796,279 @@
     },
     {
       "path": "src/modules/drawers/ContentWindow.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/drawers/Drawers.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/drawers/Exclusions.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/drawers/Interactions.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/drawers/Panels.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/drawers/Regions.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "per-ShellScreen native layer-shell surface state",
+      "degradedState": "A disabled panel removes only its own drag region",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_production_per_output_host_enforces_one_open_surface"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_drawer_drag_thresholds_route_each_original_surface"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/AppList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/Content.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/ContentList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/WallpaperList.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Launcher wallpaper search and execution are unavailable because desktop protocol v3 exposes no wallpaper catalog or approved launcher wallpaper action"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/Wrapper.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/ActionItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/AppItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/CalcItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Calculator result and execution are unavailable because desktop protocol v3 exposes neither a calculator result row nor an approved calculation command"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/SchemeItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Scheme search and execution are unavailable because desktop protocol v3 exposes no daemon-owned scheme catalog or apply-scheme command"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/VariantItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/items/WallpaperItem.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Launcher wallpaper search and execution are unavailable because desktop protocol v3 exposes no wallpaper catalog or approved launcher wallpaper action"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/services/Actions.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/services/Apps.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/services/M3Variants.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/launcher/services/Schemes.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "Quickshell DesktopEntries, native Qalculator/clipboard, and modular Sleepy appearance helper",
+      "degradedState": "Unavailable optional executables affect only their matching launcher action",
       "tests": [
-        "tests/qml/tst_core_overlays.qml#test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_launcher_keyboard_search_apps_and_failure_safe_execution",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_calculator_copy_and_terminal_are_fixed_argv",
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Scheme search and execution are unavailable because desktop protocol v3 exposes no daemon-owned scheme catalog or apply-scheme command"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/lock/Center.qml",
@@ -2255,37 +2297,36 @@
     },
     {
       "path": "src/modules/windowinfo/Buttons.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland toplevels, ScreencopyView, and dispatch",
+      "degradedState": "No active toplevel renders the original explicit empty state",
       "tests": [
-        "tests/qml/tst_parity.qml#test_window_info_is_per_output_and_routes_typed_actions_without_optimism"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_window_preview_and_actions_use_native_hyprland_objects"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/windowinfo/Details.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland toplevels, ScreencopyView, and dispatch",
+      "degradedState": "No active toplevel renders the original explicit empty state",
       "tests": [
-        "tests/qml/tst_parity.qml#test_window_info_is_per_output_and_routes_typed_actions_without_optimism"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_window_preview_and_actions_use_native_hyprland_objects"
       ],
       "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/windowinfo/Preview.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland toplevels, ScreencopyView, and dispatch",
+      "degradedState": "No active toplevel renders the original explicit empty state",
       "tests": [
-        "tests/qml/tst_parity.qml#test_window_info_is_per_output_and_routes_typed_actions_without_optimism"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_window_preview_and_actions_use_native_hyprland_objects"
       ],
-      "behaviorStatus": "approved-deviation",
-      "approvedDeviation": "Window preview rendering is unavailable because desktop protocol v3 exposes no compositor-approved preview image handle"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/windowinfo/SleepyWindowInfo.qml",
@@ -2301,12 +2342,12 @@
     },
     {
       "path": "src/modules/windowinfo/WindowInfo.qml",
-      "disposition": "rewrite",
+      "disposition": "render",
       "sleepyOwner": "sleepy-desktop",
-      "protocol": "desktop-v3 confirmed projection and typed commands",
-      "degradedState": "Active Core view shows an unavailable state when its daemon capability is absent",
+      "protocol": "native Quickshell Hyprland toplevels, ScreencopyView, and dispatch",
+      "degradedState": "No active toplevel renders the original explicit empty state",
       "tests": [
-        "tests/qml/tst_parity.qml#test_window_info_is_per_output_and_routes_typed_actions_without_optimism"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_window_preview_and_actions_use_native_hyprland_objects"
       ],
       "behaviorStatus": "verified"
     },
@@ -3990,15 +4031,15 @@
     },
     {
       "path": "src/services/Colours.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "watched XDG Sleepy appearance state plus modular fixed-argv appearance helper",
+      "degradedState": "Missing wallpaper or scheme state uses the packaged Sleepy fallback and remains independently recoverable",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/CommandClient.qml",
@@ -4535,15 +4576,15 @@
     },
     {
       "path": "src/services/Wallpapers.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "watched XDG Sleepy appearance state plus modular fixed-argv appearance helper",
+      "degradedState": "Missing wallpaper or scheme state uses the packaged Sleepy fallback and remains independently recoverable",
       "tests": [
-        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+        "tests/qml/tst_full_launcher_drawers_windowinfo.qml#test_scheme_wallpaper_and_preview_keep_original_launcher_composition",
+        "tests/appearance-cli.sh#PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/Weather.qml",

@@ -79,9 +79,13 @@ test -f "$repo_root/tests/qml-native/tst_full_settings.qml" \
 test -x "$repo_root/tests/full-settings-contract.sh" \
   || fail 'full native settings contract runner is missing or not executable'
 
-if rg -n 'Q_INVOKABLE.*(saveItem|copyFile|deleteFile)|CUtils::(saveItem|copyFile|deleteFile)' \
+if rg -n 'Q_INVOKABLE.*(saveItem[[:space:]]*\(|copyFile|deleteFile)|CUtils::(saveItem[[:space:]]*\(|copyFile|deleteFile)' \
     "$cutils_header" "$cutils_source"; then
   fail 'native CUtils must not expose direct file mutation helpers'
 fi
+rg -Fq 'saveItemToTemp(QQuickItem* target, const QRect& rect, QJSValue onSaved)' "$cutils_header" \
+  || fail 'native CUtils must expose only the constrained temporary-image capture helper'
+rg -Fq 'QStandardPaths::writableLocation(QStandardPaths::TempLocation)' "$cutils_source" \
+  || fail 'temporary-image capture must choose its own system temporary directory'
 
 printf 'PASS: complete renamed native plugin graph and dependencies are declared\n'
