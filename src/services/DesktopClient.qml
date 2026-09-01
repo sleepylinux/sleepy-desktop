@@ -22,20 +22,26 @@ DesktopProtocol {
     property alias reconnectTimer: reconnectPolicy.reconnectTimer
 
     function connectStream() {
-        if (!root.enabled || desktopSocket.connected)
+        const socket = root.desktopSocket;
+        if (!root.enabled || root.intentionalDisconnect || !socket || socket.connected)
             return false;
         reconnectPolicy.reconnectTimer.stop();
         root.beginConnection();
-        desktopSocket.connected = true;
+        socket.connected = true;
         return true;
     }
 
     function stopStream(message) {
         reconnectPolicy.intentionalDisconnect = true;
         reconnectPolicy.reconnectTimer.stop();
-        desktopSocket.connected = false;
+        const socket = root.desktopSocket;
+        if (socket && socket.connected) {
+            socket.connected = false;
+        } else {
+            if (root.replaceDesktopSocket(socket))
+                reconnectPolicy.intentionalDisconnect = false;
+        }
         root.disconnected(message || "Desktop stream stopped");
-        reconnectPolicy.intentionalDisconnect = false;
         return true;
     }
 
@@ -43,11 +49,42 @@ DesktopProtocol {
         return reconnectPolicy.scheduleReconnect(message, countAttempt);
     }
 
-    function handleSocketDisconnected(message) {
-        return reconnectPolicy.handleSocketDisconnected(message);
+    function handleSocketDisconnected(socket, message) {
+        if (socket !== root.desktopSocket)
+            return false;
+        const intentional = root.intentionalDisconnect;
+        const result = reconnectPolicy.handleSocketDisconnected(message);
+        if (intentional)
+            root.replaceDesktopSocket(socket);
+        return result;
     }
 
-    Component.onCompleted: if (root.enabled) Qt.callLater(root.connectStream)
+    function handleSocketError(socket) {
+        if (socket !== root.desktopSocket || root.intentionalDisconnect)
+            return false;
+        if (!root.replaceDesktopSocket(socket))
+            return false;
+        return root.scheduleReconnect("Desktop stream unavailable", true);
+    }
+
+    function replaceDesktopSocket(expectedSocket) {
+        if (expectedSocket && expectedSocket !== root.desktopSocket)
+            return false;
+        const previousSocket = root.desktopSocket;
+        const replacement = desktopSocketFactory.createObject(root);
+        if (!replacement)
+            return false;
+        desktopSocketState.current = replacement;
+        if (previousSocket)
+            previousSocket.destroy();
+        return true;
+    }
+
+    Component.onCompleted: {
+        root.replaceDesktopSocket(null);
+        if (root.enabled)
+            Qt.callLater(root.connectStream);
+    }
 
     onEnabledChanged: {
         if (root.enabled)
@@ -69,27 +106,35 @@ DesktopProtocol {
         onReconnectDue: root.connectStream()
     }
 
-    readonly property Socket desktopSocket: Socket {
-        path: root.eventSocketPath
-        parser: SplitParser {
-            splitMarker: "\n"
-            onRead: data => {
-                if (String(data).trim().length === 0)
+    readonly property QtObject desktopSocketState: QtObject {
+        property Socket current: null
+    }
+    readonly property Socket desktopSocket: desktopSocketState.current
+
+    readonly property Component desktopSocketFactory: Component {
+        Socket {
+            id: socket
+
+            path: root.eventSocketPath
+            parser: SplitParser {
+                splitMarker: "\n"
+                onRead: data => {
+                    if (String(data).trim().length === 0)
+                        return;
+                    if (!root.acceptLine(data))
+                        socket.connected = false;
+                }
+            }
+            onConnectionStateChanged: {
+                if (socket !== root.desktopSocket)
                     return;
-                if (!root.acceptLine(data))
-                    root.desktopSocket.connected = false;
+                if (connected) {
+                    root.beginConnection();
+                } else {
+                    root.handleSocketDisconnected(socket, "Desktop stream disconnected");
+                }
             }
-        }
-        onConnectionStateChanged: {
-            if (connected) {
-                root.beginConnection();
-            } else {
-                root.handleSocketDisconnected("Desktop stream disconnected");
-            }
-        }
-        onError: {
-            root.desktopSocket.connected = false;
-            root.scheduleReconnect("Desktop stream unavailable", true);
+            onError: root.handleSocketError(socket)
         }
     }
 

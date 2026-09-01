@@ -26,13 +26,12 @@ QtObject {
         root.intentionalDisconnect = true;
         reconnectTimer.stop();
         root.disconnected(message || "Desktop stream stopped");
-        root.intentionalDisconnect = false;
         return true;
     }
 
     function scheduleReconnect(message, countAttempt) {
         root.disconnected(message);
-        if (!root.enabled)
+        if (root.intentionalDisconnect || !root.enabled)
             return false;
         const attemptForDelay = root.reconnectAttempt;
         if (countAttempt && !reconnectTimer.running)
@@ -44,7 +43,12 @@ QtObject {
     }
 
     function handleSocketDisconnected(message) {
-        if (root.intentionalDisconnect || !root.enabled)
+        if (root.intentionalDisconnect) {
+            root.intentionalDisconnect = false;
+            reconnectTimer.stop();
+            return false;
+        }
+        if (!root.enabled)
             return false;
         return root.scheduleReconnect(message || "Desktop stream disconnected", true);
     }

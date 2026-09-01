@@ -1,0 +1,4 @@
+module Quickshell.Io
+plugin sleepysocketcontractplugin
+classname SleepySocketContractPlugin
+SplitParser 1.0 SplitParser.qml
