@@ -423,7 +423,7 @@
             export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml
             readonly SLEEPY_TEST_QUICKSHELL=${quickshellWithModules}/bin/qs
             export SLEEPY_TEST_QUICKSHELL
-            export PATH=${pkgs.qt6.qtdeclarative}/bin:$PATH
+            export PATH=${pkgs.qt6.qtdeclarative}/bin:${pkgs.qt6.qtdeclarative}/libexec:$PATH
             export SLEEPY_ARTWORK_ROOT='${artworkRoot}'
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
             export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway
