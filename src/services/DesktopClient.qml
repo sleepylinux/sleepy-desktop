@@ -58,7 +58,7 @@ DesktopProtocol {
 
     onEventAccepted: root.reconnectAttempt = 0
 
-    DesktopReconnectPolicy {
+    readonly property DesktopReconnectPolicy reconnectPolicy: DesktopReconnectPolicy {
         id: reconnectPolicy
 
         enabled: root.enabled
