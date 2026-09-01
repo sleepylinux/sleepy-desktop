@@ -32,6 +32,12 @@
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
+      socketContractNativeInputs = pkgs: [
+        pkgs.stdenv.cc
+        pkgs.pkg-config
+        pkgs.qt6.qtbase
+        pkgs.qt6.qtdeclarative
+      ];
 
       packagesFor = system:
         let
@@ -252,6 +258,16 @@
     {
       packages = forAllSystems packagesFor;
 
+      devShells = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          default = pkgs.mkShell {
+            packages = socketContractNativeInputs pkgs;
+          };
+        });
+
       checks = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
@@ -285,13 +301,11 @@
               pkgs.util-linux
               quickshellWithModules
               pkgs.ripgrep
-              pkgs.qt6.qtbase
-              pkgs.qt6.qtdeclarative
               pkgs.qt6.qtsvg
               pkgs.vulkan-loader
               pkgs.sway
               pkgs.xorg.xorgserver
-            ];
+            ] ++ socketContractNativeInputs pkgs;
           } ''
             cd ${self}
             display_number=100

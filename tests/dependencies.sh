@@ -138,6 +138,36 @@ fi
 qml_check_block="$(
   sed -n '/^          qml = pkgs.runCommand /,/^          package = pkgs.runCommand /p' "$flake"
 )"
+socket_contract_inputs_block="$(
+  sed -n '/^      socketContractNativeInputs = pkgs: \[/,/^      \];/p' "$flake"
+)"
+for dependency in \
+  pkgs.stdenv.cc \
+  pkgs.pkg-config \
+  pkgs.qt6.qtbase \
+  pkgs.qt6.qtdeclarative; do
+  if ! rg -Fxq "        $dependency" <<< "$socket_contract_inputs_block"; then
+    printf 'FAIL: socket contract native input set must declare %s\n' \
+      "$dependency" >&2
+    exit 1
+  fi
+done
+if ! rg -Fq '] ++ socketContractNativeInputs pkgs;' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must consume the complete socket contract native input set\n' >&2
+  exit 1
+fi
+dev_shell_block="$(
+  sed -n '/^      devShells = forAllSystems /,/^      checks = forAllSystems /p' "$flake"
+)"
+if ! rg -Fq 'packages = socketContractNativeInputs pkgs;' <<< "$dev_shell_block"; then
+  printf 'FAIL: default dev shell must consume the complete socket contract native input set\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'moc_binary="$(command -v moc || true)"' \
+    "$repository_root/tests/desktop-client-socket-contract.sh"; then
+  printf 'FAIL: socket contract runner must discover the Nix-provided moc through PATH\n' >&2
+  exit 1
+fi
 if ! rg -Fq 'bash "$repo_root/tests/dependencies.sh"' "$repository_root/tests/run.sh"; then
   printf 'FAIL: QML runner must invoke dependency checks through the pinned Bash on PATH\n' >&2
   exit 1
