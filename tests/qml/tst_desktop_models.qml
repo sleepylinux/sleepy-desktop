@@ -49,6 +49,30 @@ TestCase {
         return createTemporaryObject(component, testCase);
     }
 
+    function loadProductionModelWithStrictWeakMap() {
+        let qml = source("../../src/services/DesktopModelProjection.qml");
+        const original = "const cells = new WeakMap();";
+        verify(qml.indexOf(original) >= 0);
+        qml = qml.replace(original, `
+            const cells = (function() {
+                const map = new WeakMap();
+                return Object.freeze({
+                    "get": function(target) {
+                        if (target === null
+                                || (typeof target !== "object" && typeof target !== "function"))
+                            throw new TypeError("WeakMap key must be a non-null object");
+                        return map.get(target);
+                    },
+                    "set": function(target, value) {
+                        map.set(target, value);
+                    }
+                });
+            })();`);
+        const object = Qt.createQmlObject(qml, testCase, "StrictWeakMapDesktopModelProjection");
+        verify(object !== null);
+        return object;
+    }
+
     function loadProductionProtocol() {
         const component = Qt.createComponent("../../src/services/DesktopProtocol.qml");
         verify(component.status === Component.Ready, component.errorString());
@@ -248,6 +272,21 @@ TestCase {
             rows.push({"collection": name, "row": model[name][0]});
         }
         return rows;
+    }
+
+    function test_first_full_snapshot_never_looks_up_a_missing_weakmap_target() {
+        const model = loadProductionModelWithStrictWeakMap();
+
+        verify(model.applyFullSnapshot(snapshot(), 1));
+        compare(model.monitors.length, 2);
+        compare(model.accessPoints.length, 2);
+
+        const retained = model.accessPoints[0];
+        const network = clone(snapshot().system.network);
+        network.data.accessPoints[0].signalLevel = 0.93;
+        verify(model.applyDomainUpdate("system", {"domain": "network", "data": network}, 2));
+        compare(model.accessPoints[0], retained);
+        compare(model.accessPoints[0].signalLevel, 0.93);
     }
 
     function reachableRowBacking(row) {

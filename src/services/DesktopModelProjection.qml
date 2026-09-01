@@ -171,7 +171,9 @@ QtObject {
         }
 
         function replaceRecord(propertyName, target, source) {
-            const cell = cells.get(target);
+            const keyable = target !== null
+                && (typeof target === "object" || typeof target === "function");
+            const cell = keyable ? cells.get(target) : null;
             if (!cell || Object.keys(source).some(key => !root.own(target, key)))
                 return createRow(propertyName, source);
             cell.record = root.deepFreeze(root.deepClone(source));
