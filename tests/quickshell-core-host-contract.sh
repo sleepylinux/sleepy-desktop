@@ -249,6 +249,12 @@ if [[ ! -s "$qs_child_pid_file" ]]; then
     exit 1
 fi
 qs_child_pid="$(<"$qs_child_pid_file")"
+for _ in $(seq 1 100); do
+    if ! kill -0 "$qs_child_pid" 2>/dev/null; then
+        break
+    fi
+    sleep 0.02
+done
 if kill -0 "$qs_child_pid" 2>/dev/null; then
     printf 'FAIL: host gate left nested Quickshell descendant %s alive\n' \
         "$qs_child_pid" >&2
