@@ -83,14 +83,13 @@ public:
     Q_INVOKABLE void peerCloseError() {
         if (!mHasTransport || !mConnected)
             return;
-        mConnected = false;
-        emit lifecycleChanged();
         emit error(1);
     }
 
     Q_INVOKABLE void acknowledgePeerClose() {
         if (!mHasTransport)
             return;
+        mConnected = false;
         mDisconnecting = false;
         mHasTransport = false;
         emit lifecycleChanged();

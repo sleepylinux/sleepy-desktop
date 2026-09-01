@@ -52,13 +52,14 @@ TestCase {
         });
 
         initialSocket.peerCloseError();
-        compare(initialSocket.connected, false);
+        compare(initialSocket.connected, true);
         const firstRetry = client.testSocket;
         verify(firstRetry !== initialSocket);
         compare(client.reconnectAttempt, 1);
         compare(client.reconnectTimer.interval, 5);
         verify(client.reconnectTimer.running);
         initialSocket.acknowledgePeerClose();
+        compare(initialSocket.connected, false);
         compare(initialSocket.connectAttempts, 1);
         initialSocket.emitConnectionState();
         compare(client.testSocket, firstRetry);
