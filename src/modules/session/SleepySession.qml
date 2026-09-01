@@ -62,9 +62,18 @@ Column {
             delegate: Rectangle {
                 id: button
                 required property var modelData
+                readonly property string actionId: "session:" + modelData.id
+                readonly property var feedback:
+                    (root.outputState.actionFeedback || ({}))[actionId] || ({})
+                readonly property string actionStatus:
+                    feedback.status || root.outputState.actionStatus(actionId)
+                readonly property string actionDiagnostic:
+                    feedback.diagnostic || root.outputState.actionDiagnostic(actionId)
+                readonly property bool feedbackVisible:
+                    ["pending", "rejected", "timeout"].indexOf(actionStatus) >= 0
                 objectName: "sessionAction:" + modelData.id
                 width: 154
-                height: 42
+                height: 58
                 radius: 13
                 enabled: !root.blocked && root.outputState.sessionAvailable
                 activeFocusOnTab: enabled
@@ -74,18 +83,39 @@ Column {
                 Accessible.role: Accessible.Button
                 Accessible.name: root.pendingAction === modelData.id
                     ? "Confirm " + modelData.label : modelData.label
+                Accessible.description: feedbackVisible ? actionDiagnostic : Accessible.name
                 signal triggered
                 onTriggered: root.requestAction(String(modelData.id))
                 Keys.onReturnPressed: triggered()
                 Keys.onSpacePressed: triggered()
                 Keys.onEscapePressed: root.cancelConfirmation()
                 Accessible.onPressAction: { if (enabled) triggered(); }
-                Text {
+                Column {
                     anchors.centerIn: parent
-                    text: button.modelData.label
-                    textFormat: Text.PlainText
-                    color: root.pendingAction === button.modelData.id
-                        ? "#101418" : (root.colors.textPrimary || "#f1f3f4")
+                    width: parent.width - 16
+                    spacing: 2
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: button.modelData.label
+                        textFormat: Text.PlainText
+                        color: root.pendingAction === button.modelData.id
+                            ? "#101418" : (root.colors.textPrimary || "#f1f3f4")
+                    }
+                    Text {
+                        objectName: "commandDiagnostic:" + button.actionId
+                        width: parent.width
+                        visible: button.feedbackVisible
+                        horizontalAlignment: Text.AlignHCenter
+                        text: button.actionDiagnostic
+                        textFormat: Text.PlainText
+                        elide: Text.ElideRight
+                        color: button.actionStatus === "pending"
+                            ? (root.colors.textSecondary || "#bdc1c6") : "#f2b8b5"
+                        font.pixelSize: 9
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: text
+                    }
                 }
                 TapHandler { enabled: button.enabled; onTapped: button.triggered() }
             }

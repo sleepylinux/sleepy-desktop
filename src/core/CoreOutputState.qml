@@ -191,11 +191,73 @@ QtObject {
     readonly property bool colorPickerAvailable:
         root.desktopModel.capabilityAvailable("utilities", "colorPicker")
     readonly property bool sessionAvailable: Boolean(root.desktopModel.available)
+    property var actionFeedback: Object.freeze({})
+    property string pendingActionId: ""
 
     readonly property var colors: root.desktopModel.appearance?.theme?.colors || ({
         "surface": "#202124", "textPrimary": "#f1f3f4",
         "textSecondary": "#bdc1c6", "accent": "#8ab4f8", "control": "#e8eaed"
     })
+
+    function actionStatus(actionId) {
+        return root.actionFeedback[String(actionId)]?.status ?? "idle";
+    }
+
+    function actionDiagnostic(actionId) {
+        return root.actionFeedback[String(actionId)]?.diagnostic ?? "";
+    }
+
+    function updateActionFeedback(actionId, status, diagnostic) {
+        const next = Object.assign({}, root.actionFeedback);
+        next[String(actionId)] = Object.freeze({
+            "status": String(status),
+            "diagnostic": String(diagnostic || "")
+        });
+        root.actionFeedback = Object.freeze(next);
+    }
+
+    function sendTrackedAction(actionId, sender) {
+        // DesktopCommandProtocol owns serialization.  Keep the presentation
+        // tracker descriptive rather than inventing a second authority: test
+        // sinks and future adapters may complete without protocol signals,
+        // while the production client always raises busy before returning.
+        if (root.busy)
+            return false;
+        const accepted = Boolean(sender());
+        if (!accepted) {
+            root.updateActionFeedback(actionId, "rejected",
+                "Desktop command request was not accepted");
+            return false;
+        }
+        root.pendingActionId = String(actionId);
+        root.updateActionFeedback(actionId, "pending",
+            "Pending desktop confirmation…");
+        return true;
+    }
+
+    readonly property Connections commandFeedbackConnections: Connections {
+        target: root.commandClient
+        ignoreUnknownSignals: true
+
+        function onCommandCompleted(_result) {
+            if (!root.pendingActionId.length)
+                return;
+            const actionId = root.pendingActionId;
+            root.pendingActionId = "";
+            root.updateActionFeedback(actionId, "succeeded", "");
+        }
+
+        function onCommandFailed(message) {
+            if (!root.pendingActionId.length)
+                return;
+            const actionId = root.pendingActionId;
+            root.pendingActionId = "";
+            const diagnostic = String(message || "Desktop command rejected");
+            const status = diagnostic.toLocaleLowerCase().indexOf("timed out") >= 0
+                ? "timeout" : "rejected";
+            root.updateActionFeedback(actionId, status, diagnostic);
+        }
+    }
 
     function openOverlay(surfaceId, focusItem) {
         return overlayState.openSurface(surfaceId, focusItem);
@@ -217,7 +279,10 @@ QtObject {
     }
     function setDashboardTab(tabId) { return overlayState.setDashboardTab(tabId); }
     function controlPlayer(playerId, transport) {
-        return overlayState.controlPlayer(playerId, transport);
+        const actionId = "media:" + String(playerId) + ":" + String(transport);
+        return root.sendTrackedAction(actionId, function() {
+            return overlayState.controlPlayer(playerId, transport);
+        });
     }
     function setNexusTab(tabId) { return overlayState.setNexusTab(tabId); }
     function setWifiEnabled(enabled) { return overlayState.setWifiEnabled(enabled); }
@@ -377,43 +442,57 @@ QtObject {
         if (!root.idleInhibitAvailable || root.busy)
             return false;
         const command = DesktopCommands.utilitySetIdleInhibited(Boolean(enabled));
-        return command ? root.commandClient.utility(command) : false;
+        return command ? root.sendTrackedAction("utility:idleInhibit", function() {
+            return root.commandClient.utility(command);
+        }) : false;
     }
 
     function startRecording() {
         if (!root.recordingAvailable || root.busy)
             return false;
         const command = DesktopCommands.utilityStartRecording(root.outputId);
-        return command ? root.commandClient.utility(command) : false;
+        return command ? root.sendTrackedAction("utility:recording", function() {
+            return root.commandClient.utility(command);
+        }) : false;
     }
 
     function pauseRecording() {
         return root.recordingAvailable && !root.busy
-            ? root.commandClient.utility(DesktopCommands.utilityPauseRecording()) : false;
+            ? root.sendTrackedAction("utility:recording", function() {
+                return root.commandClient.utility(DesktopCommands.utilityPauseRecording());
+            }) : false;
     }
 
     function stopRecording() {
         return root.recordingAvailable && !root.busy
-            ? root.commandClient.utility(DesktopCommands.utilityStopRecording()) : false;
+            ? root.sendTrackedAction("utility:recording", function() {
+                return root.commandClient.utility(DesktopCommands.utilityStopRecording());
+            }) : false;
     }
 
     function takeScreenshot() {
         if (!root.screenshotAvailable || root.busy)
             return false;
         const command = DesktopCommands.utilityScreenshot(root.outputId);
-        return command ? root.commandClient.utility(command) : false;
+        return command ? root.sendTrackedAction("utility:screenshot", function() {
+            return root.commandClient.utility(command);
+        }) : false;
     }
 
     function pickColor() {
         return root.colorPickerAvailable && !root.busy
-            ? root.commandClient.utility(DesktopCommands.utilityPickColor()) : false;
+            ? root.sendTrackedAction("utility:colorPicker", function() {
+                return root.commandClient.utility(DesktopCommands.utilityPickColor());
+            }) : false;
     }
 
     function setGameMode(enabled) {
         if (!root.gameModeAvailable || root.busy)
             return false;
         const command = DesktopCommands.utilitySetGameMode(Boolean(enabled));
-        return command ? root.commandClient.utility(command) : false;
+        return command ? root.sendTrackedAction("utility:gameMode", function() {
+            return root.commandClient.utility(command);
+        }) : false;
     }
 
     function ownsWindow(windowId) {
@@ -426,7 +505,15 @@ QtObject {
                 || !root.ownsWindow(windowId))
             return false;
         const command = DesktopCommands.compositor(type, {"windowId": String(windowId)});
-        return command ? root.commandClient.compositor(command) : false;
+        const actionNames = ({
+            "focusWindow": "focus", "closeWindow": "close",
+            "toggleFullscreen": "fullscreen", "toggleFloating": "floating",
+            "togglePinned": "pinned", "toggleGroup": "group"
+        });
+        const actionId = "window:" + String(windowId) + ":" + actionNames[type];
+        return command ? root.sendTrackedAction(actionId, function() {
+            return root.commandClient.compositor(command);
+        }) : false;
     }
 
     function focusWindow(windowId) {
@@ -449,19 +536,28 @@ QtObject {
     }
 
     function moveWindowToWorkspace(windowId, workspaceId) {
+        const window = root.windows.find(
+            candidate => String(candidate.id) === String(windowId)) || null;
         if (root.busy || !root.compositorActions.moveWindowToWorkspace
-                || !root.ownsWindow(windowId)
-                || root.workspaceIds.indexOf(String(workspaceId)) < 0)
+                || !root.ownsWindow(windowId) || !window
+                || root.workspaceIds.indexOf(String(workspaceId)) < 0
+                || String(window.workspaceId) === String(workspaceId))
             return false;
         const command = DesktopCommands.compositor("moveWindowToWorkspace", {
             "windowId": String(windowId), "workspaceId": String(workspaceId)});
-        return command ? root.commandClient.compositor(command) : false;
+        const actionId = "window:" + String(windowId) + ":move:"
+            + String(workspaceId);
+        return command ? root.sendTrackedAction(actionId, function() {
+            return root.commandClient.compositor(command);
+        }) : false;
     }
 
     function performSession(action) {
         if (!root.sessionAvailable || root.busy)
             return false;
         const command = DesktopCommands.session(action);
-        return command ? root.commandClient.session(command) : false;
+        return command ? root.sendTrackedAction("session:" + String(action), function() {
+            return root.commandClient.session(command);
+        }) : false;
     }
 }

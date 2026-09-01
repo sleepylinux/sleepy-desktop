@@ -44,6 +44,9 @@ TestCase {
             property string currentWallpaperId: "wallpaper:night"
             property var sent: []
 
+            function actionStatus(_actionId) { return "idle"; }
+            function actionDiagnostic(_actionId) { return ""; }
+
             function record(family, action, data) {
                 const next = sent.slice();
                 next.push({"family": family, "action": action, "data": data || {}});
@@ -82,6 +85,10 @@ TestCase {
             }
             function toggleWindowGroup(id) {
                 return record("compositor", "toggleGroup", {"windowId": id});
+            }
+            function moveWindowToWorkspace(id, workspaceId) {
+                return record("compositor", "moveWindowToWorkspace", {
+                    "windowId": id, "workspaceId": workspaceId});
             }
             function performSession(action) {
                 return record("session", action);
@@ -160,6 +167,50 @@ TestCase {
         verify(view.requestFocus("window-main"));
         compare(state.sent.length, 1);
         compare(state.sent[0].action, "focusWindow");
+    }
+
+    function test_window_details_pinned_group_move_and_preview_deviation() {
+        const state = createTemporaryObject(stateFactory, testCase);
+        const view = load("../../src/modules/windowinfo/SleepyWindowInfo.qml", state);
+        const pinned = findChild(view, "windowAction:window-main:pinned");
+        const group = findChild(view, "windowAction:window-main:group");
+        const moveCurrent = findChild(view, "windowMove:window-main:1");
+        const moveSpecial = findChild(view, "windowMove:window-main:special-music");
+        const details = findChild(view, "windowDetails:window-main");
+        const preview = findChild(view, "windowPreviewUnavailable:window-main");
+
+        verify(pinned !== null && group !== null);
+        verify(moveCurrent !== null && moveSpecial !== null);
+        verify(details !== null && preview !== null);
+        verify(details.text.indexOf("com.term") >= 0);
+        verify(details.text.indexOf("workspace 1") >= 0);
+        compare(preview.text,
+            "Preview unavailable: desktop protocol v3 provides no safe preview handle");
+        verify(pinned.enabled && group.enabled);
+        verify(!moveCurrent.enabled && moveCurrent.Accessible.ignored);
+        verify(moveSpecial.enabled && !moveSpecial.Accessible.ignored);
+
+        verify(view.requestPinned("window-main"));
+        verify(view.requestGroup("window-main"));
+        verify(!view.requestMove("window-main", "1"));
+        verify(view.requestMove("window-main", "special-music"));
+        verify(!view.requestMove("window-other", "special-music"));
+        compare(JSON.stringify(state.sent), JSON.stringify([
+            {"family":"compositor","action":"togglePinned",
+                "data":{"windowId":"window-main"}},
+            {"family":"compositor","action":"toggleGroup",
+                "data":{"windowId":"window-main"}},
+            {"family":"compositor","action":"moveWindowToWorkspace",
+                "data":{"windowId":"window-main","workspaceId":"special-music"}}
+        ]));
+
+        state.compositorActions = Object.assign({}, state.compositorActions, {
+            "togglePinned": false, "toggleGroup": false,
+            "moveWindowToWorkspace": false
+        });
+        verify(!pinned.enabled && pinned.Accessible.ignored);
+        verify(!group.enabled && group.Accessible.ignored);
+        verify(!moveSpecial.enabled && moveSpecial.Accessible.ignored);
     }
 
     function test_background_respects_confirmed_effects_and_monitor_scale() {

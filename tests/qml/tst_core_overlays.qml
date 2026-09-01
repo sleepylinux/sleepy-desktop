@@ -28,6 +28,11 @@ TestCase {
         }
     }
 
+    Component {
+        id: protocolCommandFactory
+        ProtocolCommandClient {}
+    }
+
     function source(relativePath) {
         const request = new XMLHttpRequest();
         request.open("GET", Qt.resolvedUrl(relativePath), false);
@@ -124,6 +129,13 @@ TestCase {
         const model = loadProductionModel();
         accept(model, fixtureSnapshot(), 1);
         const commands = createTemporaryObject(commandSinkFactory, testCase);
+        return {model: model, commands: commands, view: createView(model, commands)};
+    }
+
+    function setupWithProtocolCommands() {
+        const model = loadProductionModel();
+        accept(model, fixtureSnapshot(), 1);
+        const commands = createTemporaryObject(protocolCommandFactory, testCase);
         return {model: model, commands: commands, view: createView(model, commands)};
     }
 
@@ -244,9 +256,107 @@ TestCase {
         wait(0);
         verify(!playPause.enabled && !playPause.activeFocusOnTab);
         compare(playPause.Accessible.description,
-            "Another desktop command is pending");
+            "Pending desktop confirmation…");
         verify(!output.controlPlayer("firefox.instance1", "next"));
         compare(fixture.commands.sent.length, 1);
+    }
+
+    function test_failed_v3_responses_surface_action_scoped_ui_diagnostics() {
+        const fixture = setupWithProtocolCommands();
+        const output = outputById(fixture.view, "DP-1");
+
+        verify(output.openOverlay("nexus"));
+        verify(output.setNexusTab("utilities"));
+        const screenshot = findChild(output, "utilityScreenshot");
+        const screenshotDiagnostic = findChild(output,
+            "commandDiagnostic:utility:screenshot");
+        verify(screenshot !== null && screenshotDiagnostic !== null);
+        screenshot.Accessible.pressAction();
+        compare(output.actionStatus("utility:screenshot"), "pending");
+        compare(output.activeOverlay, "nexus");
+        wait(0);
+        compare(screenshot.actionStatus, "pending");
+        compare(screenshot.feedbackVisible, true);
+        compare(screenshotDiagnostic.text, "Pending desktop confirmation…");
+        compare(screenshot.Accessible.description, "Pending desktop confirmation…");
+        verify(!fixture.commands.acceptFailedResponse("Screenshot permission denied"));
+        wait(0);
+        compare(output.actionStatus("utility:screenshot"), "rejected");
+        compare(screenshotDiagnostic.text, "Screenshot permission denied");
+
+        verify(output.setNexusTab("session"));
+        const lock = findChild(output, "sessionAction:lock");
+        const lockDiagnostic = findChild(output, "commandDiagnostic:session:lock");
+        verify(lock !== null && lockDiagnostic !== null);
+        lock.Accessible.pressAction();
+        compare(output.actionStatus("session:lock"), "pending");
+        verify(!fixture.commands.acceptFailedResponse("Locker rejected request"));
+        wait(0);
+        compare(output.actionStatus("session:lock"), "rejected");
+        compare(lockDiagnostic.text, "Locker rejected request");
+
+        verify(output.setNexusTab("windows"));
+        const pinned = findChild(output, "windowAction:0x1234:pinned");
+        const pinnedDiagnostic = findChild(output,
+            "commandDiagnostic:window:0x1234:pinned");
+        verify(pinned !== null && pinnedDiagnostic !== null);
+        const pinnedBefore = output.windows[0].pinned;
+        pinned.Accessible.pressAction();
+        compare(output.actionStatus("window:0x1234:pinned"), "pending");
+        compare(output.windows[0].pinned, pinnedBefore);
+        verify(!fixture.commands.acceptFailedResponse("Pinned state rejected"));
+        wait(0);
+        compare(output.actionStatus("window:0x1234:pinned"), "rejected");
+        compare(pinnedDiagnostic.text, "Pinned state rejected");
+        compare(output.windows[0].pinned, pinnedBefore);
+
+        verify(output.openOverlay("dashboard"));
+        verify(output.setDashboardTab("media"));
+        const transport = findChild(output,
+            "dashboardMediaTransport:firefox.instance1:playPause");
+        const transportDiagnostic = findChild(output,
+            "commandDiagnostic:media:firefox.instance1:playPause");
+        verify(transport !== null && transportDiagnostic !== null);
+        const playingBefore = output.players[0].playing;
+        transport.Accessible.pressAction();
+        compare(output.actionStatus("media:firefox.instance1:playPause"), "pending");
+        verify(!fixture.commands.acceptFailedResponse("Player transport rejected"));
+        wait(0);
+        compare(output.actionStatus("media:firefox.instance1:playPause"), "rejected");
+        compare(transportDiagnostic.text, "Player transport rejected");
+        compare(output.players[0].playing, playingBefore);
+
+        verify(output.openOverlay("nexus"));
+        verify(output.setNexusTab("utilities"));
+        fixture.commands.timeoutMs = 1;
+        const colorPicker = findChild(output, "utilityColorPicker");
+        const colorDiagnostic = findChild(output,
+            "commandDiagnostic:utility:colorPicker");
+        verify(colorPicker !== null && colorDiagnostic !== null);
+        colorPicker.Accessible.pressAction();
+        tryCompare(output, "busy", false);
+        compare(output.actionStatus("utility:colorPicker"), "timeout");
+        compare(colorDiagnostic.text, "Desktop command timed out");
+    }
+
+    function test_opaque_mode_changes_active_overlay_surface_alpha() {
+        const model = loadProductionModel();
+        const transparentSnapshot = fixtureSnapshot();
+        transparentSnapshot.appearance.theme.opaqueFallback = false;
+        accept(model, transparentSnapshot, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("nexus"));
+        const panel = findChild(output, "coreOverlayPanel");
+        verify(panel !== null);
+        compare(output.opaque, false);
+        verify(panel.color.a < 1);
+
+        const opaqueSnapshot = fixtureSnapshot();
+        opaqueSnapshot.appearance.theme.opaqueFallback = true;
+        accept(model, opaqueSnapshot, 2);
+        compare(output.opaque, true);
+        compare(panel.color.a, 1);
     }
 
     function test_dashboard_producer_failures_are_independent() {

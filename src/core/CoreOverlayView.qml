@@ -11,6 +11,11 @@ FocusScope {
 
     required property var outputState
     readonly property var colors: root.outputState.colors
+    readonly property color baseSurfaceColor: root.colors.surface || "#202124"
+    readonly property color renderedSurfaceColor: root.outputState.opaque
+        ? root.baseSurfaceColor
+        : Qt.rgba(root.baseSurfaceColor.r, root.baseSurfaceColor.g,
+            root.baseSurfaceColor.b, 0.9)
     readonly property Item initialFocusItem: root.outputState.activeOverlay === "launcher"
         ? launcherSearch : root.outputState.activeOverlay === "dashboard"
             ? dashboardContent.initialFocusItem : root.outputState.activeOverlay === "nexus"
@@ -106,7 +111,7 @@ FocusScope {
         }
         width: Math.min(540, Math.max(420, parent.width - 28))
         radius: 26
-        color: root.colors.surface || "#202124"
+        color: root.renderedSurfaceColor
         border.width: 1
         border.color: root.colors.accent || "#8ab4f8"
         opacity: visible ? 1 : 0

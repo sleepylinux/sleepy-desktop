@@ -139,7 +139,7 @@ Column {
                         required property var modelData
                         objectName: "dashboardPlayer:" + modelData.id
                         width: dashboardBody.width
-                        height: 124
+                        height: 154
                         radius: 16
                         color: "#2a2e33"
                         Accessible.role: Accessible.ListItem
@@ -186,20 +186,51 @@ Column {
                                             ? "Pause" : "Play"},
                                         {id: "next", label: "Next"}
                                     ]
-                                    delegate: CoreOverlayButton {
+                                    delegate: Column {
                                         required property var modelData
-                                        objectName: "dashboardMediaTransport:"
+                                        readonly property string actionKey: "media:"
                                             + playerRow.modelData.id + ":" + modelData.id
-                                        height: 30
-                                        label: modelData.label
-                                        enabled: root.outputState.mediaAvailable
-                                            && !root.outputState.busy
-                                        description: enabled ? label
-                                            : root.outputState.busy
-                                                ? "Another desktop command is pending"
-                                                : root.outputState.mediaDiagnostic
-                                        onTriggered: root.outputState.controlPlayer(
-                                            String(playerRow.modelData.id), modelData.id)
+                                        readonly property var feedback:
+                                            (root.outputState.actionFeedback || ({}))[actionKey]
+                                                || ({})
+                                        readonly property string actionStatus:
+                                            feedback.status
+                                                || root.outputState.actionStatus(actionKey)
+                                        readonly property string actionDiagnostic:
+                                            feedback.diagnostic
+                                                || root.outputState.actionDiagnostic(actionKey)
+                                        spacing: 2
+                                        CoreOverlayButton {
+                                            objectName: "dashboardMediaTransport:"
+                                                + playerRow.modelData.id + ":" + parent.modelData.id
+                                            height: 30
+                                            label: parent.modelData.label
+                                            enabled: root.outputState.mediaAvailable
+                                                && !root.outputState.busy
+                                            description: parent.actionDiagnostic.length
+                                                ? parent.actionDiagnostic : enabled ? label
+                                                : root.outputState.busy
+                                                    ? "Another desktop command is pending"
+                                                    : root.outputState.mediaDiagnostic
+                                            onTriggered: root.outputState.controlPlayer(
+                                                String(playerRow.modelData.id), parent.modelData.id)
+                                        }
+                                        Text {
+                                            objectName: "commandDiagnostic:" + parent.actionKey
+                                            width: parent.width
+                                            visible: ["pending", "rejected", "timeout"]
+                                                .indexOf(parent.actionStatus) >= 0
+                                            text: parent.actionDiagnostic
+                                            textFormat: Text.PlainText
+                                            horizontalAlignment: Text.AlignHCenter
+                                            elide: Text.ElideRight
+                                            color: parent.actionStatus === "pending"
+                                                ? (root.colors.textSecondary || "#bdc1c6")
+                                                : "#f2b8b5"
+                                            font.pixelSize: 9
+                                            Accessible.role: Accessible.StaticText
+                                            Accessible.name: text
+                                        }
                                     }
                                 }
                             }

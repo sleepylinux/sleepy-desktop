@@ -350,7 +350,13 @@
           '';
 
           package = pkgs.runCommand "sleepy-desktop-package-contracts" {
-            nativeBuildInputs = [ pkgs.jq pkgs.ripgrep ];
+            nativeBuildInputs = [
+              pkgs.bash
+              pkgs.coreutils
+              pkgs.jq
+              pkgs.ripgrep
+              pkgs.strace
+            ];
           } ''
             shell_package=${componentPackages.sleepy-shell}
             locker_package=${componentPackages.sleepy-locker}
@@ -372,6 +378,9 @@
             rg -F '${artworkManifest}' \
               "$shell_package/share/sleepy-desktop/services/IconRegistry.qml"
             rg -F '${sessionPackage}/bin' "$shell_package/bin/sleepy-shell"
+            bash ${self}/tests/packaged-ipc-smoke.sh \
+              "$shell_package/bin/sleepy-shell-ipc" \
+              "${quickshellWithModules}/bin/qs"
             if rg '@sleepy[A-Za-z]+@' "$shell_package/share/sleepy-desktop"; then
               exit 1
             fi

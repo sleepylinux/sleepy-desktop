@@ -2,6 +2,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/tests/lib/parity-validator.sh"
+evidence_registry="$repo_root/tests/parity-evidence-registry.json"
+parity_manifest="$repo_root/tests/parity-manifest.json"
+evidence_scratch="$(mktemp -d)"
+trap 'rm -rf -- "$evidence_scratch"' EXIT
+evidence_results="$evidence_scratch/results.txt"
+: >"$evidence_results"
 
 bash "$repo_root/tests/upstream-provenance.sh"
 bash "$repo_root/tests/dependencies.sh"
@@ -16,10 +23,8 @@ bash "$repo_root/tests/private-wayland-contract.sh"
 bash "$repo_root/tests/runtime-names.sh"
 bash "$repo_root/tests/closed-imports.sh"
 bash "$repo_root/tests/service-boundary.sh"
-bash "$repo_root/tests/active-graph.sh"
-bash "$repo_root/tests/native-plugin-contracts.sh"
 bash "$repo_root/tests/shell-ipc-wrapper.sh"
-bash "$repo_root/tests/locker-boundary.sh"
+run_parity_shell_evidence "$evidence_registry" "$repo_root" "$evidence_results"
 bash "$repo_root/tests/parity-validator-test.sh"
 bash "$repo_root/tests/parity.sh"
 
@@ -53,7 +58,10 @@ if [[ ! "$qml_timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
-  "$qml_test_runner" -input "$repo_root/tests/qml" -import "$repo_root/src" -v1
+  "$qml_test_runner" -input "$repo_root/tests/qml" -import "$repo_root/src" -v1 \
+  2>&1 | tee "$evidence_scratch/qml-software.log"
+record_parity_qml_evidence "$parity_manifest" \
+  "$evidence_scratch/qml-software.log" "$evidence_results"
 
 # Qt Quick's painter-style software backend intentionally does not execute
 # Re-run real production surfaces and the icon mask path with the RHI
@@ -69,6 +77,8 @@ for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_su
     -import "$repo_root/src" \
     -v1
 done
+
+validate_parity_evidence_results "$parity_manifest" "$evidence_results"
 
 private_compositor="${SLEEPY_TEST_WAYLAND_COMPOSITOR:-${SLEEPY_TEST_SWAY:-}}"
 if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then

@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "qmlRunners": [
+    {
+      "id": "qml-software-suite",
+      "kind": "qmltestrunner-directory",
+      "input": "tests/qml",
+      "filePattern": "tst_*.qml"
+    }
+  ],
+  "shellRunners": [
+    {
+      "id": "shell-active-graph",
+      "path": "tests/active-graph.sh",
+      "passIdentity": "PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+    },
+    {
+      "id": "shell-locker-boundary",
+      "path": "tests/locker-boundary.sh",
+      "passIdentity": "PASS: fail-secure locker source boundary"
+    },
+    {
+      "id": "shell-native-plugin-contracts",
+      "path": "tests/native-plugin-contracts.sh",
+      "passIdentity": "PASS: native plugin packaging is pinned and limited to audited render helpers"
+    }
+  ]
+}

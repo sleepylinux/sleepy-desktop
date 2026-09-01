@@ -17,6 +17,7 @@ Item {
     readonly property alias focusedWorkspaceId: state.focusedWorkspaceId
     readonly property alias occupiedWorkspaceIds: state.occupiedWorkspaceIds
     readonly property alias specialWorkspaceIds: state.specialWorkspaceIds
+    readonly property alias windows: state.windows
     readonly property alias barVisible: state.barVisible
     readonly property alias trayItems: state.trayItems
     readonly property alias trayActivationSupported: state.trayActivationSupported
@@ -114,6 +115,8 @@ Item {
         return state.moveWindowToWorkspace(windowId, workspaceId);
     }
     function performSession(action) { return state.performSession(action); }
+    function actionStatus(actionId) { return state.actionStatus(actionId); }
+    function actionDiagnostic(actionId) { return state.actionDiagnostic(actionId); }
 
     readonly property string activeOverlay: state.activeOverlay
     property alias launcherSearchText: state.launcherSearchText
@@ -162,6 +165,8 @@ Item {
     readonly property alias idleInhibited: state.idleInhibited
     readonly property alias gameMode: state.gameMode
     readonly property alias recordingState: state.recordingState
+    readonly property alias busy: state.busy
+    readonly property alias actionFeedback: state.actionFeedback
 
     CoreOutputState {
         id: state
