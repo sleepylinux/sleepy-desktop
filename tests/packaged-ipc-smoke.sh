@@ -6,11 +6,13 @@ fail() {
   exit 1
 }
 
-[[ $# -eq 2 ]] || fail 'usage: packaged-ipc-smoke.sh WRAPPER PINNED_QS'
+[[ $# -eq 3 ]] || fail 'usage: packaged-ipc-smoke.sh WRAPPER PINNED_QS CONFIG_PATH'
 wrapper="$1"
 pinned_qs="$2"
+config_path="$3"
 [[ -x "$wrapper" ]] || fail 'packaged sleepy-shell-ipc is not executable'
 [[ -x "$pinned_qs" ]] || fail 'pinned Quickshell IPC client is not executable'
+[[ -f "$config_path" ]] || fail 'packaged shell.qml is missing'
 command -v strace >/dev/null 2>&1 || fail 'strace is required'
 
 runtime="$TMPDIR/sleepy-ipc-empty-runtime"
@@ -30,7 +32,7 @@ set -e
 
 [[ $status -ne 0 ]] \
   || fail 'IPC unexpectedly found a shell instance in the private empty runtime'
-expected="execve(\"$pinned_qs\", [\"$pinned_qs\", \"ipc\", \"--config\", \"sleepy\", \"call\", \"sleepy\", \"toggleLauncher\"]"
+expected="execve(\"$pinned_qs\", [\"$pinned_qs\", \"ipc\", \"--path\", \"$config_path\", \"call\", \"sleepy\", \"toggleLauncher\"]"
 rg -Fq "$expected" "$trace" \
   || {
     cat "$trace" >&2

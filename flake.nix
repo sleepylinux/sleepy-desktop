@@ -215,7 +215,7 @@
                     --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
                     --set QML_IMPORT_PATH "${qtQmlImportPath}" \
                     --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
-                    --add-flags "ipc --config sleepy"
+                    --add-flags "ipc --path $out/${installRoot}/shell.qml"
                 ''}
 
                 runHook postInstall
@@ -396,7 +396,8 @@
             rg -F '${sessionPackage}/bin' "$shell_package/bin/sleepy-shell"
             bash ${self}/tests/packaged-ipc-smoke.sh \
               "$shell_package/bin/sleepy-shell-ipc" \
-              "${quickshellWithModules}/bin/qs"
+              "${quickshellWithModules}/bin/qs" \
+              "$shell_package/share/sleepy-desktop/shell.qml"
             if rg '@sleepy[A-Za-z]+@' "$shell_package/share/sleepy-desktop"; then
               exit 1
             fi

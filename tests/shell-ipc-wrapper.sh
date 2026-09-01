@@ -13,8 +13,8 @@ rg -Fq 'withIpcClient ? false' "$flake" \
   || fail 'desktop package helper must make the IPC companion explicit'
 rg -Fq 'makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-shell-ipc"' "$flake" \
   || fail 'IPC companion must execute the same pinned Quickshell build as sleepy-shell'
-rg -Fq -- '--add-flags "ipc --config sleepy"' "$flake" \
-  || fail 'IPC companion must select the closed sleepy handler configuration'
+rg -Fq -- '--add-flags "ipc --path $out/${installRoot}/shell.qml"' "$flake" \
+  || fail 'IPC companion must select the exact packaged shell path'
 rg -Fq 'withIpcClient = true;' "$flake" \
   || fail 'sleepy-shell package must install its version-matched IPC companion'
 rg -Fq 'test -x "$shell_package/bin/sleepy-shell-ipc"' "$flake" \
