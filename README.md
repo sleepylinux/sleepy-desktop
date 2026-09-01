@@ -134,6 +134,26 @@ Sleepy branding mask, surface bounds and ordered animation frames/timestamps.
 Real reference captures and the real virt-manager acceptance remain separate
 environment gates; unit fixtures do not stand in for those gates.
 
+## Customization and upstream updates
+
+User-adjustable values live in the typed Sleepy settings/config layer and XDG
+Sleepy state, not in the entry point. Surface code can be edited independently
+inside its module directory; provider changes belong in `src/services` or the
+Sleepy transport adapters. Add an executable only through the direct-integration
+registry and Nix runtime command map, with a fixed argv contract, explicit
+secret policy, readback strategy and failure test. Add a protected transition
+to `sleepy-sdk` first, implement it in `sleepy-sessiond`, and expose only the
+typed command to QML.
+
+To import a newer Caelestia release, fetch an immutable upstream tag/commit into
+a separate reference tree, regenerate the provenance/parity inventory, and
+port changes by module rather than replacing Sleepy transport or security
+boundaries. Review every new command, native plugin, state path and secret flow;
+rename runtime identities to Sleepy; update deterministic fixtures and branding
+masks; then run component tests, exact reference capture comparison and the real
+virt-manager acceptance. The upstream source is a review reference only and is
+never a runtime dependency.
+
 ## Preview
 
 The packaged gallery changes appearance, effects, reduced-motion, compact,
