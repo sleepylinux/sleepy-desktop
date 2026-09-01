@@ -188,7 +188,7 @@ The flake pins `sleepy-sdk` at
 `175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`07fa0e3d20c7a39293023c75408782447a6520fc` and prefixes its exact package
+`8430c42820bbec16d8571600cfa95e60ce366595` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
 These revisions are the reviewed public M3 component commits merged to each
