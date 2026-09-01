@@ -7,6 +7,8 @@ TestCase {
     id: testCase
     name: "DesktopModels"
 
+    property var trackedCellMap: null
+
     Component {
         id: bindingProbeFactory
 
@@ -49,26 +51,34 @@ TestCase {
         return createTemporaryObject(component, testCase);
     }
 
-    function loadProductionModelWithStrictWeakMap() {
+    function makeTrackedCellMap() {
+        const map = new Map();
+        return {
+            "size": 0,
+            "get": function(target) {
+                return map.get(target);
+            },
+            "set": function(target, value) {
+                if (!map.has(target))
+                    this.size += 1;
+                map.set(target, value);
+            },
+            "delete": function(target) {
+                if (!map.delete(target))
+                    return false;
+                this.size -= 1;
+                return true;
+            }
+        };
+    }
+
+    function loadProductionModelWithTrackedCellMap() {
         let qml = source("../../src/services/DesktopModelProjection.qml");
-        const original = "const cells = new WeakMap();";
+        const original = "const cells = new Map();";
         verify(qml.indexOf(original) >= 0);
-        qml = qml.replace(original, `
-            const cells = (function() {
-                const map = new WeakMap();
-                return Object.freeze({
-                    "get": function(target) {
-                        if (target === null
-                                || (typeof target !== "object" && typeof target !== "function"))
-                            throw new TypeError("WeakMap key must be a non-null object");
-                        return map.get(target);
-                    },
-                    "set": function(target, value) {
-                        map.set(target, value);
-                    }
-                });
-            })();`);
-        const object = Qt.createQmlObject(qml, testCase, "StrictWeakMapDesktopModelProjection");
+        testCase.trackedCellMap = makeTrackedCellMap();
+        qml = qml.replace(original, "const cells = testCase.trackedCellMap;");
+        const object = Qt.createQmlObject(qml, testCase, "TrackedMapDesktopModelProjection");
         verify(object !== null);
         return object;
     }
@@ -274,19 +284,78 @@ TestCase {
         return rows;
     }
 
-    function test_first_full_snapshot_never_looks_up_a_missing_weakmap_target() {
-        const model = loadProductionModelWithStrictWeakMap();
+    function productionProjectionUsesWeakMap(qml) {
+        return /\bWeakMap\b/.test(qml);
+    }
 
-        verify(model.applyFullSnapshot(snapshot(), 1));
-        compare(model.monitors.length, 2);
-        compare(model.accessPoints.length, 2);
+    function livePresentationRowCount(model) {
+        const names = ["monitors", "workspaces", "windows", "accessPoints", "connections",
+                       "bluetoothDevices", "audioNodes", "audioStreams", "players", "notifications",
+                       "launcherEntries", "trayItems", "clipboardEntries", "calendarEvents",
+                       "weatherForecast", "resourceSamples"];
+        return names.reduce((total, name) => total + model[name].length, 0);
+    }
 
-        const retained = model.accessPoints[0];
-        const network = clone(snapshot().system.network);
-        network.data.accessPoints[0].signalLevel = 0.93;
-        verify(model.applyDomainUpdate("system", {"domain": "network", "data": network}, 2));
-        compare(model.accessPoints[0], retained);
-        compare(model.accessPoints[0].signalLevel, 0.93);
+    function test_production_projection_forbids_weakmap_mutation() {
+        const qml = source("../../src/services/DesktopModelProjection.qml");
+        verify(!productionProjectionUsesWeakMap(qml));
+        const mutant = qml.replace("new Map()", "new WeakMap()");
+        verify(productionProjectionUsesWeakMap(mutant));
+    }
+
+    function test_sustained_projection_keeps_identity_and_bounds_cell_lifetime() {
+        const model = loadProductionModelWithTrackedCellMap();
+        const initial = snapshot();
+        verify(model.applyFullSnapshot(initial, 1));
+        compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
+        let retainedHome = model.accessPoints[0];
+
+        for (let iteration = 0; iteration < 250; ++iteration) {
+            const full = clone(initial);
+            full.system.network.data.accessPoints[0].signalLevel = iteration / 250;
+            if (iteration % 2 === 0) {
+                full.system.network.data.accessPoints.push({
+                    "id": "ephemeral-" + iteration,
+                    "ssid": "Ephemeral " + iteration,
+                    "signalLevel": 0.25,
+                    "secured": false
+                });
+            }
+            verify(model.applyFullSnapshot(full, iteration * 2 + 2));
+            compare(model.accessPoints[0], retainedHome);
+            compare(model.accessPoints[0].signalLevel, iteration / 250);
+            compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
+
+            const network = clone(full.system.network);
+            network.data.accessPoints[0].signalLevel = (iteration + 1) / 250;
+            verify(model.applyDomainUpdate("system",
+                {"domain": "network", "data": network}, iteration * 2 + 3));
+            compare(model.accessPoints[0], retainedHome);
+            compare(model.accessPoints[0].signalLevel, (iteration + 1) / 250);
+            compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
+            if (typeof gc === "function" && iteration % 10 === 0)
+                gc();
+        }
+
+        const retiredHome = retainedHome;
+        const withoutAccessPoints = clone(initial.system.network);
+        withoutAccessPoints.data.accessPoints = [];
+        verify(model.applyDomainUpdate("system",
+            {"domain": "network", "data": withoutAccessPoints}, 1000));
+        compare(model.accessPoints.length, 0);
+        compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
+        compare(retiredHome.id, "ap-home");
+
+        const readded = clone(withoutAccessPoints);
+        readded.data.accessPoints = [{
+            "id": "ap-home", "ssid": "Home Again", "signalLevel": 0.95, "secured": true
+        }];
+        verify(model.applyDomainUpdate("system", {"domain": "network", "data": readded}, 1001));
+        retainedHome = model.accessPoints[0];
+        verify(retainedHome !== retiredHome);
+        compare(retainedHome.ssid, "Home Again");
+        compare(retiredHome.ssid, "Home");
+        compare(testCase.trackedCellMap.size, livePresentationRowCount(model));
     }
 
     function reachableRowBacking(row) {

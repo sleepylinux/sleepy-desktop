@@ -139,7 +139,7 @@ QtObject {
     }
 
     readonly property var reconcileRows: (function() {
-        const cells = new WeakMap();
+        const cells = new Map();
         const allowedKeysByCollection = Object.freeze({
             "notifications": Object.freeze([
                 "schemaVersion", "id", "applicationId", "summary", "body", "urgency",
@@ -171,9 +171,7 @@ QtObject {
         }
 
         function replaceRecord(propertyName, target, source) {
-            const keyable = target !== null
-                && (typeof target === "object" || typeof target === "function");
-            const cell = keyable ? cells.get(target) : null;
+            const cell = cells.get(target);
             if (!cell || Object.keys(source).some(key => !root.own(target, key)))
                 return createRow(propertyName, source);
             cell.record = root.deepFreeze(root.deepClone(source));
@@ -197,6 +195,10 @@ QtObject {
                 const identifier = String(record[key]);
                 const item = root.own(byId, identifier) ? byId[identifier] : null;
                 next.push(replaceRecord(propertyName, item, record));
+            }
+            for (const item of previous) {
+                if (next.indexOf(item) < 0)
+                    cells.delete(item);
             }
             root[propertyName] = Object.freeze(next);
         };
