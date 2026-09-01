@@ -11,6 +11,8 @@ evidence_results="$evidence_scratch/results.txt"
 : >"$evidence_results"
 
 bash "$repo_root/tests/upstream-provenance.sh"
+bash "$repo_root/tests/patch-inventory-validator-test.sh"
+bash "$repo_root/tests/patch-inventory.sh"
 bash "$repo_root/tests/dependencies.sh"
 bash "$repo_root/tests/socket-contract-environment-validator-test.sh"
 bash "$repo_root/tests/qt6-moc-resolver-test.sh"

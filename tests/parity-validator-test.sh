@@ -65,15 +65,14 @@ JSON
 base="$fixture_root/base.json"
 cat >"$base" <<'JSON'
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "upstreamRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
   "referenceComparison": {
     "id": "upstream-v2.4.0-vs-sleepy-reference-pixels",
     "upstreamRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
     "comparison": "exact-pixel-and-layout",
     "environment": "private-wayland-vm",
-    "status": "deferred-environment",
-    "reason": "Exact capture requires private Wayland in the reference VM",
+    "status": "verified",
     "requiredArtifacts": ["upstream-v2.4.0.png", "sleepy-task10.png", "pixel-layout-comparison.json"]
   },
   "entries": [
@@ -81,6 +80,7 @@ cat >"$base" <<'JSON'
       "path":"src/modules/A.qml",
       "disposition":"render",
       "sleepyOwner":"sleepy-desktop",
+      "runtimeReachable":true,
       "protocol":"desktop-v3",
       "degradedState":"hidden",
       "behaviorStatus":"verified",
@@ -90,6 +90,7 @@ cat >"$base" <<'JSON'
       "path":"src/services/B.qml",
       "disposition":"rewrite",
       "sleepyOwner":"sleepy-session",
+      "runtimeReachable":true,
       "protocol":"desktop-v3",
       "degradedState":"unavailable",
       "behaviorStatus":"verified",
@@ -106,8 +107,7 @@ cat >"$base" <<'JSON'
     {
       "id":"case-b",
       "area":"B",
-      "status":"deferred-environment",
-      "reason":"requires private Wayland in the VM",
+      "status":"verified",
       "tests":["tests/qml/tst_beta.qml#test_beta"]
     }
   ]
@@ -138,6 +138,10 @@ expect_rejected() {
 
 validate_with "$base"
 
+jq '.entries[0].behaviorStatus = "excluded-non-runtime" | .entries[0].disposition = "build-only" | .entries[0].sleepyOwner = "none" | .entries[0].runtimeReachable = false | .entries[0].exclusionReason = "fixture compiler helper"' "$base" \
+  >"$fixture_root/valid-non-runtime-exclusion.json"
+validate_with "$fixture_root/valid-non-runtime-exclusion.json"
+
 jq 'del(.entries[0])' "$base" >"$fixture_root/missing-entry.json"
 expect_rejected 'missing inventory entry' "$fixture_root/missing-entry.json"
 
@@ -160,6 +164,21 @@ jq '.entries[0].behaviorStatus = "approved-deviation"' "$base" \
   >"$fixture_root/unjustified-approved-deviation.json"
 expect_rejected 'unjustified approved deviation' \
   "$fixture_root/unjustified-approved-deviation.json"
+
+jq '.entries[0].behaviorStatus = "deferred-environment" | .entries[0].environmentReason = "private Wayland VM"' "$base" \
+  >"$fixture_root/deferred-reachable-entry.json"
+expect_rejected 'deferred reachable entry' \
+  "$fixture_root/deferred-reachable-entry.json"
+
+jq '.entries[0].behaviorStatus = "excluded-non-runtime" | .entries[0].disposition = "unreachable" | .entries[0].sleepyOwner = "none" | .entries[0].exclusionReason = "fixture path is reachable QML"' "$base" \
+  >"$fixture_root/excluded-reachable-qml.json"
+expect_rejected 'excluded reachable QML entry' \
+  "$fixture_root/excluded-reachable-qml.json"
+
+jq '.entries[0].behaviorStatus = "excluded-non-runtime" | .entries[0].disposition = "replaced-asset" | .entries[0].sleepyOwner = "none" | .entries[0].runtimeReachable = false | .entries[0].exclusionReason = "fixture asset is replaced"' "$base" \
+  >"$fixture_root/replacement-without-path.json"
+expect_rejected 'replacement asset without replacementPath' \
+  "$fixture_root/replacement-without-path.json"
 
 jq '.entries[0].tests = ["tests/does-not-exist.sh#PASS: fake"]' "$base" \
   >"$fixture_root/fake-test.json"
@@ -204,17 +223,18 @@ expect_rejected 'tampered immutable upstream inventory' "$base" \
 jq 'del(.objectiveCases[0])' "$base" >"$fixture_root/missing-case.json"
 expect_rejected 'missing required objective' "$fixture_root/missing-case.json"
 
-jq 'del(.objectiveCases[1].reason)' "$base" >"$fixture_root/unjustified-deferral.json"
-expect_rejected 'unjustified environment deferral' "$fixture_root/unjustified-deferral.json"
+jq '.objectiveCases[1].status = "deferred-environment" | .objectiveCases[1].reason = "private Wayland VM"' "$base" \
+  >"$fixture_root/deferred-objective.json"
+expect_rejected 'deferred objective case' "$fixture_root/deferred-objective.json"
 
 jq 'del(.referenceComparison)' "$base" >"$fixture_root/missing-reference-comparison.json"
 expect_rejected 'missing exact reference comparison' \
   "$fixture_root/missing-reference-comparison.json"
 
-jq '.referenceComparison.status = "verified"' "$base" \
-  >"$fixture_root/false-reference-verification.json"
-expect_rejected 'false exact reference verification' \
-  "$fixture_root/false-reference-verification.json"
+jq '.referenceComparison.status = "deferred-environment" | .referenceComparison.reason = "private Wayland VM"' "$base" \
+  >"$fixture_root/deferred-reference-verification.json"
+expect_rejected 'deferred exact reference verification' \
+  "$fixture_root/deferred-reference-verification.json"
 
 jq '.shellRunners = []' "$fixture_root/registry.json" >"$fixture_root/uninvoked-registry.json"
 expect_rejected 'registry with no mandatory shell runner' "$base" \

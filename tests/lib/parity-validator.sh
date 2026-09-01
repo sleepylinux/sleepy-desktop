@@ -148,7 +148,7 @@ validate_parity_manifest() {
     || parity_validation_error 'parity evidence registry is invalid' || return 1
 
   jq -e '
-    .formatVersion == 1 and
+    (.formatVersion == 1 or .formatVersion == 2) and
     .upstreamRevision == "24aa15eefdb146350d2548c0a015b04eddbd1008" and
     (.entries | type == "array" and length > 0) and
     (.objectiveCases | type == "array" and length > 0) and
@@ -157,6 +157,17 @@ validate_parity_manifest() {
     || parity_validation_error 'parity manifest top-level contract is invalid' || return 1
 
   jq -e '
+    if .formatVersion == 2 then
+      .referenceComparison.id == "upstream-v2.4.0-vs-sleepy-reference-pixels" and
+      .referenceComparison.upstreamRevision == .upstreamRevision and
+      .referenceComparison.comparison == "exact-pixel-and-layout" and
+      .referenceComparison.environment == "private-wayland-vm" and
+      .referenceComparison.status == "verified" and
+      (.referenceComparison | has("reason") | not) and
+      (.referenceComparison.requiredArtifacts == [
+        "upstream-v2.4.0.png", "sleepy-task10.png", "pixel-layout-comparison.json"
+      ])
+    else
     .referenceComparison.id == "upstream-v2.4.0-vs-sleepy-reference-pixels" and
     .referenceComparison.upstreamRevision == .upstreamRevision and
     .referenceComparison.comparison == "exact-pixel-and-layout" and
@@ -167,9 +178,10 @@ validate_parity_manifest() {
     (.referenceComparison.requiredArtifacts == [
       "upstream-v2.4.0.png", "sleepy-task10.png", "pixel-layout-comparison.json"
     ])
+    end
   ' "$manifest" >/dev/null || {
     parity_validation_error \
-      'exact upstream reference capture must remain explicitly deferred to private Wayland/VM'
+      'exact upstream reference comparison status is inconsistent with the manifest version'
     return 1
   }
 
@@ -195,25 +207,47 @@ validate_parity_manifest() {
   fi
 
   jq -e '
+    .formatVersion as $formatVersion |
     ([.entries[].path] | length) == ([.entries[].path] | unique | length) and
     all(.entries[];
       (.path | type == "string" and length > 0) and
-      (.disposition | IN("render", "move", "rewrite", "drop-with-reason")) and
-      (.sleepyOwner | IN("sleepy-desktop", "sleepy-session", "none")) and
+      (if $formatVersion == 2
+       then (.runtimeReachable | type == "boolean") and
+         (if .behaviorStatus == "verified"
+          then .runtimeReachable == true and
+            (.disposition | IN("render", "move", "rewrite")) and
+            (.sleepyOwner | IN("sleepy-desktop", "sleepy-session")) and
+            (has("exclusionReason") | not) and
+            (has("replacementPath") | not)
+          elif .behaviorStatus == "excluded-non-runtime"
+          then .runtimeReachable == false and
+            (.disposition | IN("build-only", "license", "unreachable", "replaced-asset")) and
+            .sleepyOwner == "none" and
+            (.exclusionReason | type == "string" and length > 0) and
+            (if .disposition == "replaced-asset"
+             then (.replacementPath | type == "string" and length > 0)
+             else (has("replacementPath") | not)
+             end)
+          else false
+          end)
+       else
+         (.disposition | IN("render", "move", "rewrite", "drop-with-reason")) and
+         (.sleepyOwner | IN("sleepy-desktop", "sleepy-session", "none")) and
+         (.behaviorStatus | IN("verified", "approved-deviation", "deferred-environment")) and
+         (if .behaviorStatus == "approved-deviation" or .disposition == "drop-with-reason"
+          then (.approvedDeviation | type == "string" and length > 0)
+          else has("approvedDeviation") | not
+          end) and
+         (if .behaviorStatus == "deferred-environment"
+          then (.environmentReason | type == "string" and length > 0
+            and (test("private Wayland") or test("VM")))
+          else has("environmentReason") | not
+          end)
+       end) and
       (.protocol | type == "string" and length > 0) and
       (.degradedState | type == "string" and length > 0) and
-      (.behaviorStatus | IN("verified", "approved-deviation", "deferred-environment")) and
       (.tests | type == "array" and length > 0 and
-        all(.[]; type == "string" and length > 0)) and
-      (if .behaviorStatus == "approved-deviation" or .disposition == "drop-with-reason"
-        then (.approvedDeviation | type == "string" and length > 0)
-        else has("approvedDeviation") | not
-       end) and
-      (if .behaviorStatus == "deferred-environment"
-        then (.environmentReason | type == "string" and length > 0
-          and (test("private Wayland") or test("VM")))
-        else has("environmentReason") | not
-       end)
+        all(.[]; type == "string" and length > 0))
     )
   ' "$manifest" >/dev/null || {
     rm -rf -- "$scratch"
@@ -230,24 +264,28 @@ validate_parity_manifest() {
   fi
 
   jq -e '
+    .formatVersion as $formatVersion |
     ([.objectiveCases[].id] | length) == ([.objectiveCases[].id] | unique | length) and
     all(.objectiveCases[];
       (.area | type == "string" and length > 0) and
-      (.status | IN("verified", "approved-deviation", "deferred-environment")) and
+      (if $formatVersion == 2
+       then .status == "verified" and (has("reason") | not)
+       else (.status | IN("verified", "approved-deviation", "deferred-environment")) and
+         (if .status == "deferred-environment"
+          then (.reason | type == "string" and length > 0
+            and (test("private Wayland") or test("VM")))
+          elif .status == "approved-deviation"
+          then (.reason | type == "string" and length > 0)
+          else has("reason") | not
+          end)
+       end) and
       (.tests | type == "array" and length > 0 and
-        all(.[]; type == "string" and length > 0)) and
-      (if .status == "deferred-environment"
-        then (.reason | type == "string" and length > 0
-          and (test("private Wayland") or test("VM")))
-        elif .status == "approved-deviation"
-        then (.reason | type == "string" and length > 0)
-        else has("reason") | not
-       end)
+        all(.[]; type == "string" and length > 0))
     )
   ' "$manifest" >/dev/null || {
     rm -rf -- "$scratch"
     parity_validation_error \
-      'objective cases need verified evidence, approved deviation, or environment deferral'
+      'objective case status is inconsistent with the manifest version'
     return 1
   }
 

@@ -1,0 +1,116 @@
+{
+  "formatVersion": 1,
+  "upstreamRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+  "entries": [
+    {
+      "path": "src/CMakeLists.txt",
+      "upstreamPath": "CMakeLists.txt",
+      "category": "packaging",
+      "reason": "Install the fork under the Sleepy QML, library, and Quickshell paths and exclude unaudited PAM assets.",
+      "tests": [
+        "tests/native-plugin-contracts.sh#PASS: native plugin packaging is pinned and limited to audited render helpers"
+      ]
+    },
+    {
+      "path": "src/shell.qml",
+      "upstreamPath": "shell.qml",
+      "category": "identity",
+      "reason": "Use the Sleepy shell id, crash-report target, branding tokens, and reviewed production entry graph.",
+      "tests": [
+        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected",
+        "tests/runtime-names.sh#Sleepy runtime identity gate"
+      ]
+    },
+    {
+      "path": "src/components/controls/StyledProgressBar.qml",
+      "upstreamPath": "components/controls/StyledProgressBar.qml",
+      "category": "compatibility",
+      "reason": "Keep the imported control loadable with the pinned Qt and Quickshell revisions.",
+      "tests": [
+        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+      ]
+    },
+    {
+      "path": "src/core/**",
+      "upstreamPath": null,
+      "category": "compatibility",
+      "reason": "Retain the temporary Sleepy protocol-v3 surfaces until the corresponding upstream modules pass full parity gates.",
+      "tests": [
+        "tests/quickshell-core-host-contract.sh#PASS: production CoreDesktopWindows real PanelWindow lifecycle"
+      ]
+    },
+    {
+      "path": "src/modules/background/SleepyBackground.qml",
+      "upstreamPath": null,
+      "category": "branding",
+      "reason": "Provide the temporary Sleepy-branded background projection pending activation of the upstream background module.",
+      "tests": [
+        "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+      ]
+    },
+    {
+      "path": "src/modules/nexus/pages/wallandstyle/WallpaperSelect.qml",
+      "upstreamPath": "modules/nexus/pages/wallandstyle/WallpaperSelect.qml",
+      "category": "security",
+      "reason": "Route wallpaper selection through reviewed Sleepy state while the direct wallpaper provider is inactive.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate"
+      ]
+    },
+    {
+      "path": "src/modules/session/SleepySession.qml",
+      "upstreamPath": null,
+      "category": "security",
+      "reason": "Keep destructive session operations on the confirmed Sleepy session authority.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate"
+      ]
+    },
+    {
+      "path": "src/modules/utilities/SleepyUtilities.qml",
+      "upstreamPath": null,
+      "category": "compatibility",
+      "reason": "Project protocol-v3 utility state until the complete upstream utility module is active.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate"
+      ]
+    },
+    {
+      "path": "src/modules/windowinfo/Preview.qml",
+      "upstreamPath": "modules/windowinfo/Preview.qml",
+      "category": "security",
+      "reason": "Prevent unreviewed screencopy handles from crossing the temporary protocol-v3 boundary.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate"
+      ]
+    },
+    {
+      "path": "src/modules/windowinfo/SleepyWindowInfo.qml",
+      "upstreamPath": null,
+      "category": "compatibility",
+      "reason": "Project protocol-v3 window actions until the complete upstream window-information module is active.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate"
+      ]
+    },
+    {
+      "path": "src/plugin/src/Sleepy/Config/userpaths.hpp",
+      "upstreamPath": "plugin/src/Caelestia/Config/userpaths.hpp",
+      "category": "identity",
+      "reason": "Resolve configuration, state, cache, and data beneath Sleepy XDG paths.",
+      "tests": [
+        "tests/runtime-names.sh#Sleepy runtime identity gate"
+      ]
+    },
+    {
+      "path": "src/services/**",
+      "upstreamPath": "services/**",
+      "category": "compatibility",
+      "reason": "Expose Sleepy protocol-v3 compatibility providers and renamed upstream-facing service APIs without a Caelestia runtime dependency.",
+      "tests": [
+        "tests/service-boundary.sh#Sleepy service boundary gate",
+        "tests/runtime-names.sh#Sleepy runtime identity gate"
+      ]
+    }
+  ]
+}

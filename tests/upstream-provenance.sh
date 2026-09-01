@@ -22,6 +22,11 @@ jq -e '
   .dependencies.quickshell.narHash == "sha256-OZdLL1rMR9kjTFZroOODeyQ0u6nrSxcFHlK6JUi+R/c=" and
   .dependencies.m3shapes.rev == "32ad9ce328bb77ed349b40a3be10ee9ea610b8ab" and
   .dependencies.m3shapes.narHash == "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns=" and
+  .localPatchInventory == "tests/patch-inventory.json" and
+  .completionPolicy.manifestFormatVersion == 2 and
+  .completionPolicy.reachableStatus == "verified" and
+  .completionPolicy.nonRuntimeStatus == "excluded-non-runtime" and
+  .completionPolicy.forbiddenStatuses == ["approved-deviation", "deferred-environment"] and
   .import.destination == "src" and
   .import.paths == [
     "components",

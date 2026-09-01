@@ -17,6 +17,16 @@
       "narHash": "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns="
     }
   },
+  "localPatchInventory": "tests/patch-inventory.json",
+  "completionPolicy": {
+    "manifestFormatVersion": 2,
+    "reachableStatus": "verified",
+    "nonRuntimeStatus": "excluded-non-runtime",
+    "forbiddenStatuses": [
+      "approved-deviation",
+      "deferred-environment"
+    ]
+  },
   "import": {
     "destination": "src",
     "paths": [
