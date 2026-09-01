@@ -22,6 +22,9 @@ trap cleanup EXIT
 
 mkdir -p "$test_root/live-runtime" "$test_root/private-runtime" \
     "$test_root/path-bin" "$test_root/explicit-bin" \
+    "$test_root/private-user/home" "$test_root/private-user/cache" \
+    "$test_root/private-user/config" "$test_root/private-user/data" \
+    "$test_root/private-user/state" \
     "$test_root/sdk/fixtures/desktop-runtime" \
     "$test_root/repository/tests/fixtures"
 chmod 0700 "$test_root/live-runtime" "$test_root/private-runtime"
@@ -58,6 +61,18 @@ printf 'TASK7B_HOST_PASS\n'
 SH
 chmod 0700 "$test_root/path-bin/quickshell"
 
+cat >"$test_root/path-bin/qs" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+: >"$SLEEPY_PATH_MARKER"
+for private_path in "$HOME" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" \
+        "$XDG_DATA_HOME" "$XDG_STATE_HOME"; do
+    [[ "$private_path" == "$SLEEPY_TEST_PRIVATE_USER_ROOT"/* ]]
+done
+printf 'TASK7B_HOST_PASS\n'
+SH
+chmod 0700 "$test_root/path-bin/qs"
+
 cat >"$test_root/explicit-bin/qs" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$0" "$@" >"$SLEEPY_EXPLICIT_MARKER"
@@ -83,11 +98,24 @@ cp "$host_source" \
 
 run_host() {
     PATH="$test_root/path-bin:$PATH" \
+    HOME="$test_root/private-user/home" \
+    XDG_CACHE_HOME="$test_root/private-user/cache" \
+    XDG_CONFIG_HOME="$test_root/private-user/config" \
+    XDG_DATA_HOME="$test_root/private-user/data" \
+    XDG_STATE_HOME="$test_root/private-user/state" \
+    SLEEPY_TEST_PRIVATE_USER_ROOT="$test_root/private-user" \
     SLEEPY_PATH_MARKER="$path_marker" \
     SLEEPY_EXPLICIT_MARKER="$explicit_marker" \
     SLEEPY_SDK_ROOT="$test_root/sdk" \
         "$@"
 }
+
+controlled_bare_qs="$test_root/path-bin/qs"
+resolved_bare_qs="$(PATH="$test_root/path-bin:$PATH" command -v qs || true)"
+if [[ "$resolved_bare_qs" != "$controlled_bare_qs" ]]; then
+    printf 'FAIL: bare qs mutation probe would escape to an uncontrolled host executable\n' >&2
+    exit 1
+fi
 
 set +e
 run_host env XDG_RUNTIME_DIR="$test_root/live-runtime" \
