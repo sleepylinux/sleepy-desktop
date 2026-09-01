@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/tests/lib/process-state.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-qs-contract.XXXXXX")"
 socket_pid=""
 qs_child_pid_file="$test_root/qs-child.pid"
@@ -108,16 +109,6 @@ run_host() {
     SLEEPY_EXPLICIT_MARKER="$explicit_marker" \
     SLEEPY_SDK_ROOT="$test_root/sdk" \
         "$@"
-}
-
-pid_is_running() {
-    local pid=$1 stat_line state
-    kill -0 "$pid" 2>/dev/null || return 1
-    [[ -r "/proc/$pid/stat" ]] || return 0
-    stat_line="$(<"/proc/$pid/stat")"
-    state="${stat_line##*) }"
-    state="${state%% *}"
-    [[ "$state" != Z && "$state" != X ]]
 }
 
 controlled_bare_qs="$test_root/path-bin/qs"
@@ -260,12 +251,12 @@ if [[ ! -s "$qs_child_pid_file" ]]; then
 fi
 qs_child_pid="$(<"$qs_child_pid_file")"
 for _ in $(seq 1 100); do
-    if ! pid_is_running "$qs_child_pid"; then
+    if ! sleepy_pid_is_running "$qs_child_pid"; then
         break
     fi
     sleep 0.02
 done
-if pid_is_running "$qs_child_pid"; then
+if sleepy_pid_is_running "$qs_child_pid"; then
     printf 'FAIL: host gate left nested Quickshell descendant %s running\n' \
         "$qs_child_pid" >&2
     exit 1

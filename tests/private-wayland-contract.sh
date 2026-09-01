@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/tests/lib/process-state.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-wayland-contract.XXXXXX")"
 pid_file="$test_root/compositor.pid"
 child_pid_file="$test_root/child.pid"
@@ -150,7 +151,7 @@ if [[ ! -s "$pid_file" ]]; then
     exit 1
 fi
 compositor_pid="$(<"$pid_file")"
-if kill -0 "$compositor_pid" 2>/dev/null; then
+if sleepy_pid_is_running "$compositor_pid"; then
     printf 'FAIL: private Wayland runner left compositor process %s alive\n' \
         "$compositor_pid" >&2
     exit 1
@@ -160,8 +161,8 @@ if [[ ! -s "$child_pid_file" ]]; then
     exit 1
 fi
 child_pid="$(<"$child_pid_file")"
-if kill -0 "$child_pid" 2>/dev/null; then
-    printf 'FAIL: private Wayland runner left test process %s alive\n' "$child_pid" >&2
+if sleepy_pid_is_running "$child_pid"; then
+    printf 'FAIL: private Wayland runner left test process %s running\n' "$child_pid" >&2
     exit 1
 fi
 

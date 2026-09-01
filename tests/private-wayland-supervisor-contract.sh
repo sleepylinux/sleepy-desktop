@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+source "$repo_root/tests/lib/process-state.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-wayland-supervisor.XXXXXX")"
 wrapper_source="${SLEEPY_PRIVATE_WAYLAND_SOURCE:-$repo_root/tests/with-private-wayland.sh}"
 term_pid_file="$test_root/term-compositor.pid"
@@ -85,7 +86,7 @@ assert_session_cleaned() {
             all_dead=true
             for pid_path in "$@"; do
                 leaked_pid="$(<"$pid_path")"
-                if kill -0 "$leaked_pid" 2>/dev/null; then
+                if sleepy_pid_is_running "$leaked_pid"; then
                     all_dead=false
                     break
                 fi
