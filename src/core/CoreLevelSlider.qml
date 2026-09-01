@@ -14,6 +14,7 @@ Item {
     activeFocusOnTab: enabled
     Accessible.role: Accessible.Slider
     Accessible.name: accessibleName
+    Accessible.ignored: !enabled || !visible
 
     function updateFromPosition(position) {
         root.value = Math.max(0, Math.min(1, position / Math.max(1, root.width)));

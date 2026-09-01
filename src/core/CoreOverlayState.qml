@@ -27,6 +27,8 @@ QtObject {
     readonly property string notificationsDiagnostic:
         root.desktopModel.producerDiagnostic("notifications") || "Notifications unavailable"
     readonly property bool launcherCalculatorSupported: false
+    readonly property bool launcherSchemeSupported: false
+    readonly property bool launcherWallpaperSupported: false
     readonly property bool launcherCommandModeSupported: false
     readonly property bool launcherActionsSupported: false
     readonly property bool mediaAvailable:
@@ -204,7 +206,8 @@ QtObject {
     }
 
     function setNexusTab(tabId) {
-        if (["network", "bluetooth", "audio", "appearance"].indexOf(tabId) < 0)
+        if (["network", "bluetooth", "audio", "appearance", "utilities",
+                "windows", "session"].indexOf(tabId) < 0)
             return false;
         root.nexusTab = tabId;
         return true;

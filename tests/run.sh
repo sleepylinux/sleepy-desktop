@@ -18,7 +18,10 @@ bash "$repo_root/tests/closed-imports.sh"
 bash "$repo_root/tests/service-boundary.sh"
 bash "$repo_root/tests/active-graph.sh"
 bash "$repo_root/tests/native-plugin-contracts.sh"
+bash "$repo_root/tests/shell-ipc-wrapper.sh"
 bash "$repo_root/tests/locker-boundary.sh"
+bash "$repo_root/tests/parity-validator-test.sh"
+bash "$repo_root/tests/parity.sh"
 
 if [[ -x /usr/lib/qt6/bin/qmltestrunner ]]; then
   qml_test_runner=/usr/lib/qt6/bin/qmltestrunner
@@ -56,7 +59,7 @@ timeout --signal=TERM --kill-after=5s "$qml_timeout_seconds" \
 # Re-run real production surfaces and the icon mask path with the RHI
 # scenegraph and Mesa software rendering. Each runner remains independently
 # bounded so a driver or scenegraph hang cannot be hidden.
-for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_surfaces.qml tst_core_overlays.qml; do
+for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_surfaces.qml tst_core_overlays.qml tst_parity.qml; do
   QT_QUICK_BACKEND=rhi \
   QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
   LIBGL_ALWAYS_SOFTWARE=1 \

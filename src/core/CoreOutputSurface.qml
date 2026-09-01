@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick 6.0
+import "../modules/background" as Task10Background
 
 Item {
     id: root
@@ -94,12 +95,33 @@ Item {
     function applyWallpaper(wallpaperId) { return state.applyWallpaper(wallpaperId); }
     function setReducedMotion(enabled) { return state.setReducedMotion(enabled); }
     function setOpaque(enabled) { return state.setOpaque(enabled); }
+    function setIdleInhibited(enabled) { return state.setIdleInhibited(enabled); }
+    function startRecording() { return state.startRecording(); }
+    function pauseRecording() { return state.pauseRecording(); }
+    function stopRecording() { return state.stopRecording(); }
+    function takeScreenshot() { return state.takeScreenshot(); }
+    function pickColor() { return state.pickColor(); }
+    function setGameMode(enabled) { return state.setGameMode(enabled); }
+    function focusWindow(windowId) { return state.focusWindow(windowId); }
+    function closeWindow(windowId) { return state.closeWindow(windowId); }
+    function toggleWindowFullscreen(windowId) {
+        return state.toggleWindowFullscreen(windowId);
+    }
+    function toggleWindowFloating(windowId) { return state.toggleWindowFloating(windowId); }
+    function toggleWindowPinned(windowId) { return state.toggleWindowPinned(windowId); }
+    function toggleWindowGroup(windowId) { return state.toggleWindowGroup(windowId); }
+    function moveWindowToWorkspace(windowId, workspaceId) {
+        return state.moveWindowToWorkspace(windowId, workspaceId);
+    }
+    function performSession(action) { return state.performSession(action); }
 
     readonly property string activeOverlay: state.activeOverlay
     property alias launcherSearchText: state.launcherSearchText
     readonly property alias launcherAvailable: state.launcherAvailable
     readonly property alias notificationsAvailable: state.notificationsAvailable
     readonly property alias launcherCalculatorSupported: state.launcherCalculatorSupported
+    readonly property alias launcherSchemeSupported: state.launcherSchemeSupported
+    readonly property alias launcherWallpaperSupported: state.launcherWallpaperSupported
     readonly property alias launcherCommandModeSupported: state.launcherCommandModeSupported
     readonly property alias filteredLauncherEntries: state.filteredLauncherEntries
     readonly property alias notificationItems: state.notificationItems
@@ -137,6 +159,9 @@ Item {
     readonly property alias currentWallpaperId: state.currentWallpaperId
     readonly property alias reducedMotion: state.reducedMotion
     readonly property alias opaque: state.opaque
+    readonly property alias idleInhibited: state.idleInhibited
+    readonly property alias gameMode: state.gameMode
+    readonly property alias recordingState: state.recordingState
 
     CoreOutputState {
         id: state
@@ -144,6 +169,14 @@ Item {
         commandClient: root.commandClient
         monitor: root.monitor
         motionDuration: root.motionDuration
+    }
+
+    Task10Background.SleepyBackground {
+        anchors.fill: parent
+        outputState: state
+        colors: state.colors
+        reducedMotion: state.reducedMotion
+        opaque: state.opaque
     }
 
     CoreBar {

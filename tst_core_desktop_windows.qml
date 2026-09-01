@@ -32,11 +32,29 @@ ShellRoot {
     QtObject {
         id: commandSink
         property bool busy: false
-        function system(_command) { return true; }
-        function compositor(_command) { return true; }
-        function notification(_command) { return true; }
-        function launcher(_command) { return true; }
-        function utility(_command) { return true; }
+        property var sent: []
+        function record(family, command) {
+            sent = sent.concat([{"family": family, "command": command}]);
+            return true;
+        }
+        function system(command) { return record("system", command); }
+        function compositor(command) { return record("compositor", command); }
+        function notification(command) { return record("notification", command); }
+        function launcher(command) { return record("launcher", command); }
+        function utility(command) { return record("utility", command); }
+        function session(command) { return record("session", command); }
+    }
+
+    Component {
+        id: virtualBackgroundWindow
+        QtObject {
+            required property var shellScreen
+            required property var outputState
+            readonly property var screen: shellScreen
+            readonly property bool visible: shellScreen !== null
+            readonly property bool focusable: false
+            readonly property string wallpaperId: outputState.currentWallpaperId
+        }
     }
 
     Component {
@@ -177,9 +195,14 @@ ShellRoot {
                 const actual = outputForName(actualHost, actualName);
                 require(actual !== null && actual.shellScreen === Quickshell.screens[0],
                     "real named screen binding mismatch");
-                require(actual.barWindow !== null && actual.osdWindow !== null
+                require(actual.backgroundWindow !== null && actual.barWindow !== null
+                        && actual.osdWindow !== null
                         && actual.overlayWindow !== null,
                     "default real PanelWindows missing");
+                require(actual.backgroundWindow.screen === Quickshell.screens[0],
+                    "real background screen mismatch");
+                require(actual.backgroundWindow.visible && !actual.backgroundWindow.focusable,
+                    "real background visibility/focus mismatch");
                 require(actual.barWindow.screen === Quickshell.screens[0], "real bar screen mismatch");
                 require(actual.osdWindow.screen === Quickshell.screens[0], "real OSD screen mismatch");
                 require(actual.overlayWindow.screen === Quickshell.screens[0],
@@ -213,9 +236,43 @@ ShellRoot {
                 "first virtual named screen mismatch");
             require(removedVirtualOutput.shellScreen === virtualScreenTwo,
                 "second virtual named screen mismatch");
-            require(retainedVirtualOutput.overlayWindow !== null
+            require(retainedVirtualOutput.backgroundWindow !== null
+                    && removedVirtualOutput.backgroundWindow !== null
+                    && retainedVirtualOutput.overlayWindow !== null
                     && removedVirtualOutput.overlayWindow !== null,
-                "virtual overlay windows missing");
+                "virtual background/overlay windows missing");
+            require(retainedVirtualOutput.backgroundWindow.screen === virtualScreenOne
+                    && removedVirtualOutput.backgroundWindow.screen === virtualScreenTwo,
+                "virtual background named-screen binding mismatch");
+            const ipc = virtualHost.productionIpcRouter;
+            require(ipc !== null, "production IPC router missing");
+            require(typeof ipc.session === "undefined"
+                    && typeof ipc.suspend === "undefined"
+                    && typeof ipc.logout === "undefined"
+                    && typeof ipc.reboot === "undefined"
+                    && typeof ipc.powerOff === "undefined"
+                    && typeof ipc.unlock === "undefined",
+                "production IPC exposed a direct destructive session action");
+            require(ipc.toggle("dashboard"), "focused-output dashboard IPC failed");
+            require(retainedVirtualOutput.outputState.activeOverlay === "dashboard"
+                    && removedVirtualOutput.outputState.activeOverlay === "",
+                "production IPC leaked to an unfocused output");
+            require(ipc.media("next"), "focused-output media IPC failed");
+            require(ipc.openPowerMenu(), "power menu IPC failed");
+            require(retainedVirtualOutput.outputState.activeOverlay === "nexus"
+                    && retainedVirtualOutput.outputState.nexusTab === "session",
+                "power menu IPC did not open the Session tab");
+            require(ipc.openPowerMenu()
+                    && retainedVirtualOutput.outputState.activeOverlay === "nexus",
+                "power menu IPC toggled an already-open Nexus closed");
+            require(ipc.lock(), "direct lock IPC failed");
+            require(commandSink.sent.some(item => item.family === "system"
+                    && item.command.domain === "media")
+                    && commandSink.sent.some(item => item.family === "session"
+                        && item.command === "lock"),
+                "production IPC did not route typed media/lock commands");
+            retainedVirtualOutput.outputState.closeOverlay();
+            commandSink.sent = [];
             require(retainedVirtualOutput.barWindow.outputState.openOverlay("notifications"),
                 "first virtual overlay did not open");
             require(retainedVirtualOutput.overlayWindow.focusable
@@ -281,6 +338,9 @@ ShellRoot {
             require(readded.instanceSerial
                     !== removedVirtualSerial,
                 "removed output identity was reused on re-add");
+            require(readded.backgroundWindow !== null
+                    && readded.backgroundWindow.screen === virtualScreenTwo,
+                "re-added output did not recreate its background surface");
             const postHotplug = JSON.parse(JSON.stringify(virtualSnapshot));
             postHotplug.compositor.hyprland.data.monitors[0].focused = false;
             postHotplug.compositor.hyprland.data.monitors[1].focused = true;
@@ -326,7 +386,8 @@ ShellRoot {
                 "real output delegate identity was reused after removal");
             require(actual.shellScreen === Quickshell.screens[0],
                 "recreated real output lost its named screen binding");
-            require(actual.barWindow !== null && actual.osdWindow !== null
+            require(actual.backgroundWindow !== null && actual.barWindow !== null
+                    && actual.osdWindow !== null
                     && actual.overlayWindow !== null,
                 "recreated real PanelWindows are missing");
             actualStressIndex += 1;
@@ -402,6 +463,7 @@ ShellRoot {
             "commandClient": commandSink,
             "tokens": ({"motionDuration": 0}),
             "screens": root.virtualScreens,
+            "backgroundWindowComponent": virtualBackgroundWindow,
             "barWindowComponent": virtualBarWindow,
             "osdWindowComponent": virtualOsdWindow,
             "overlayWindowComponent": virtualOverlayWindow

@@ -13,10 +13,11 @@ TestCase {
         id: commandSinkFactory
         QtObject {
             property bool busy: false
+            property bool acceptCommands: true
             property var sent: []
             function append(family, command) {
                 sent = sent.concat([{family: family, command: command}]);
-                return true;
+                return acceptCommands;
             }
             function system(command) { return append("system", command); }
             function notification(command) { return append("notification", command); }
@@ -517,6 +518,24 @@ TestCase {
         verify(appearanceDiagnostic !== null);
         compare(appearanceDiagnostic.textFormat, Text.PlainText);
         verify(!output.applyTheme("018f3f4c-8af1-7f6b-bf42-1bd472868e67"));
+
+        const audioFailure = fixtureSnapshot();
+        audioFailure.system.audio = {status: "timeout", diagnostic: {
+            message: "Audio timeout"}};
+        accept(model, audioFailure, 2);
+        verify(output.networkAvailable && output.bluetoothAvailable);
+        verify(!output.audioAvailable);
+        verify(!output.setNodeMuted("speaker", true));
+        verify(output.scanWifi());
+
+        const bluetoothFailure = fixtureSnapshot();
+        bluetoothFailure.system.bluetooth = {status: "unsupported", diagnostic: {
+            message: "Bluetooth unavailable"}};
+        accept(model, bluetoothFailure, 3);
+        verify(output.networkAvailable && output.audioAvailable);
+        verify(!output.bluetoothAvailable);
+        verify(!output.scanBluetooth());
+        verify(output.setNodeMuted("speaker", true));
     }
 
     function test_launcher_filters_confirmed_entries_and_routes_only_desktop_launch() {
@@ -535,6 +554,8 @@ TestCase {
         verify(!output.launchEntry("missing.desktop"));
         verify(!output.launchAction("org.mozilla.firefox.desktop", "open"));
         verify(!output.launcherCalculatorSupported);
+        verify(!output.launcherSchemeSupported);
+        verify(!output.launcherWallpaperSupported);
         verify(!output.launcherCommandModeSupported);
         compare(fixture.commands.sent.length, 1);
         compare(output.activeOverlay, "launcher");
@@ -544,11 +565,48 @@ TestCase {
         verify(button.enabled, "confirmed launcher delegate was disabled");
         verify(button.activeFocusOnTab, "enabled launcher delegate left the tab chain");
         verify(button.Accessible.name.indexOf("Firefox") >= 0);
+        for (const mode of ["calculator", "scheme", "wallpaper", "command", "actions"]) {
+            const modeButton = findChild(output, "launcherMode:" + mode);
+            verify(modeButton !== null, mode);
+            verify(!modeButton.enabled && !modeButton.activeFocusOnTab, mode);
+            verify(modeButton.Accessible.description.indexOf("protocol v3") >= 0
+                    || modeButton.Accessible.description.indexOf("disabled") >= 0
+                    || modeButton.Accessible.description.indexOf("daemon-issued") >= 0,
+                mode + ": " + modeButton.Accessible.description);
+        }
         fixture.commands.busy = true;
         wait(0);
         verify(!button.enabled && !button.activeFocusOnTab);
         compare(button.Accessible.description, "Another desktop command is pending");
         fixture.commands.busy = false;
+    }
+
+    function test_multiple_players_expose_missing_lyrics_and_transport_failure_truthfully() {
+        const model = loadProductionModel();
+        const snapshot = fixtureSnapshot();
+        snapshot.system.media.data.players.push({
+            id: "music.instance2", identity: "Music", title: "Second track",
+            artist: "Another artist", playing: false, progress: 0.5
+        });
+        accept(model, snapshot, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands), "DP-1");
+        verify(output.openOverlay("dashboard"));
+        verify(output.setDashboardTab("media"));
+
+        compare(output.players.length, 2);
+        for (const playerId of ["firefox.instance1", "music.instance2"]) {
+            verify(findChild(output, "dashboardPlayer:" + playerId) !== null, playerId);
+            const missing = findChild(output, "dashboardPlayerMissingFeatures:" + playerId);
+            verify(missing !== null, playerId);
+            compare(missing.text, "Artwork and lyrics unavailable in desktop protocol v3");
+            compare(missing.textFormat, Text.PlainText);
+        }
+
+        commands.acceptCommands = false;
+        verify(!output.controlPlayer("music.instance2", "next"));
+        compare(commands.sent.length, 1);
+        compare(output.players[1].playing, false);
     }
 
     function test_notification_center_routes_dnd_actions_and_archive_without_optimism() {

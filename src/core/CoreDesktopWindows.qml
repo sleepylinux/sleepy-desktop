@@ -4,6 +4,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
 import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import "../modules/background" as Task10Background
 
 Scope {
     id: root
@@ -12,6 +15,7 @@ Scope {
     required property var commandClient
     required property var tokens
     property var screens: Quickshell.screens
+    property Component backgroundWindowComponent: productionBackgroundWindow
     property Component barWindowComponent: productionBarWindow
     property Component osdWindowComponent: productionOsdWindow
     property Component overlayWindowComponent: productionOverlayWindow
@@ -21,6 +25,9 @@ Scope {
     property bool waitingForOutputRetirement: false
     property int nextOutputSerial: 1
     readonly property int outputCount: outputVariants.instances.length
+    readonly property var outputStates:
+        outputVariants.instances.map(instance => instance.outputState)
+    readonly property alias productionIpcRouter: ipcRouter
 
     function outputAt(index) {
         return index >= 0 && index < outputVariants.instances.length
@@ -30,17 +37,29 @@ Scope {
     function createOutputModel(record) {
         const reusable = root.outputModelCache.find(model => !model.active);
         if (reusable) {
-            reusable.id = record.id;
-            reusable.name = record.name;
+            root.applyOutputRecord(reusable, record);
             reusable.active = true;
             return reusable;
         }
         const created = outputModelFactory.createObject(root, {
             "id": record.id,
-            "name": record.name
+            "name": record.name,
+            "width": record.width,
+            "height": record.height,
+            "scale": record.scale,
+            "focused": record.focused
         });
         root.outputModelCache = root.outputModelCache.concat([created]);
         return created;
+    }
+
+    function applyOutputRecord(model, record) {
+        model.id = record.id;
+        model.name = record.name;
+        model.width = record.width;
+        model.height = record.height;
+        model.scale = record.scale;
+        model.focused = record.focused;
     }
 
     function commitPendingOutputs() {
@@ -50,7 +69,7 @@ Scope {
         for (const record of desired) {
             const retained = previous.find(model => model.id === record.id);
             if (retained) {
-                retained.name = record.name;
+                root.applyOutputRecord(retained, record);
                 next.push(retained);
             } else {
                 next.push(root.createOutputModel(record));
@@ -66,7 +85,11 @@ Scope {
     function reconcileOutputs() {
         const desired = root.desktopModel.monitors.map(monitor => ({
             "id": String(monitor.id),
-            "name": String(monitor.name)
+            "name": String(monitor.name),
+            "width": Number(monitor.width),
+            "height": Number(monitor.height),
+            "scale": Number(monitor.scale),
+            "focused": Boolean(monitor.focused)
         }));
         root.pendingOutputRecords = desired;
         const desiredIds = desired.map(record => record.id);
@@ -76,7 +99,7 @@ Scope {
             model.active = retained.indexOf(model) >= 0;
         for (const model of retained) {
             const record = desired.find(candidate => candidate.id === model.id);
-            model.name = record.name;
+            root.applyOutputRecord(model, record);
         }
         if (retained.length !== previous.length) {
             root.waitingForOutputRetirement = true;
@@ -116,7 +139,55 @@ Scope {
         QtObject {
             required property string id
             required property string name
+            required property real width
+            required property real height
+            required property real scale
+            required property bool focused
             property bool active: true
+        }
+    }
+
+    CoreIpcRouter {
+        id: ipcRouter
+        outputStates: root.outputStates
+    }
+
+    IpcHandler {
+        target: "sleepy"
+        function toggleLauncher(): void { ipcRouter.toggle("launcher"); }
+        function toggleNotifications(): void { ipcRouter.toggle("notifications"); }
+        function toggleDashboard(): void { ipcRouter.toggle("dashboard"); }
+        function toggleNexus(): void { ipcRouter.toggle("nexus"); }
+        function closeOverlay(): void { ipcRouter.close(); }
+        function mediaPlayPause(): void { ipcRouter.media("playPause"); }
+        function mediaNext(): void { ipcRouter.media("next"); }
+        function mediaPrevious(): void { ipcRouter.media("previous"); }
+        function lock(): void { ipcRouter.lock(); }
+        function openPowerMenu(): void { ipcRouter.openPowerMenu(); }
+    }
+
+    Component {
+        id: productionBackgroundWindow
+        PanelWindow {
+            id: backgroundWindow
+            required property var shellScreen
+            required property var outputState
+            screen: shellScreen
+            visible: shellScreen !== null
+            color: "transparent"
+            focusable: false
+            WlrLayershell.exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Background
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            anchors { left: true; right: true; top: true; bottom: true }
+
+            Task10Background.SleepyBackground {
+                anchors.fill: parent
+                outputState: backgroundWindow.outputState
+                colors: backgroundWindow.outputState.colors
+                reducedMotion: backgroundWindow.outputState.reducedMotion
+                opaque: backgroundWindow.outputState.opaque
+            }
         }
     }
 
@@ -236,9 +307,11 @@ Scope {
             readonly property string outputId: String(modelData.id)
             property int instanceSerial: 0
             readonly property var monitor: modelData
+            readonly property var outputState: state
             readonly property string outputName: state.outputName
             readonly property var shellScreen: root.screens.find(
                 candidate => String(candidate.name) === outputScope.outputName) || null
+            property var backgroundWindow: null
             property var barWindow: null
             property var osdWindow: null
             property var overlayWindow: null
@@ -254,6 +327,11 @@ Scope {
             Component.onCompleted: {
                 outputScope.instanceSerial = root.nextOutputSerial;
                 root.nextOutputSerial += 1;
+                outputScope.backgroundWindow = root.backgroundWindowComponent.createObject(
+                    outputScope, {
+                        "shellScreen": Qt.binding(function() { return outputScope.shellScreen; }),
+                        "outputState": state
+                    });
                 outputScope.barWindow = root.barWindowComponent.createObject(outputScope, {
                     "shellScreen": Qt.binding(function() { return outputScope.shellScreen; }),
                     "outputState": state

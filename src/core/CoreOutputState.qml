@@ -134,6 +134,8 @@ QtObject {
     readonly property alias notificationsAvailable: overlayState.notificationsAvailable
     readonly property alias notificationsDiagnostic: overlayState.notificationsDiagnostic
     readonly property alias launcherCalculatorSupported: overlayState.launcherCalculatorSupported
+    readonly property alias launcherSchemeSupported: overlayState.launcherSchemeSupported
+    readonly property alias launcherWallpaperSupported: overlayState.launcherWallpaperSupported
     readonly property alias launcherCommandModeSupported: overlayState.launcherCommandModeSupported
     readonly property alias launcherActionsSupported: overlayState.launcherActionsSupported
     readonly property alias filteredLauncherEntries: overlayState.filteredLauncherEntries
@@ -171,6 +173,24 @@ QtObject {
     readonly property alias currentWallpaperId: overlayState.currentWallpaperId
     readonly property alias reducedMotion: overlayState.reducedMotion
     readonly property alias opaque: overlayState.opaque
+    readonly property var windows: root.desktopModel.windows
+    readonly property var recordingState:
+        root.desktopModel.capabilityData("utilities", "recording", ({"status": "inactive"}))
+    readonly property bool recordingAvailable:
+        root.desktopModel.capabilityAvailable("utilities", "recording")
+    readonly property bool idleInhibited: Boolean(
+        root.desktopModel.capabilityData("utilities", "idleInhibited", false))
+    readonly property bool idleInhibitAvailable:
+        root.desktopModel.capabilityAvailable("utilities", "idleInhibited")
+    readonly property bool gameMode: Boolean(
+        root.desktopModel.capabilityData("utilities", "gameMode", false))
+    readonly property bool gameModeAvailable:
+        root.desktopModel.capabilityAvailable("utilities", "gameMode")
+    readonly property bool screenshotAvailable:
+        root.desktopModel.capabilityAvailable("utilities", "screenshot")
+    readonly property bool colorPickerAvailable:
+        root.desktopModel.capabilityAvailable("utilities", "colorPicker")
+    readonly property bool sessionAvailable: Boolean(root.desktopModel.available)
 
     readonly property var colors: root.desktopModel.appearance?.theme?.colors || ({
         "surface": "#202124", "textPrimary": "#f1f3f4",
@@ -351,5 +371,97 @@ QtObject {
             return false;
         const command = DesktopCommands.displaySetBrightness(root.outputId, level);
         return command ? root.commandClient.system(command) : false;
+    }
+
+    function setIdleInhibited(enabled) {
+        if (!root.idleInhibitAvailable || root.busy)
+            return false;
+        const command = DesktopCommands.utilitySetIdleInhibited(Boolean(enabled));
+        return command ? root.commandClient.utility(command) : false;
+    }
+
+    function startRecording() {
+        if (!root.recordingAvailable || root.busy)
+            return false;
+        const command = DesktopCommands.utilityStartRecording(root.outputId);
+        return command ? root.commandClient.utility(command) : false;
+    }
+
+    function pauseRecording() {
+        return root.recordingAvailable && !root.busy
+            ? root.commandClient.utility(DesktopCommands.utilityPauseRecording()) : false;
+    }
+
+    function stopRecording() {
+        return root.recordingAvailable && !root.busy
+            ? root.commandClient.utility(DesktopCommands.utilityStopRecording()) : false;
+    }
+
+    function takeScreenshot() {
+        if (!root.screenshotAvailable || root.busy)
+            return false;
+        const command = DesktopCommands.utilityScreenshot(root.outputId);
+        return command ? root.commandClient.utility(command) : false;
+    }
+
+    function pickColor() {
+        return root.colorPickerAvailable && !root.busy
+            ? root.commandClient.utility(DesktopCommands.utilityPickColor()) : false;
+    }
+
+    function setGameMode(enabled) {
+        if (!root.gameModeAvailable || root.busy)
+            return false;
+        const command = DesktopCommands.utilitySetGameMode(Boolean(enabled));
+        return command ? root.commandClient.utility(command) : false;
+    }
+
+    function ownsWindow(windowId) {
+        return root.windows.some(window => String(window.id) === String(windowId)
+            && root.workspaceIds.indexOf(String(window.workspaceId)) >= 0);
+    }
+
+    function runWindowCommand(type, windowId, capability) {
+        if (root.busy || !Boolean(root.compositorActions[capability])
+                || !root.ownsWindow(windowId))
+            return false;
+        const command = DesktopCommands.compositor(type, {"windowId": String(windowId)});
+        return command ? root.commandClient.compositor(command) : false;
+    }
+
+    function focusWindow(windowId) {
+        return root.runWindowCommand("focusWindow", windowId, "focusWindow");
+    }
+    function closeWindow(windowId) {
+        return root.runWindowCommand("closeWindow", windowId, "closeWindow");
+    }
+    function toggleWindowFullscreen(windowId) {
+        return root.runWindowCommand("toggleFullscreen", windowId, "toggleFullscreen");
+    }
+    function toggleWindowFloating(windowId) {
+        return root.runWindowCommand("toggleFloating", windowId, "toggleFloating");
+    }
+    function toggleWindowPinned(windowId) {
+        return root.runWindowCommand("togglePinned", windowId, "togglePinned");
+    }
+    function toggleWindowGroup(windowId) {
+        return root.runWindowCommand("toggleGroup", windowId, "toggleGroup");
+    }
+
+    function moveWindowToWorkspace(windowId, workspaceId) {
+        if (root.busy || !root.compositorActions.moveWindowToWorkspace
+                || !root.ownsWindow(windowId)
+                || root.workspaceIds.indexOf(String(workspaceId)) < 0)
+            return false;
+        const command = DesktopCommands.compositor("moveWindowToWorkspace", {
+            "windowId": String(windowId), "workspaceId": String(workspaceId)});
+        return command ? root.commandClient.compositor(command) : false;
+    }
+
+    function performSession(action) {
+        if (!root.sessionAvailable || root.busy)
+            return false;
+        const command = DesktopCommands.session(action);
+        return command ? root.commandClient.session(command) : false;
     }
 }

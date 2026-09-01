@@ -374,6 +374,10 @@ function utilityScreenshot(outputId) {
     return id ? {"type": "screenshot", "data": {"outputId": id}} : null;
 }
 
+function utilityPickColor() {
+    return {"type": "pickColor"};
+}
+
 function utilitySetGameMode(enabled) {
     const data = enabledData(enabled);
     return data ? {"type": "setGameMode", "data": data} : null;

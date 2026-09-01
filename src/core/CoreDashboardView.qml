@@ -139,7 +139,7 @@ Column {
                         required property var modelData
                         objectName: "dashboardPlayer:" + modelData.id
                         width: dashboardBody.width
-                        height: 104
+                        height: 124
                         radius: 16
                         color: "#2a2e33"
                         Accessible.role: Accessible.ListItem
@@ -165,6 +165,17 @@ Column {
                                 text: playerRow.modelData.artist
                                 color: root.colors.textSecondary || "#bdc1c6"
                                 elide: Text.ElideRight
+                            }
+                            Text {
+                                objectName: "dashboardPlayerMissingFeatures:" + playerRow.modelData.id
+                                text: "Artwork and lyrics unavailable in desktop protocol v3"
+                                textFormat: Text.PlainText
+                                width: parent.width
+                                color: root.colors.textSecondary || "#bdc1c6"
+                                font.pixelSize: 10
+                                elide: Text.ElideRight
+                                Accessible.role: Accessible.StaticText
+                                Accessible.name: text
                             }
                             Row {
                                 spacing: 6

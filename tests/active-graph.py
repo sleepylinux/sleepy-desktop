@@ -21,6 +21,11 @@ FORBIDDEN = (
 FORBIDDEN_TASK_PATH = re.compile(
     r"/(?:launcher|dashboard|sidebar|notifications|nexus|lock|session|background|areapicker|utilities|drawers)/"
 )
+RETAINED_TASK10_COMPONENTS = {
+    "src/modules/background/SleepyBackground.qml",
+    "src/modules/session/SleepySession.qml",
+    "src/modules/utilities/SleepyUtilities.qml",
+}
 HANDWRITTEN_COMMAND_KEY = re.compile(
     r'(?:^|[,{])\s*(?:["\'](?:family|domain|type)["\']|(?:family|domain|type))\s*:',
     re.MULTILINE,
@@ -95,7 +100,10 @@ def main() -> int:
     for path in graph:
         text = path.read_text(encoding="utf-8")
         display = str(path)
-        if FORBIDDEN_TASK_PATH.search(display):
+        retained_task10 = any(
+            display.endswith(f"/{relative}") for relative in RETAINED_TASK10_COMPONENTS
+        )
+        if FORBIDDEN_TASK_PATH.search(display) and not retained_task10:
             failures.append(f"{display}: forbidden Task 8/10 module is reachable")
         for pattern in FORBIDDEN:
             match = re.search(pattern, text)

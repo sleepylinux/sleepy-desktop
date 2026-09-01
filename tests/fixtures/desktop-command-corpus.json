@@ -530,6 +530,15 @@
     "command": null
   },
   {
+    "name": "utility pick color",
+    "builder": "utilityPickColor",
+    "args": [],
+    "family": "utility",
+    "command": {
+      "type": "pickColor"
+    }
+  },
+  {
     "name": "utility game mode",
     "builder": "utilitySetGameMode",
     "args": [false],

@@ -49,6 +49,8 @@ Rectangle {
             verticalCenter: parent.verticalCenter
         }
         value: root.outputState.osdLevel
+        visible: ["volume", "microphone", "brightness"]
+            .indexOf(root.outputState.osdKind) >= 0
         enabled: root.outputState.osdKind === "volume"
             ? root.outputState.volumeControlAvailable
             : root.outputState.osdKind === "microphone"
@@ -65,6 +67,25 @@ Rectangle {
             root.outputState.setOsdLevel(requested);
             value = Qt.binding(() => root.outputState.osdLevel);
         }
+    }
+
+    Text {
+        objectName: "osdStatusText"
+        visible: ["volume", "microphone", "brightness"]
+            .indexOf(root.outputState.osdKind) < 0
+        anchors {
+            left: parent.left
+            leftMargin: 120
+            right: parent.right
+            rightMargin: 18
+            verticalCenter: parent.verticalCenter
+        }
+        text: root.outputState.osdLabel
+        textFormat: Text.PlainText
+        elide: Text.ElideRight
+        color: root.outputState.colors.textSecondary || "#bdc1c6"
+        Accessible.role: Accessible.StaticText
+        Accessible.name: text
     }
 
     Rectangle {

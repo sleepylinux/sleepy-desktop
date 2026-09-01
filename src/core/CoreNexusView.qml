@@ -4,16 +4,28 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.0
+import "../modules/session" as Task10Session
+import "../modules/utilities" as Task10Utilities
+import "../modules/windowinfo" as Task10WindowInfo
 
 Column {
     id: root
 
     required property var outputState
     required property var colors
-    readonly property alias initialFocusItem: networkTab
+    readonly property Item initialFocusItem: {
+        const selected = root.outputState.nexusTab;
+        if (selected === "network")
+            return networkTab;
+        const index = ["bluetooth", "audio", "appearance", "utilities", "windows", "session"]
+            .indexOf(selected);
+        return index >= 0 ? remainingTabs.itemAt(index) : networkTab;
+    }
     spacing: 10
 
-    Row {
+    Flow {
+        id: tabFlow
+        width: parent.width
         spacing: 6
         CoreOverlayButton {
             id: networkTab
@@ -25,10 +37,14 @@ Column {
             onTriggered: root.outputState.setNexusTab("network")
         }
         Repeater {
+            id: remainingTabs
             model: [
                 {id: "bluetooth", label: "Bluetooth"},
                 {id: "audio", label: "Audio"},
-                {id: "appearance", label: "Appearance"}
+                {id: "appearance", label: "Appearance"},
+                {id: "utilities", label: "Utilities"},
+                {id: "windows", label: "Windows"},
+                {id: "session", label: "Session"}
             ]
             delegate: CoreOverlayButton {
                 required property var modelData
@@ -45,7 +61,7 @@ Column {
     Flickable {
         id: scroller
         width: parent.width
-        height: Math.max(0, root.height - 48)
+        height: Math.max(0, root.height - tabFlow.implicitHeight - 10)
         clip: true
         contentWidth: width
         contentHeight: body.implicitHeight
@@ -547,6 +563,27 @@ Column {
                         onTriggered: root.outputState.setOpaque(!root.outputState.opaque)
                     }
                 }
+            }
+
+            Task10Utilities.SleepyUtilities {
+                width: parent.width
+                visible: root.outputState.nexusTab === "utilities"
+                outputState: root.outputState
+                colors: root.colors
+            }
+
+            Task10WindowInfo.SleepyWindowInfo {
+                width: parent.width
+                visible: root.outputState.nexusTab === "windows"
+                outputState: root.outputState
+                colors: root.colors
+            }
+
+            Task10Session.SleepySession {
+                width: parent.width
+                visible: root.outputState.nexusTab === "session"
+                outputState: root.outputState
+                colors: root.colors
             }
         }
     }

@@ -195,6 +195,18 @@ FocusScope {
                         description: "Calculator mode is not provided by desktop protocol v3"
                     }
                     CoreOverlayButton {
+                        objectName: "launcherMode:scheme"
+                        label: "Scheme"
+                        enabled: root.outputState.launcherSchemeSupported
+                        description: "Scheme search is not provided by desktop protocol v3"
+                    }
+                    CoreOverlayButton {
+                        objectName: "launcherMode:wallpaper"
+                        label: "Wallpaper"
+                        enabled: root.outputState.launcherWallpaperSupported
+                        description: "Wallpaper search is not provided by desktop protocol v3"
+                    }
+                    CoreOverlayButton {
                         objectName: "launcherMode:command"
                         label: "Commands"
                         enabled: root.outputState.launcherCommandModeSupported

@@ -26,6 +26,10 @@ TestCase {
                 sent = sent.concat([{"family": "utility", "command": command}]);
                 return true;
             }
+            function session(command) {
+                sent = sent.concat([{"family": "session", "command": command}]);
+                return true;
+            }
         }
     }
 
@@ -42,7 +46,7 @@ TestCase {
         const snapshot = envelope.payload.data;
         const hyprland = snapshot.compositor.hyprland.data;
         hyprland.monitors.push({"id": "HDMI-A-1", "name": "HDMI-A-1",
-            "width": 1920, "height": 1080, "scale": 1, "focused": false});
+            "width": 1920, "height": 1080, "scale": 2, "focused": false});
         hyprland.workspaces.push(
             {"id": "special-music", "name": "special:music", "monitorId": "DP-1", "focused": false},
             {"id": "2", "name": "2", "monitorId": "HDMI-A-1", "focused": false},
@@ -144,6 +148,8 @@ TestCase {
         verify(outputById(view, "DP-1") !== null);
         verify(outputById(view, "HDMI-A-1") !== null);
         compare(outputById(view, "DP-1").outputName, "DP-1");
+        compare(findChild(outputById(view, "DP-1"), "task10Background").outputScale, 1);
+        compare(findChild(outputById(view, "HDMI-A-1"), "task10Background").outputScale, 2);
     }
 
     function test_workspaces_are_per_monitor_and_focus_uses_exact_builder() {
@@ -224,6 +230,14 @@ TestCase {
         compare(commands.sent[0].command.type, "focusWorkspace");
         restoredTray.Accessible.pressAction();
         compare(view.outputAt(0).trayExpandedItemId, "tray-network");
+
+        const readded = JSON.parse(JSON.stringify(initial));
+        readded.compositor.hyprland.data.windows[1].fullscreen = false;
+        accept(model, readded, 3);
+        compare(view.outputCount, 2);
+        const readdedOutput = outputById(view, "DP-1");
+        verify(readdedOutput !== null);
+        compare(findChild(readdedOutput, "task10Background").outputScale, 1);
     }
 
     function test_tray_preserves_stable_ids_and_routes_only_supported_menu_actions() {
@@ -338,31 +352,104 @@ TestCase {
                 "type": "setNodeMuted", "data": {"nodeId": "speaker", "muted": true}}}}
         ]));
 
-        const confirmed = JSON.parse(JSON.stringify(initial));
+        const microphone = JSON.parse(JSON.stringify(initial));
+        microphone.system.audio.data.nodes.push({"id": "microphone", "name": "Microphone",
+            "kind": "input", "volume": 0.35, "muted": true, "isDefault": true});
+        microphone.system.osd.data.current = {"schemaVersion": 2, "outputId": "DP-1",
+            "kind": "microphone", "level": 0.35, "muted": true, "label": "Microphone"};
+        accept(model, microphone, 2);
+        verify(first.microphoneControlAvailable);
+        compare(first.osdKind, "microphone");
+        levelSlider.value = 0.45;
+        levelSlider.moved();
+        muteButton.Accessible.pressAction();
+        compare(JSON.stringify(commands.sent[2]), JSON.stringify(
+            {"family": "system", "command": {"domain": "audio", "action": {
+                "type": "setNodeVolume", "data": {"nodeId": "microphone", "level": 0.45}}}}));
+        compare(JSON.stringify(commands.sent[3]), JSON.stringify(
+            {"family": "system", "command": {"domain": "audio", "action": {
+                "type": "setNodeMuted", "data": {"nodeId": "microphone", "muted": false}}}}));
+
+        const confirmed = JSON.parse(JSON.stringify(microphone));
         confirmed.system.osd.data.current = {"schemaVersion": 2, "outputId": "DP-1",
             "kind": "brightness", "level": 0.65, "label": "Display"};
-        accept(model, confirmed, 2);
+        accept(model, confirmed, 3);
         compare(first.osdKind, "brightness");
         compare(first.osdLevel, 0.65);
         levelSlider.value = 0.75;
         levelSlider.moved();
         compare(first.osdLevel, 0.65);
         compare(levelSlider.value, 0.65);
-        compare(JSON.stringify(commands.sent[2]), JSON.stringify(
+        compare(JSON.stringify(commands.sent[4]), JSON.stringify(
             {"family": "system", "command": {"domain": "display", "action": {
                 "type": "setBrightness", "data": {"outputId": "DP-1", "level": 0.75}}}}));
 
         const degraded = JSON.parse(JSON.stringify(confirmed));
         degraded.system.osd.data.current.level = 0.75;
-        confirmed.system.audio = {"status": "unsupported",
+        degraded.system.audio = {"status": "unsupported",
             "diagnostic": {"message": "Audio unavailable"}};
-        degraded.system.audio = confirmed.system.audio;
-        accept(model, degraded, 3);
+        accept(model, degraded, 4);
         compare(first.osdLevel, 0.75);
         verify(!first.volumeControlAvailable);
         verify(!first.muteControlAvailable);
         verify(!first.microphoneControlAvailable);
         verify(first.brightnessControlAvailable);
+
+        const power = JSON.parse(JSON.stringify(degraded));
+        power.system.osd.data.current = {"schemaVersion": 2, "outputId": "DP-1",
+            "kind": "powerProfile", "label": "Balanced"};
+        accept(model, power, 5);
+        compare(first.osdKind, "powerProfile");
+        verify(!levelSlider.visible);
+        verify(!levelSlider.enabled && levelSlider.Accessible.ignored);
+        verify(!muteButton.visible);
+        const statusText = findChild(first, "osdStatusText");
+        verify(statusText !== null);
+        compare(statusText.text, "Balanced");
+    }
+
+    function test_recording_lifecycle_and_area_selection_follow_confirmed_v3_state() {
+        const model = loadProductionModel();
+        const initial = fixtureSnapshot();
+        accept(model, initial, 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands, false), "DP-1");
+        verify(output.openOverlay("nexus"));
+        verify(output.setNexusTab("utilities"));
+        const utilities = findChild(output, "task10Utilities");
+        const screenshot = findChild(output, "utilityScreenshot");
+        const recording = findChild(output, "utilityRecording");
+        verify(utilities !== null && screenshot !== null && recording !== null);
+        compare(screenshot.Accessible.name, "Screenshot / area");
+
+        verify(utilities.requestScreenshot());
+        verify(utilities.requestRecording());
+        compare(output.recordingState.status, "inactive");
+        compare(commands.sent[0].command.type, "screenshot");
+        compare(commands.sent[0].command.data.outputId, "DP-1");
+        compare(commands.sent[1].command.type, "startRecording");
+
+        const active = JSON.parse(JSON.stringify(initial));
+        active.utilities.recording.data = {"status": "recording",
+            "recordingId": "recording-1", "outputId": "DP-1"};
+        accept(model, active, 2);
+        compare(recording.Accessible.name, "Pause recording");
+        verify(utilities.requestRecording());
+        compare(output.recordingState.status, "recording");
+        compare(commands.sent[2].command.type, "pauseRecording");
+
+        const paused = JSON.parse(JSON.stringify(active));
+        paused.utilities.recording.data.status = "paused";
+        accept(model, paused, 3);
+        compare(recording.Accessible.name, "Stop recording");
+        verify(utilities.requestRecording());
+        compare(output.recordingState.status, "paused");
+        compare(commands.sent[3].command.type, "stopRecording");
+
+        const stopped = JSON.parse(JSON.stringify(initial));
+        accept(model, stopped, 4);
+        compare(output.recordingState.status, "inactive");
+        compare(recording.Accessible.name, "Record");
     }
 
     function test_vertical_layout_clipping_placement_and_motion_tokens() {
@@ -461,6 +548,59 @@ TestCase {
         });
         verify(host !== null, component.errorString());
         compare(host.outputCount, 2);
+    }
+
+    function test_task10_views_are_reachable_and_route_strict_v3_without_optimism() {
+        const model = loadProductionModel();
+        accept(model, fixtureSnapshot(), 1);
+        const commands = createTemporaryObject(commandSinkFactory, testCase);
+        const output = outputById(createView(model, commands, false), "DP-1");
+
+        verify(findChild(output, "task10Background") !== null);
+        verify(output.openOverlay("nexus"));
+        output.setNexusTab("utilities");
+        wait(0);
+        const utilities = findChild(output, "task10Utilities");
+        verify(utilities !== null);
+        verify(utilities.requestIdleInhibited(true));
+        verify(utilities.requestRecording());
+        verify(utilities.requestScreenshot());
+        verify(utilities.requestColorPicker());
+        verify(utilities.requestGameMode(true));
+        compare(output.idleInhibited, false);
+        compare(output.gameMode, false);
+
+        output.setNexusTab("windows");
+        wait(0);
+        const windows = findChild(output, "task10WindowInfo");
+        verify(windows !== null);
+        compare(windows.windowRows.length, 1);
+        verify(!windows.requestFullscreen("0x1234"));
+        verify(windows.requestFocus("0x1234"));
+
+        output.setNexusTab("session");
+        wait(0);
+        const session = findChild(output, "task10Session");
+        const overlay = findChild(output, "coreOverlayView");
+        verify(session !== null);
+        verify(overlay !== null);
+        compare(overlay.initialFocusItem.objectName, "nexusTab:session");
+        verify(overlay.initialFocusItem.activeFocus);
+        verify(session.requestAction("lock"));
+        verify(session.requestAction("powerOff"));
+        compare(commands.sent.filter(item => item.family === "session").length, 1);
+        verify(session.requestAction("powerOff"));
+
+        compare(JSON.stringify(commands.sent), JSON.stringify([
+            {"family":"utility","command":{"type":"setIdleInhibited","data":{"enabled":true}}},
+            {"family":"utility","command":{"type":"startRecording","data":{"outputId":"DP-1"}}},
+            {"family":"utility","command":{"type":"screenshot","data":{"outputId":"DP-1"}}},
+            {"family":"utility","command":{"type":"pickColor"}},
+            {"family":"utility","command":{"type":"setGameMode","data":{"enabled":true}}},
+            {"family":"compositor","command":{"type":"focusWindow","data":{"windowId":"0x1234"}}},
+            {"family":"session","command":"lock"},
+            {"family":"session","command":"powerOff"}
+        ]));
     }
 
 }

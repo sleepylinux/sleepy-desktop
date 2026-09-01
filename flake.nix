@@ -130,7 +130,7 @@
           };
           qtQmlImportPath = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${quickshellWithModules}/lib/qt-6/qml:${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}";
 
-          mkDesktopPackage = { pname, runner, runnerFlags }:
+          mkDesktopPackage = { pname, runner, runnerFlags, withIpcClient ? false }:
             pkgs.stdenvNoCC.mkDerivation {
               inherit pname;
               version = "0.2.0";
@@ -204,6 +204,15 @@
                   --prefix PATH : "${sessionPackage}/bin" \
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
+                ${pkgs.lib.optionalString withIpcClient ''
+                  makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-shell-ipc" \
+                    --set QML_XHR_ALLOW_FILE_READ 1 \
+                    --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
+                    --set QML_IMPORT_PATH "${qtQmlImportPath}" \
+                    --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
+                    --add-flags "ipc --config sleepy"
+                ''}
+
                 runHook postInstall
               '';
 
@@ -229,6 +238,7 @@
             pname = "sleepy-shell";
             runner = "${quickshellWithModules}/bin/qs";
             runnerFlags = installPath: "-p ${installPath}/shell.qml";
+            withIpcClient = true;
           };
 
           sleepy-settings-preview = mkDesktopPackage {
@@ -346,6 +356,7 @@
             shell_package=${componentPackages.sleepy-shell}
             locker_package=${componentPackages.sleepy-locker}
             test -x "$shell_package/bin/sleepy-shell"
+            test -x "$shell_package/bin/sleepy-shell-ipc"
             test -x "$locker_package/bin/sleepy-locker"
             test -f "$locker_package/share/sleepy-locker/LockRoot.qml"
             test -f "$locker_package/lib/qt6/qml/Sleepy/Locker/Native/qmldir"
