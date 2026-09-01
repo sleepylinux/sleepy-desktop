@@ -5,7 +5,8 @@
 
 // Behavioral mirror of Quickshell src/io/socket.cpp at the revision pinned in
 // flake.nix. In particular, connected reads the live transport state while its
-// setter updates a separate target state, and an error retains the transport.
+// setter updates a separate target state, a successful connection clears that
+// target, and an error retains the transport until a later disconnect callback.
 class ContractSocket : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool connected READ isConnected WRITE setConnected NOTIFY connectionStateChanged)
@@ -65,6 +66,7 @@ public:
         if (!mHasTransport)
             return;
         mConnected = true;
+        mTargetConnected = false;
         mDisconnecting = false;
         emit lifecycleChanged();
         emit connectionStateChanged();
@@ -78,10 +80,17 @@ public:
 
     Q_INVOKABLE void emitError() { emit error(0); }
 
-    Q_INVOKABLE void peerClose() {
-        if (!mHasTransport)
+    Q_INVOKABLE void peerCloseError() {
+        if (!mHasTransport || !mConnected)
             return;
         mConnected = false;
+        emit lifecycleChanged();
+        emit error(1);
+    }
+
+    Q_INVOKABLE void acknowledgePeerClose() {
+        if (!mHasTransport)
+            return;
         mDisconnecting = false;
         mHasTransport = false;
         emit lifecycleChanged();
@@ -101,6 +110,8 @@ public:
         if (mTargetConnected)
             beginAttempt();
     }
+
+    Q_INVOKABLE void emitConnectionState() { emit connectionStateChanged(); }
 
 signals:
     void error(int errorCode);

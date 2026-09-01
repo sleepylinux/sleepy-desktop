@@ -54,8 +54,11 @@ DesktopProtocol {
             return false;
         const intentional = root.intentionalDisconnect;
         const result = reconnectPolicy.handleSocketDisconnected(message);
-        if (intentional)
-            root.replaceDesktopSocket(socket);
+        if (intentional) {
+            const replaced = root.replaceDesktopSocket(socket);
+            if (replaced && root.enabled)
+                Qt.callLater(root.connectStream);
+        }
         return result;
     }
 

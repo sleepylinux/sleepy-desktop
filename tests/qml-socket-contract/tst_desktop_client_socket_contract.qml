@@ -46,27 +46,41 @@ TestCase {
         connectClient(client);
         const initialSocket = client.testSocket;
         const baselineInstances = initialSocket.liveInstances;
+        const timerSpy = signalSpy.createObject(testCase, {
+            "target": client.reconnectTimer,
+            "signalName": "triggered"
+        });
 
-        initialSocket.peerClose();
+        initialSocket.peerCloseError();
         compare(initialSocket.connected, false);
-        verify(client.reconnectTimer.running);
-        tryVerify(() => initialSocket.connectAttempts === 2, 100);
-        initialSocket.failAttempt();
-        const failedInstance = initialSocket.instanceId;
-
-        verify(client.testSocket.instanceId !== failedInstance);
-        const replacement = client.testSocket;
-        verify(!replacement.hasTransport);
-        verify(client.reconnectTimer.running);
-
-        initialSocket.failAttempt();
-        compare(client.testSocket, replacement);
+        const firstRetry = client.testSocket;
+        verify(firstRetry !== initialSocket);
         compare(client.reconnectAttempt, 1);
-        tryCompare(replacement, "liveInstances", baselineInstances, 100);
-        tryVerify(() => replacement.hasTransport, 100);
-        compare(replacement.connectAttempts, 1);
-        replacement.succeedAttempt();
-        compare(replacement.connected, true);
+        compare(client.reconnectTimer.interval, 5);
+        verify(client.reconnectTimer.running);
+        initialSocket.acknowledgePeerClose();
+        compare(initialSocket.connectAttempts, 1);
+        initialSocket.emitConnectionState();
+        compare(client.testSocket, firstRetry);
+
+        tryVerify(() => firstRetry.hasTransport, 100);
+        compare(firstRetry.connectAttempts, 1);
+        compare(timerSpy.count, 1);
+        firstRetry.failAttempt();
+        const secondRetry = client.testSocket;
+        verify(secondRetry !== firstRetry);
+        compare(client.reconnectAttempt, 2);
+        compare(client.reconnectTimer.interval, 10);
+        verify(client.reconnectTimer.running);
+
+        firstRetry.failAttempt();
+        compare(client.testSocket, secondRetry);
+        tryCompare(secondRetry, "liveInstances", baselineInstances, 100);
+        tryVerify(() => secondRetry.hasTransport, 100);
+        compare(secondRetry.connectAttempts, 1);
+        compare(timerSpy.count, 2);
+        secondRetry.succeedAttempt();
+        compare(secondRetry.connected, true);
         client.eventAccepted({});
         compare(client.reconnectAttempt, 0);
         verify(!client.reconnectTimer.running);
@@ -74,13 +88,13 @@ TestCase {
         wait(0);
     }
 
-    function test_clean_stop_waits_for_async_ack_and_explicit_start_reconnects() {
+    function test_disable_only_waits_for_ack_and_stays_idle() {
         const client = loadProductionClient();
         connectClient(client);
         const socket = client.testSocket;
         const baselineInstances = socket.liveInstances;
 
-        client.stopStream("intentional stop");
+        client.enabled = false;
         compare(client.intentionalDisconnect, true);
         compare(socket.connected, true);
         compare(socket.disconnecting, true);
@@ -97,15 +111,57 @@ TestCase {
         verify(!client.reconnectTimer.running);
         compare(client.testSocket.hasTransport, false);
         compare(client.testSocket.liveInstances, baselineInstances);
+        client.destroy();
+        wait(0);
+    }
 
-        verify(client.connectStream());
-        const restartedSocket = client.testSocket;
-        compare(restartedSocket.hasTransport, true);
-        compare(restartedSocket.connectAttempts, 1);
-        restartedSocket.succeedAttempt();
-        compare(restartedSocket.connected, true);
-        client.eventAccepted({});
-        compare(client.reconnectAttempt, 0);
+    function test_disable_enable_before_ack_replays_exactly_one_start() {
+        const client = loadProductionClient();
+        connectClient(client);
+        const socket = client.testSocket;
+
+        client.enabled = false;
+        compare(client.intentionalDisconnect, true);
+        client.enabled = true;
+        wait(0);
+        compare(socket.connectAttempts, 1);
+        compare(socket.disconnecting, true);
+
+        socket.acknowledgeDisconnect();
+        const replacement = client.testSocket;
+        verify(replacement !== socket);
+        compare(client.intentionalDisconnect, false);
+        tryVerify(() => replacement.hasTransport, 100);
+        compare(replacement.connectAttempts, 1);
+        verify(!client.reconnectTimer.running);
+        replacement.succeedAttempt();
+        compare(replacement.connected, true);
+        client.destroy();
+        wait(0);
+    }
+
+    function test_repeated_toggles_and_stale_acks_replay_one_current_generation() {
+        const client = loadProductionClient();
+        connectClient(client);
+        const socket = client.testSocket;
+        const baselineInstances = socket.liveInstances;
+
+        client.enabled = false;
+        client.enabled = true;
+        client.enabled = false;
+        client.enabled = true;
+        wait(0);
+        socket.acknowledgeDisconnect();
+        const replacement = client.testSocket;
+        socket.emitConnectionState();
+        socket.emitConnectionState();
+        socket.emitError();
+        tryVerify(() => replacement.hasTransport, 100);
+        compare(client.testSocket, replacement);
+        compare(replacement.connectAttempts, 1);
+        verify(!client.reconnectTimer.running);
+        tryCompare(replacement, "liveInstances", baselineInstances, 100);
+        replacement.succeedAttempt();
         client.destroy();
         wait(0);
     }
@@ -117,7 +173,10 @@ TestCase {
         connectClient(client);
         const baselineInstances = client.testSocket.liveInstances;
 
-        client.testSocket.peerClose();
+        const connectedSocket = client.testSocket;
+        connectedSocket.peerCloseError();
+        connectedSocket.acknowledgePeerClose();
+        compare(connectedSocket.connectAttempts, 1);
         for (let failure = 0; failure < 6; ++failure) {
             const failedSocket = client.testSocket;
             tryVerify(() => failedSocket.hasTransport, 100);
@@ -125,8 +184,8 @@ TestCase {
             failedSocket.failAttempt();
             const replacement = client.testSocket;
             verify(replacement !== failedSocket, "generation " + failure);
-            compare(client.reconnectAttempt, failure + 1, "attempt " + failure);
-            compare(client.reconnectTimer.interval, Math.min(4, Math.pow(2, failure)),
+            compare(client.reconnectAttempt, failure + 2, "attempt " + failure);
+            compare(client.reconnectTimer.interval, Math.min(4, Math.pow(2, failure + 1)),
                 "bounded delay " + failure);
             tryCompare(replacement, "liveInstances", baselineInstances, 100);
         }
@@ -152,17 +211,24 @@ TestCase {
         for (let restart = 0; restart < 40; ++restart) {
             const connectedSocket = client.testSocket;
             const baselineInstances = connectedSocket.liveInstances;
-            connectedSocket.peerClose();
+            connectedSocket.peerCloseError();
             compare(client.reconnectAttempt, 1, "peer close " + restart);
             compare(client.reconnectTimer.interval, 1, "first delay " + restart);
-            tryVerify(() => connectedSocket.connectAttempts === 2, 100);
+            const firstRetry = client.testSocket;
+            verify(firstRetry !== connectedSocket, "peer generation " + restart);
+            connectedSocket.acknowledgePeerClose();
+            compare(connectedSocket.connectAttempts, 1,
+                "successful target cleared " + restart);
+            connectedSocket.emitConnectionState();
+            tryVerify(() => firstRetry.hasTransport, 100);
+            compare(firstRetry.connectAttempts, 1, "first retry transport " + restart);
 
-            connectedSocket.failAttempt();
-            connectedSocket.failAttempt();
+            firstRetry.failAttempt();
+            firstRetry.failAttempt();
             const replacement = client.testSocket;
-            verify(replacement !== connectedSocket, "replacement " + restart);
-            compare(client.reconnectAttempt, 1, "failed automatic retry " + restart);
-            compare(client.reconnectTimer.interval, 1, "single-loop delay " + restart);
+            verify(replacement !== firstRetry, "replacement " + restart);
+            compare(client.reconnectAttempt, 2, "failed delayed retry " + restart);
+            compare(client.reconnectTimer.interval, 2, "second-loop delay " + restart);
             tryVerify(() => replacement.hasTransport, 100);
             compare(replacement.connectAttempts, 1, "single transport " + restart);
             tryCompare(replacement, "liveInstances", baselineInstances, 100);
@@ -170,35 +236,38 @@ TestCase {
             client.eventAccepted({});
             compare(client.reconnectAttempt, 0, "accepted " + restart);
             verify(!client.reconnectTimer.running, "timer stopped " + restart);
-            compare(timerSpy.count, restart + 1, "one loop " + restart);
+            compare(timerSpy.count, (restart + 1) * 2, "two sequential retries " + restart);
         }
 
         client.destroy();
         wait(0);
     }
 
-    function test_repeated_async_stop_start_has_no_late_retry() {
+    function test_repeated_async_disable_enable_replays_without_late_retry() {
         const client = loadProductionClient();
         connectClient(client);
 
         for (let cycle = 0; cycle < 30; ++cycle) {
             const stoppingSocket = client.testSocket;
             const baselineInstances = stoppingSocket.liveInstances;
-            client.stopStream("cycle " + cycle);
+            client.enabled = false;
             compare(client.intentionalDisconnect, true, "suppression " + cycle);
             stoppingSocket.emitError();
             stoppingSocket.emitError();
             verify(!client.reconnectTimer.running, "error suppression " + cycle);
+            client.enabled = true;
+            wait(0);
 
             stoppingSocket.acknowledgeDisconnect();
             const replacement = client.testSocket;
             compare(client.intentionalDisconnect, false, "ack " + cycle);
             verify(replacement !== stoppingSocket, "retired stop generation " + cycle);
             stoppingSocket.emitError();
+            stoppingSocket.emitConnectionState();
             verify(!client.reconnectTimer.running, "late error " + cycle);
             tryCompare(replacement, "liveInstances", baselineInstances, 100);
 
-            verify(client.connectStream(), "explicit start " + cycle);
+            tryVerify(() => replacement.hasTransport, 100);
             compare(replacement.connectAttempts, 1, "single restart transport " + cycle);
             replacement.succeedAttempt();
             client.eventAccepted({});
