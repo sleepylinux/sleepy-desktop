@@ -102,11 +102,13 @@ QtObject {
         root.appearanceAvailable && Boolean(root.appearanceData.theme?.reducedMotion ?? false)
     readonly property bool opaque:
         root.appearanceAvailable && Boolean(root.appearanceData.theme?.opaqueFallback ?? false)
-    readonly property var launcherEntries: root.desktopModel.launcherEntries
+    readonly property var launcherEntries:
+        typeof root.desktopModel?.launcherEntries?.filter === "function"
+            ? root.desktopModel.launcherEntries : []
     readonly property var filteredLauncherEntries: {
-        void(root.desktopModel.launcherEntries);
+        void(root.launcherEntries);
         const query = root.launcherSearchText.trim().toLocaleLowerCase();
-        const rows = root.desktopModel.launcherEntries.filter(entry => {
+        const rows = root.launcherEntries.filter(entry => {
             if (!query.length)
                 return true;
             return String(entry.name).toLocaleLowerCase().indexOf(query) >= 0
@@ -115,12 +117,16 @@ QtObject {
         return rows.slice().sort((left, right) =>
             String(left.name).localeCompare(String(right.name)));
     }
-    readonly property var notificationItems: root.desktopModel.notificationItems
+    readonly property var notificationItems:
+        typeof root.desktopModel?.notificationItems?.filter === "function"
+            ? root.desktopModel.notificationItems
+            : (typeof root.desktopModel?.notifications?.filter === "function"
+                ? root.desktopModel.notifications : [])
     readonly property var toastItems: {
-        void(root.desktopModel.notificationItems);
+        void(root.notificationItems);
         if (!root.notificationsAvailable || root.dndEnabled)
             return [];
-        return root.desktopModel.notificationItems.filter(
+        return root.notificationItems.filter(
             item => !item.read && !item.archived);
     }
     readonly property bool dndEnabled:

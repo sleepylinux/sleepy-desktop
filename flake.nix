@@ -376,6 +376,7 @@
               pkgs.bash
               pkgs.coreutils
               pkgs.dbus
+              pkgs.git
               pkgs.glibc.bin
               pkgs.jq
               pkgs.procps
@@ -428,6 +429,7 @@
             export SLEEPY_SDK_ROOT='${sleepy-sdk}'
             export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway
             export SLEEPY_TEST_WAYLAND_COMPOSITOR=${pkgs.sway}/bin/sway
+            export SLEEPY_TEST_DBUS_SESSION_CONFIG=${pkgs.dbus}/share/dbus-1/session.conf
             export SLEEPY_APPEARANCE_CLI=${componentPackages.sleepy-appearance-cli}/bin/sleepy
             test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"
             unset WAYLAND_DISPLAY

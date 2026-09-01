@@ -10,6 +10,7 @@ trap cleanup EXIT
 
 repository_copy="$test_root/repository"
 cp -a "$repo_root" "$repository_copy"
+chmod -R u+w "$repository_copy"
 
 python3 - "$repository_copy/flake.nix" <<'PY'
 from pathlib import Path

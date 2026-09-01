@@ -42,7 +42,7 @@ TestCase {
 
     function fixtureSnapshot() {
         const envelope = JSON.parse(source(
-            "../../../sleepy-sdk/fixtures/desktop-runtime/full-snapshot.json"));
+            "../fixtures/task7b-sdk-full-snapshot.json"));
         const snapshot = envelope.payload.data;
         const hyprland = snapshot.compositor.hyprland.data;
         hyprland.monitors.push({"id": "HDMI-A-1", "name": "HDMI-A-1",

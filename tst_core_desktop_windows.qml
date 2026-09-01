@@ -17,6 +17,7 @@ ShellRoot {
     readonly property int stressCycles: 24
     property int actualStressIndex: 0
     property bool actualOverlayProbed: false
+    property int actualOverlayReadyRetries: 0
     readonly property int actualStressCycles: 4
     property var actualProtocol: null
     property var virtualProtocol: null
@@ -211,8 +212,23 @@ ShellRoot {
                     "real bar visible/focusable binding mismatch");
                 require(actual.barWindow.exclusiveZone === 64, "real bar exclusion mismatch");
                 require(actual.osdWindow.visible, "real OSD visible binding mismatch");
+                if ((!actual.overlayWindow.visible || actual.overlayWindow.focusable
+                        || actual.overlayWindow.inputRegion.width !== 340
+                        || actual.overlayWindow.inputRegion.height !== 72)
+                        && root.actualOverlayReadyRetries < 50) {
+                    root.actualOverlayReadyRetries += 1;
+                    stageTimer.restart();
+                    return;
+                }
                 require(actual.overlayWindow.visible && !actual.overlayWindow.focusable,
-                    "real overlay toast visibility/focus binding mismatch");
+                    "real overlay toast visibility/focus binding mismatch: visible="
+                        + actual.overlayWindow.visible + " focusable="
+                        + actual.overlayWindow.focusable + " available="
+                        + actual.overlayWindow.outputState.notificationsAvailable
+                        + " items=" + actual.overlayWindow.outputState.notificationItems.length
+                        + " toasts=" + actual.overlayWindow.outputState.toastItems.length
+                        + " mask=" + actual.overlayWindow.inputRegion.width + "x"
+                        + actual.overlayWindow.inputRegion.height);
                 require(actual.overlayWindow.inputRegion.width === 340
                         && actual.overlayWindow.inputRegion.height === 72,
                     "toast-only overlay did not constrain its input mask");

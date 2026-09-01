@@ -85,6 +85,7 @@ record_parity_qml_evidence "$parity_manifest" \
 # scenegraph and Mesa software rendering. Each runner remains independently
 # bounded so a driver or scenegraph hang cannot be hidden.
 for rhi_test in tst_icons.qml tst_m3_gallery.qml tst_m3_surfaces.qml tst_core_surfaces.qml tst_core_overlays.qml tst_parity.qml; do
+  QT_QPA_PLATFORM="${SLEEPY_TEST_QPA_PLATFORM:-offscreen}" \
   QT_QUICK_BACKEND=rhi \
   QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}" \
   LIBGL_ALWAYS_SOFTWARE=1 \
@@ -102,8 +103,12 @@ SLEEPY_TEST_QUICKSHELL="${SLEEPY_TEST_QUICKSHELL:-}"
 if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then
   bash "$repo_root/tests/with-private-wayland.sh" \
     "$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"
-  bash "$repo_root/tests/with-private-wayland.sh" \
-    "$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"
+  if [[ "${SLEEPY_REQUIRE_REAL_RHI_HOST:-0}" == 1 ]]; then
+    SLEEPY_TEST_WLR_RENDERER=gles2 bash "$repo_root/tests/with-private-wayland.sh" \
+      "$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"
+  else
+    printf 'DEFER: real Quickshell RHI host gate requires direct DRM/EGL access; run with SLEEPY_REQUIRE_REAL_RHI_HOST=1 on the acceptance host\n'
+  fi
 else
   printf 'SKIP: private Wayland compositor is not configured; real Quickshell host gate was not run\n'
 fi

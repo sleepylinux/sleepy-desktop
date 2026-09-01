@@ -119,7 +119,7 @@ expect_rejection() {
   local expected_reason="$3"
   local output="$test_root/$label-output"
 
-  if "$importer" --source "$source" >"$output" 2>&1; then
+  if "$BASH" "$importer" --source "$source" >"$output" 2>&1; then
     printf 'FAIL: importer accepted %s source\n' "$label" >&2
     exit 1
   fi

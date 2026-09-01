@@ -32,6 +32,7 @@ fi
 
 mkdir -p "$stub_root"
 cp -a "$repo_root/tests/qml-stubs/Quickshell" "$stub_root/"
+chmod -R u+w "$stub_root/Quickshell"
 rm -f -- "$io_module/Socket.qml"
 cp "$repo_root/tests/socket-contract-plugin.cpp" "$test_root/socket-contract-plugin.cpp"
 "$moc_binary" "$test_root/socket-contract-plugin.cpp" \

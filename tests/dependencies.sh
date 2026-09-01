@@ -244,6 +244,14 @@ if ! rg -Fq 'bash tests/with-private-wayland.sh' <<< "$qml_check_block" ||
   printf 'FAIL: private Wayland status/cleanup and packaged shell smoke gates must be mandatory\n' >&2
   exit 1
 fi
+if ! rg -Fq 'if [[ "${SLEEPY_REQUIRE_REAL_RHI_HOST:-0}" == 1 ]]' "$repository_root/tests/run.sh" ||
+    ! rg -Fq 'SLEEPY_TEST_WLR_RENDERER=gles2 bash "$repo_root/tests/with-private-wayland.sh"' \
+      "$repository_root/tests/run.sh" ||
+    ! rg -Fq 'DEFER: real Quickshell RHI host gate requires direct DRM/EGL access' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: real RHI host gate must be explicit, DRM-hosted, and use a software GLES2-capable compositor\n' >&2
+  exit 1
+fi
 if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; then
   printf 'FAIL: qml check must validate command fixtures against the pinned sleepy-sdk input\n' >&2
   exit 1
@@ -268,6 +276,7 @@ if ! rg -Fq 'pkgs.vulkan-loader' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_RHI_BACKEND=vulkan' <<< "$qml_check_block" ||
     ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json' <<< "$qml_check_block" ||
     ! rg -Fq 'export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib' <<< "$qml_check_block" ||
+    ! rg -Fq 'QT_QPA_PLATFORM="${SLEEPY_TEST_QPA_PLATFORM:-offscreen}"' "$repository_root/tests/run.sh" ||
     ! rg -Fq 'QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}"' "$repository_root/tests/run.sh"; then
   printf 'FAIL: qml check must provide Xvfb/xcb and pinned Mesa lavapipe for its configurable real RHI smoke\n' >&2
   exit 1

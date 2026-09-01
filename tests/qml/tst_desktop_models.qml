@@ -187,7 +187,7 @@ TestCase {
     }
 
     function sdkFullSnapshotEnvelope() {
-        return JSON.parse(source("../../../sleepy-sdk/fixtures/desktop-runtime/full-snapshot.json"));
+        return JSON.parse(source("../fixtures/task7b-sdk-full-snapshot.json"));
     }
 
     function strictDomainEnvelope(generation, topic, update) {

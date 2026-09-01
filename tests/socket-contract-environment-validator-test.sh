@@ -10,6 +10,7 @@ trap cleanup EXIT
 
 repository_copy="$test_root/repository"
 cp -a "$repo_root" "$repository_copy"
+chmod -R u+w "$repository_copy"
 cp "$repo_root/flake.nix" "$test_root/flake.nix"
 cp "$repo_root/tests/desktop-client-socket-contract.sh" "$test_root/socket-contract.sh"
 cp "$repo_root/tests/lib/qt6-moc-resolver.sh" "$test_root/moc-resolver.sh"

@@ -16,6 +16,11 @@ if [[ "${1:-}" == "--session" ]]; then
     private_data="$runner_root/data"
     private_state="$runner_root/state"
     private_guard="$runtime_dir/.sleepy-private-wayland.guard"
+    renderer="${SLEEPY_TEST_WLR_RENDERER:-pixman}"
+    case "$renderer" in
+        pixman|gles2) ;;
+        *) printf 'FAIL: SLEEPY_TEST_WLR_RENDERER must be pixman or gles2\n' >&2; exit 1 ;;
+    esac
 
     compositor_pid=""
     cleanup_compositor() {
@@ -41,7 +46,8 @@ if [[ "${1:-}" == "--session" ]]; then
         SLEEPY_PRIVATE_WAYLAND_ROOT="$runner_root" \
         SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
         WLR_BACKENDS=headless \
-        WLR_HEADLESS_OUTPUTS=2 WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman \
+        WLR_HEADLESS_OUTPUTS=2 WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER="$renderer" \
+        WLR_RENDERER_ALLOW_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 \
         "$compositor" --unsupported-gpu --config "$compositor_config" \
             --verbose >"$compositor_log" 2>&1 &
     compositor_pid=$!
@@ -132,7 +138,7 @@ cleanup_session() {
         rm -rf -- "$runner_root"
     fi
 }
-runner_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-private-wayland.XXXXXX")"
+runner_root="$(mktemp -d /tmp/sleepy-pw.XXXXXX)"
 trap cleanup_session EXIT
 trap 'exit 143' TERM
 trap 'exit 130' INT
@@ -157,8 +163,17 @@ printf 'xwayland disable\nseat seat0 fallback true\noutput * resolution 1280x720
 
 unset WAYLAND_DISPLAY WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
 unset DISPLAY XAUTHORITY SLEEPY_PRIVATE_WAYLAND_ROOT SLEEPY_PRIVATE_WAYLAND_GUARD
+dbus_run_args=()
+if [[ -n "${SLEEPY_TEST_DBUS_SESSION_CONFIG:-}" ]]; then
+    if [[ "$SLEEPY_TEST_DBUS_SESSION_CONFIG" != /* \
+        || ! -f "$SLEEPY_TEST_DBUS_SESSION_CONFIG" ]]; then
+        printf 'FAIL: SLEEPY_TEST_DBUS_SESSION_CONFIG must name an absolute regular file\n' >&2
+        exit 1
+    fi
+    dbus_run_args+=("--config-file=$SLEEPY_TEST_DBUS_SESSION_CONFIG")
+fi
 setsid timeout --signal=TERM --kill-after=5s "$timeout_seconds" \
-    dbus-run-session -- bash "$0" --session \
+    dbus-run-session "${dbus_run_args[@]}" -- bash "$0" --session \
         "$runner_root" "$compositor" "$compositor_config" "$compositor_log" \
         "$@" &
 session_pid=$!
