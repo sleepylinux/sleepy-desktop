@@ -1,0 +1,11 @@
+{
+  "bar": {
+    "dragThreshold": 47
+  },
+  "background": {
+    "wallpaperEnabled": true
+  },
+  "futureMonitorCompatible": {
+    "payload": "must-survive-monitor-save"
+  }
+}

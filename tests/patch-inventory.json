@@ -31,6 +31,16 @@
       ]
     },
     {
+      "path": "src/assets/logo.svg",
+      "upstreamPath": "assets/logo.svg",
+      "category": "branding",
+      "reason": "Replace the upstream product mark with the pinned Sleepy primary mark while preserving the same asset slot and layout behavior.",
+      "tests": [
+        "tests/runtime-names.sh#Sleepy runtime identity gate",
+        "tests/artwork-manifest.sh#Sleepy artwork manifest"
+      ]
+    },
+    {
         "path": "src/core/**",
       "upstreamPath": null,
       "category": "compatibility",
@@ -117,9 +127,10 @@
         "path": "src/plugin/src/Sleepy/Config/userpaths.hpp",
       "upstreamPath": "plugin/src/Caelestia/Config/userpaths.hpp",
       "category": "identity",
-      "reason": "Resolve configuration, state, cache, and data beneath Sleepy XDG paths.",
+      "reason": "Keep user media paths configurable while replacing unlicensed upstream binary defaults with the packaged Sleepy logo fallback.",
       "tests": [
-        "tests/runtime-names.sh#Sleepy runtime identity gate"
+        "tests/runtime-names.sh#Sleepy runtime identity gate",
+        "tests/qml-native/tst_full_settings.qml#test_defaults_are_sleepy_owned"
       ]
     },
     {

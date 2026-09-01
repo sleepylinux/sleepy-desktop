@@ -74,6 +74,10 @@ done
 
 test -f "$repo_root/tests/qml-native/tst_native_full_plugin.qml" \
   || fail 'full native plugin QML load test is missing'
+test -f "$repo_root/tests/qml-native/tst_full_settings.qml" \
+  || fail 'full native settings behavior test is missing'
+test -x "$repo_root/tests/full-settings-contract.sh" \
+  || fail 'full native settings contract runner is missing or not executable'
 
 if rg -n 'Q_INVOKABLE.*(saveItem|copyFile|deleteFile)|CUtils::(saveItem|copyFile|deleteFile)' \
     "$cutils_header" "$cutils_source"; then

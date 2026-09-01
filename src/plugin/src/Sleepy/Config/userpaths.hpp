@@ -17,10 +17,10 @@ class UserPaths : public settings::ObjectNode {
         QString, wallpaperDir, QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) + u"/Wallpapers"_s)
     CONFIG_GLOBAL_PROPERTY(
         QString, lyricsDir, QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + u"/Lyrics/"_s)
-    CONFIG_PROPERTY(QString, sessionGif, u""_s)
-    CONFIG_PROPERTY(QString, mediaGif, u""_s)
-    CONFIG_PROPERTY(QString, noNotifsPic, u""_s)
-    CONFIG_PROPERTY(QString, lockNoNotifsPic, u""_s)
+    CONFIG_PROPERTY(QString, sessionGif, u"root:/assets/logo.svg"_s)
+    CONFIG_PROPERTY(QString, mediaGif, u"root:/assets/logo.svg"_s)
+    CONFIG_PROPERTY(QString, noNotifsPic, u"root:/assets/logo.svg"_s)
+    CONFIG_PROPERTY(QString, lockNoNotifsPic, u"root:/assets/logo.svg"_s)
 };
 
 } // namespace sleepy::config

@@ -69,9 +69,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported native plugin sources renamed to Sleepy. Production build enables only Settings, Config, Components, Blobs, and Images.",
-      "modified": "2026-08-31",
-      "disposition": "partially-active"
+      "attribution": "Complete native plugin graph imported from Caelestia Shell v2.4.0, renamed to Sleepy, and built without a Caelestia runtime dependency.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/components/**",
@@ -79,9 +79,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported visual components retained for later audited porting.",
-      "modified": "2026-08-31",
-      "disposition": "quarantined-source"
+      "attribution": "Complete upstream visual component graph active under the Sleepy shell runtime.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/modules/**",
@@ -89,9 +89,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported visual modules retained as source for later audited porting. Task 6 production shell does not import this tree; modules/lock is removed from production installs.",
-      "modified": "2026-08-31",
-      "disposition": "quarantined-source"
+      "attribution": "Complete upstream shell module graph active under Sleepy identity; the in-process upstream lock module remains excluded in favour of sleepy-locker.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/utils/**",
@@ -99,9 +99,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported utility code retained for later audited porting.",
-      "modified": "2026-08-31",
-      "disposition": "quarantined-source"
+      "attribution": "Complete upstream utility graph active under the Sleepy shell runtime.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/extras/**",
@@ -119,9 +119,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported SVG logo retained in source; packaged branding uses the reviewed sleepy-artwork manifest.",
-      "modified": "2026-08-31",
-      "disposition": "source-retained"
+      "attribution": "Upstream logo replaced with the reviewed sleepy-artwork primary mark; packaged branding and in-shell fallbacks use the same Sleepy asset.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/assets/wrap_term_launch.sh",
@@ -129,9 +129,9 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported script retained only for quarantined launcher source.",
-      "modified": "2026-08-31",
-      "disposition": "quarantined-source"
+      "attribution": "Terminal-launch wrapper active for launcher entries using the configured Sleepy terminal.",
+      "modified": "2026-09-01",
+      "disposition": "active"
     },
     {
       "path": "src/assets/google-sans-flex/**",

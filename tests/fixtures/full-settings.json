@@ -1,0 +1,71 @@
+{
+  "enabled": true,
+  "appearance": {
+    "deformScale": 1.25,
+    "font": {
+      "scale": 1.1,
+      "body": {
+        "family": "Sleepy Test Sans"
+      }
+    },
+    "anim": {
+      "durations": {
+        "scale": 0.75
+      }
+    },
+    "transparency": {
+      "enabled": true,
+      "base": 0.82,
+      "layers": 0.45
+    }
+  },
+  "general": {
+    "showOverFullscreen": true,
+    "apps": {
+      "terminal": ["ghostty"]
+    }
+  },
+  "background": {
+    "wallpaperEnabled": false
+  },
+  "bar": {
+    "dragThreshold": 31
+  },
+  "dashboard": {
+    "showDashboard": false
+  },
+  "launcher": {
+    "maxShown": 11
+  },
+  "lock": {
+    "useWallpaper": true
+  },
+  "nexus": {
+    "wallpapersPerRow": 6
+  },
+  "notifs": {
+    "clearThreshold": 0.42
+  },
+  "osd": {
+    "hideDelay": 2345
+  },
+  "services": {
+    "visualiserBars": 72
+  },
+  "session": {
+    "vimKeybinds": true
+  },
+  "sidebar": {
+    "minHoverThreshold": 345
+  },
+  "utilities": {
+    "maxToasts": 7
+  },
+  "paths": {
+    "wallpaperDir": "/tmp/sleepy-wallpapers"
+  },
+  "futureCompatible": {
+    "enabled": true,
+    "payload": "must-survive-save"
+  }
+}

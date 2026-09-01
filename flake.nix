@@ -358,6 +358,8 @@
             ${pkgs.qt6.qtdeclarative}/libexec/qmltestrunner \
               -input tests/qml-native/tst_native_full_plugin.qml \
               -import ${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix} -v1
+            SLEEPY_NATIVE_QML_IMPORT_PATH=${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix} \
+              bash tests/full-settings-contract.sh
             bash scripts/validate-qml.sh
 
             production_shell=${componentPackages.sleepy-shell}

@@ -51,6 +51,32 @@ if [[ ! -f "$about_page" ]] ||
   failed=1
 fi
 
+for sleepy_path in \
+  'u"/sleepy"_s' \
+  '`${Quickshell.env("XDG_DATA_HOME") || `${home}/.local/share`}/sleepy`' \
+  '`${Quickshell.env("XDG_STATE_HOME") || `${home}/.local/state`}/sleepy`' \
+  '`${Quickshell.env("XDG_CACHE_HOME") || `${home}/.cache`}/sleepy`' \
+  '`${Quickshell.env("XDG_CONFIG_HOME") || `${home}/.config`}/sleepy`'; do
+  if ! rg -Fq "$sleepy_path" \
+      "$repo_root/src/plugin/src/Sleepy/Config/common.cpp" \
+      "$repo_root/src/utils/Paths.qml"; then
+    printf 'FAIL: missing Sleepy-owned runtime path: %s\n' "$sleepy_path" >&2
+    failed=1
+  fi
+done
+
+if ! rg -Fq 'QStringList, terminal, { u"ghostty"_s }' \
+    "$repo_root/src/plugin/src/Sleepy/Config/generalconfig.hpp"; then
+  printf 'FAIL: Sleepy shell must default to the session-owned Ghostty terminal\n' >&2
+  failed=1
+fi
+
+if [[ -n "${SLEEPY_ARTWORK_ROOT:-}" ]] \
+    && ! cmp -s "$repo_root/src/assets/logo.svg" "$SLEEPY_ARTWORK_ROOT/branding/logo.svg"; then
+  printf 'FAIL: packaged shell logo must match the pinned sleepy-artwork primary mark\n' >&2
+  failed=1
+fi
+
 if [[ $failed -ne 0 ]]; then
   exit 1
 fi

@@ -45,8 +45,10 @@ jq -e '
   (.inventory | type == "array" and length >= 10) and
   any(.inventory[]; .path == "src/shell.qml" and .disposition == "active" and .originRevision == "24aa15eefdb146350d2548c0a015b04eddbd1008") and
   any(.inventory[]; .path == "src/services/**" and .disposition == "active" and .spdx == "GPL-3.0-only") and
-  any(.inventory[]; .path == "src/plugin/**" and .disposition == "partially-active") and
-  any(.inventory[]; .path == "src/modules/**" and .disposition == "quarantined-source") and
+  any(.inventory[]; .path == "src/plugin/**" and .disposition == "active") and
+  any(.inventory[]; .path == "src/components/**" and .disposition == "active") and
+  any(.inventory[]; .path == "src/modules/**" and .disposition == "active") and
+  any(.inventory[]; .path == "src/utils/**" and .disposition == "active") and
   any(.inventory[]; .path == "src/assets/google-sans-flex/**" and .spdx == "OFL-1.1" and .disposition == "active") and
   any(.inventory[]; .spdx == "NOASSERTION" and .disposition == "excluded")
 ' "$root/UPSTREAM.json" >/dev/null
