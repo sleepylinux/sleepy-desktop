@@ -104,7 +104,7 @@ QtObject {
         protocol.queuedLine = "";
     }
 
-    DesktopCommandProtocol {
+    readonly property DesktopCommandProtocol protocol: DesktopCommandProtocol {
         id: protocol
 
         generation: DesktopClient.generation
