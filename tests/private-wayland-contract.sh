@@ -5,6 +5,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-wayland-contract.XXXXXX")"
 pid_file="$test_root/compositor.pid"
 child_pid_file="$test_root/child.pid"
+early_root_file="$test_root/early-root"
+wrapper_source="${SLEEPY_PRIVATE_WAYLAND_SOURCE:-$repo_root/tests/with-private-wayland.sh}"
 
 cleanup() {
     for pid_path in "$child_pid_file" "$pid_file"; do
@@ -12,6 +14,12 @@ cleanup() {
             leaked_pid="$(<"$pid_path")"
             kill "$leaked_pid" 2>/dev/null || true
             wait "$leaked_pid" 2>/dev/null || true
+        fi
+    done
+    for root_path_file in "$early_root_file"; do
+        if [[ -s "$root_path_file" ]]; then
+            private_root="$(<"$root_path_file")"
+            [[ -n "$private_root" ]] && rm -rf -- "$private_root"
         fi
     done
     rm -rf -- "$test_root"
@@ -128,7 +136,7 @@ HYPRLAND_INSTANCE_SIGNATURE=live-hyprland \
 SWAYSOCK=/live/sway.sock \
 I3SOCK=/live/i3.sock \
 DISPLAY=:99 \
-    bash "$repo_root/tests/with-private-wayland.sh" \
+    bash "$wrapper_source" \
         "$child_probe"
 status=$?
 set -e
@@ -173,6 +181,34 @@ while IFS='=' read -r _ private_path; do
         exit 1
     fi
 done <"$observed_file"
+
+fake_bin="$test_root/early-bin"
+mkdir -p "$fake_bin"
+cat >"$fake_bin/mkdir" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$(dirname -- "$2")" >"$SLEEPY_TEST_EARLY_ROOT_FILE"
+exit 72
+SH
+chmod 0700 "$fake_bin/mkdir"
+set +e
+PATH="$fake_bin:$PATH" \
+SLEEPY_TEST_EARLY_ROOT_FILE="$early_root_file" \
+SLEEPY_TEST_WAYLAND_COMPOSITOR="$fake_compositor" \
+SLEEPY_PRIVATE_WAYLAND_TIMEOUT_SECONDS=10 \
+    bash "$wrapper_source" true >/dev/null 2>&1
+early_status=$?
+set -e
+if [[ $early_status -ne 72 || ! -s "$early_root_file" ]]; then
+    printf 'FAIL: early setup failure probe did not reach the controlled mkdir failure\n' >&2
+    exit 1
+fi
+early_root="$(<"$early_root_file")"
+if [[ -e "$early_root" ]]; then
+    rm -rf -- "$early_root"
+    printf 'FAIL: private Wayland runner leaked its root after early setup failure\n' >&2
+    exit 1
+fi
 
 if ! rg -Fq 'tests/with-private-wayland.sh' "$repo_root/tests/run.sh"; then
     printf 'FAIL: full test runner must route real Quickshell host tests through private Wayland\n' >&2

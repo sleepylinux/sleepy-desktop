@@ -4,11 +4,17 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-qs-contract.XXXXXX")"
 socket_pid=""
+qs_child_pid_file="$test_root/qs-child.pid"
 
 cleanup() {
     if [[ -n "$socket_pid" ]]; then
         kill "$socket_pid" 2>/dev/null || true
         wait "$socket_pid" 2>/dev/null || true
+    fi
+    if [[ -s "$qs_child_pid_file" ]]; then
+        qs_child_pid="$(<"$qs_child_pid_file")"
+        kill "$qs_child_pid" 2>/dev/null || true
+        wait "$qs_child_pid" 2>/dev/null || true
     fi
     rm -rf -- "$test_root"
 }
@@ -55,6 +61,10 @@ chmod 0700 "$test_root/path-bin/quickshell"
 cat >"$test_root/explicit-bin/qs" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$0" "$@" >"$SLEEPY_EXPLICIT_MARKER"
+if [[ -n "${SLEEPY_FAKE_QS_CHILD_PID_FILE:-}" ]]; then
+    sleep 300 &
+    printf '%s\n' "$!" >"$SLEEPY_FAKE_QS_CHILD_PID_FILE"
+fi
 printf 'TASK7B_HOST_PASS\n'
 SH
 chmod 0700 "$test_root/explicit-bin/qs"
@@ -67,7 +77,8 @@ cp "$repo_root/tests/fixtures/task7b-sdk-full-snapshot.json" \
     "$test_root/sdk/fixtures/desktop-runtime/full-snapshot.json"
 cp "$repo_root/tests/fixtures/task7b-sdk-full-snapshot.json" \
     "$test_root/repository/tests/fixtures/task7b-sdk-full-snapshot.json"
-cp "$repo_root/tests/quickshell-core-host.sh" \
+host_source="${SLEEPY_HOST_SOURCE:-$repo_root/tests/quickshell-core-host.sh}"
+cp "$host_source" \
     "$test_root/repository/tests/quickshell-core-host.sh"
 
 run_host() {
@@ -106,6 +117,37 @@ if [[ $foreign_status -eq 0 || -e "$path_marker" || -e "$explicit_marker" ]]; th
 fi
 
 private_guard="$test_root/private-runtime/.sleepy-private-wayland.guard"
+symlink_guard_target="$test_root/symlink-guard-target"
+printf '%s\n' "$test_root/private-runtime" >"$symlink_guard_target"
+ln -s "$symlink_guard_target" "$private_guard"
+set +e
+run_host env XDG_RUNTIME_DIR="$test_root/private-runtime" \
+    WAYLAND_DISPLAY=test-wayland \
+    SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
+    bash "$test_root/repository/tests/quickshell-core-host.sh" software \
+        "$test_root/explicit-bin/qs" >/dev/null 2>&1
+symlink_guard_status=$?
+set -e
+rm -f -- "$private_guard"
+if [[ $symlink_guard_status -eq 0 || -e "$path_marker" || -e "$explicit_marker" ]]; then
+    printf 'FAIL: host accepted a symlinked private-run guard\n' >&2
+    exit 1
+fi
+
+printf '%s\n' "$test_root/live-runtime" >"$private_guard"
+set +e
+run_host env XDG_RUNTIME_DIR="$test_root/private-runtime" \
+    WAYLAND_DISPLAY=test-wayland \
+    SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
+    bash "$test_root/repository/tests/quickshell-core-host.sh" software \
+        "$test_root/explicit-bin/qs" >/dev/null 2>&1
+wrong_guard_status=$?
+set -e
+if [[ $wrong_guard_status -eq 0 || -e "$path_marker" || -e "$explicit_marker" ]]; then
+    printf 'FAIL: host accepted a private-run guard with the wrong runtime content\n' >&2
+    exit 1
+fi
+
 printf '%s\n' "$test_root/private-runtime" >"$private_guard"
 chmod 0600 "$private_guard"
 
@@ -135,9 +177,29 @@ if [[ $non_executable_status -eq 0 || -e "$path_marker" || -e "$explicit_marker"
     exit 1
 fi
 
+for non_absolute_qs in qs ./qs; do
+    set +e
+    (
+        cd "$test_root/explicit-bin"
+        run_host env XDG_RUNTIME_DIR="$test_root/private-runtime" \
+            WAYLAND_DISPLAY=test-wayland \
+            SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
+            bash "$test_root/repository/tests/quickshell-core-host.sh" software \
+                "$non_absolute_qs" >/dev/null 2>&1
+    )
+    non_absolute_status=$?
+    set -e
+    if [[ $non_absolute_status -eq 0 || -e "$path_marker" || -e "$explicit_marker" ]]; then
+        printf 'FAIL: host accepted bare or relative Quickshell executable %s\n' \
+            "$non_absolute_qs" >&2
+        exit 1
+    fi
+done
+
 run_host env XDG_RUNTIME_DIR="$test_root/private-runtime" \
     WAYLAND_DISPLAY=test-wayland \
     SLEEPY_PRIVATE_WAYLAND_GUARD="$private_guard" \
+    SLEEPY_FAKE_QS_CHILD_PID_FILE="$qs_child_pid_file" \
     bash "$test_root/repository/tests/quickshell-core-host.sh" software \
         "$test_root/explicit-bin/qs"
 
@@ -152,6 +214,16 @@ if [[ ${#invocation[@]} -ne 4 \
     || "${invocation[2]}" != "--path" \
     || "${invocation[3]}" != "$test_root/repository/tst_core_desktop_windows.qml" ]]; then
     printf 'FAIL: host did not invoke only the explicit Quickshell executable with fixed argv\n' >&2
+    exit 1
+fi
+if [[ ! -s "$qs_child_pid_file" ]]; then
+    printf 'FAIL: explicit fake Quickshell did not start its descendant probe\n' >&2
+    exit 1
+fi
+qs_child_pid="$(<"$qs_child_pid_file")"
+if kill -0 "$qs_child_pid" 2>/dev/null; then
+    printf 'FAIL: host gate left nested Quickshell descendant %s alive\n' \
+        "$qs_child_pid" >&2
     exit 1
 fi
 

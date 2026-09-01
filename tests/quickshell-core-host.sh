@@ -39,15 +39,20 @@ fi
 runtime_dir="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-qs-host.XXXXXX")"
 host_log="$runtime_dir/host.log"
 runner_pid=""
+runner_pgid=""
+owns_runner_group=false
 
 cleanup() {
-    if [[ -n "$runner_pid" ]] && kill -0 "$runner_pid" 2>/dev/null; then
-        kill -TERM -- "-$runner_pid" 2>/dev/null || true
+    if [[ "$owns_runner_group" == true && -n "$runner_pgid" ]] \
+            && kill -0 -- "-$runner_pgid" 2>/dev/null; then
+        kill -TERM -- "-$runner_pgid" 2>/dev/null || true
         for _ in $(seq 1 20); do
-            kill -0 "$runner_pid" 2>/dev/null || break
+            kill -0 -- "-$runner_pgid" 2>/dev/null || break
             sleep 0.05
         done
-        kill -KILL -- "-$runner_pid" 2>/dev/null || true
+        kill -KILL -- "-$runner_pgid" 2>/dev/null || true
+    fi
+    if [[ -n "$runner_pid" ]]; then
         wait "$runner_pid" 2>/dev/null || true
     fi
     rm -rf -- "$runtime_dir"
@@ -61,13 +66,17 @@ setsid env QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM=wayland \
         "$repo_root/tst_core_desktop_windows.qml" \
         >"$host_log" 2>&1 &
 runner_pid=$!
+runner_pgid="$runner_pid"
+owns_runner_group=true
 
-if ! wait "$runner_pid"; then
-    runner_pid=""
+set +e
+wait "$runner_pid"
+runner_status=$?
+set -e
+if [[ $runner_status -ne 0 ]]; then
     cat "$host_log" >&2
     exit 1
 fi
-runner_pid=""
 
 if ! rg -Fq 'TASK7B_HOST_PASS' "$host_log"; then
     cat "$host_log" >&2

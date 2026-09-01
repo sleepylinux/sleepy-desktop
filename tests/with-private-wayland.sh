@@ -108,25 +108,7 @@ if [[ ! "$timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
-runner_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-private-wayland.XXXXXX")"
-runtime_dir="$runner_root/runtime"
-private_home="$runner_root/home"
-private_cache="$runner_root/cache"
-private_config="$runner_root/config"
-private_data="$runner_root/data"
-private_state="$runner_root/state"
-private_guard="$runtime_dir/.sleepy-private-wayland.guard"
-compositor_config="$runner_root/sway.conf"
-compositor_log="$runner_root/sway.log"
-mkdir -p "$runtime_dir" "$private_home" "$private_cache" "$private_config" \
-    "$private_data" "$private_state"
-chmod 0700 "$runner_root" "$runtime_dir" "$private_home" "$private_cache" \
-    "$private_config" "$private_data" "$private_state"
-printf '%s\n' "$runtime_dir" >"$private_guard"
-chmod 0600 "$private_guard"
-printf 'xwayland disable\nseat seat0 fallback true\noutput * resolution 1280x720\n' \
-    >"$compositor_config"
-
+runner_root=""
 session_pid=""
 session_pgid=""
 owns_session_group=false
@@ -146,11 +128,32 @@ cleanup_session() {
     if [[ -n "$session_pid" ]]; then
         wait "$session_pid" 2>/dev/null || true
     fi
-    rm -rf -- "$runner_root"
+    if [[ -n "$runner_root" ]]; then
+        rm -rf -- "$runner_root"
+    fi
 }
+runner_root="$(mktemp -d "${TMPDIR:-/tmp}/sleepy-private-wayland.XXXXXX")"
 trap cleanup_session EXIT
 trap 'exit 143' TERM
 trap 'exit 130' INT
+
+runtime_dir="$runner_root/runtime"
+private_home="$runner_root/home"
+private_cache="$runner_root/cache"
+private_config="$runner_root/config"
+private_data="$runner_root/data"
+private_state="$runner_root/state"
+private_guard="$runtime_dir/.sleepy-private-wayland.guard"
+compositor_config="$runner_root/sway.conf"
+compositor_log="$runner_root/sway.log"
+mkdir -p "$runtime_dir" "$private_home" "$private_cache" "$private_config" \
+    "$private_data" "$private_state"
+chmod 0700 "$runner_root" "$runtime_dir" "$private_home" "$private_cache" \
+    "$private_config" "$private_data" "$private_state"
+printf '%s\n' "$runtime_dir" >"$private_guard"
+chmod 0600 "$private_guard"
+printf 'xwayland disable\nseat seat0 fallback true\noutput * resolution 1280x720\n' \
+    >"$compositor_config"
 
 unset WAYLAND_DISPLAY WAYLAND_SOCKET HYPRLAND_INSTANCE_SIGNATURE SWAYSOCK I3SOCK
 unset DISPLAY XAUTHORITY SLEEPY_PRIVATE_WAYLAND_ROOT SLEEPY_PRIVATE_WAYLAND_GUARD
@@ -159,11 +162,7 @@ setsid timeout --signal=TERM --kill-after=5s "$timeout_seconds" \
         "$runner_root" "$compositor" "$compositor_config" "$compositor_log" \
         "$@" &
 session_pid=$!
-session_pgid="$(ps -o pgid= -p "$session_pid" | tr -d '[:space:]')"
-if [[ "$session_pgid" != "$session_pid" ]]; then
-    printf 'FAIL: private Wayland supervisor did not receive its own process group\n' >&2
-    exit 1
-fi
+session_pgid="$session_pid"
 owns_session_group=true
 
 set +e

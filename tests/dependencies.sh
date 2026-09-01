@@ -162,10 +162,11 @@ if ! rg -Fq 'pkgs.util-linux' <<< "$qml_check_block" ||
   exit 1
 fi
 if ! rg -Fq 'unset WAYLAND_DISPLAY' <<< "$qml_check_block" ||
-    ! rg -Fq 'bash tests/with-private-wayland.sh bash tests/run.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash tests/run.sh' <<< "$qml_check_block" ||
+    rg -Fq 'bash tests/with-private-wayland.sh bash tests/run.sh' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway' \
       <<< "$qml_check_block"; then
-  printf 'FAIL: qml check must run the mandatory host gates inside its declared private Wayland compositor\n' >&2
+  printf 'FAIL: qml check must preserve Xvfb for aggregate tests and privately wrap only host gates\n' >&2
   exit 1
 fi
 if ! rg -Fq 'bash tests/with-private-wayland.sh' <<< "$qml_check_block" ||
@@ -217,13 +218,19 @@ if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/q
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export SLEEPY_TEST_QUICKSHELL=${quickshellWithModules}/bin/qs' \
-    <<< "$qml_check_block" ||
+mapfile -t quickshell_assignments < <(
+  rg 'SLEEPY_TEST_QUICKSHELL[[:space:]]*=' \
+    <<< "$qml_check_block" || true
+)
+if [[ ${#quickshell_assignments[@]} -ne 1 ]] ||
+    ! rg -q '^[[:space:]]*readonly SLEEPY_TEST_QUICKSHELL=\$\{quickshellWithModules\}/bin/qs$' \
+      <<< "${quickshell_assignments[0]:-}" ||
+    ! rg -q '^[[:space:]]*export SLEEPY_TEST_QUICKSHELL$' <<< "$qml_check_block" ||
     ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"' \
       "$repository_root/tests/run.sh" ||
     ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"' \
       "$repository_root/tests/run.sh"; then
-  printf 'FAIL: real host gates must receive the exact pinned Quickshell qs executable explicitly\n' >&2
+  printf 'FAIL: real host gates must receive one immutable pinned Quickshell qs executable explicitly\n' >&2
   exit 1
 fi
 if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
