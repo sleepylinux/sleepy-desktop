@@ -97,7 +97,7 @@ LockerEndpoint::LockerEndpoint(QObject *parent)
 
 LockerEndpoint::~LockerEndpoint()
 {
-    for (QLocalSocket *socket : std::as_const(pending_)) {
+    for (QLocalSocket *socket : std::as_const(clients_)) {
         socket->abort();
     }
     server_.close();
@@ -107,6 +107,11 @@ LockerEndpoint::~LockerEndpoint()
 bool LockerEndpoint::secure() const noexcept
 {
     return secure_;
+}
+
+bool LockerEndpoint::unlockAllowed() const noexcept
+{
+    return suspendHolds_.isEmpty();
 }
 
 void LockerEndpoint::setSecure(bool secure)
@@ -129,12 +134,12 @@ void LockerEndpoint::acceptConnections()
             continue;
         }
         socket->setParent(this);
-        if (!peerIsCurrentUser(socket) || pending_.size() >= kMaximumClients) {
+        if (!peerIsCurrentUser(socket) || clients_.size() >= kMaximumClients) {
             socket->disconnectFromServer();
             socket->deleteLater();
             continue;
         }
-        pending_.append(socket);
+        clients_.append(socket);
         socket->setProperty("requestAccepted", false);
         QTimer::singleShot(2000, socket, [socket] {
             if (!socket->property("requestAccepted").toBool()) {
@@ -144,7 +149,13 @@ void LockerEndpoint::acceptConnections()
         connect(socket, &QLocalSocket::readyRead, this,
                 [this, socket] { readRequest(socket); });
         connect(socket, &QLocalSocket::disconnected, this, [this, socket] {
+            const bool wasAllowed = unlockAllowed();
+            clients_.removeAll(socket);
             pending_.removeAll(socket);
+            suspendHolds_.removeAll(socket);
+            if (wasAllowed != unlockAllowed()) {
+                emit unlockAllowedChanged();
+            }
             socket->deleteLater();
         });
         readRequest(socket);
@@ -161,15 +172,31 @@ void LockerEndpoint::readRequest(QLocalSocket *socket)
         return;
     }
     const QByteArray request = socket->readLine(kMaximumRequestBytes + 1);
-    if (request != QByteArrayLiteral("lock\n") || socket->bytesAvailable() != 0) {
+    if (socket->bytesAvailable() != 0) {
         socket->write("error\n");
         socket->disconnectFromServer();
         return;
     }
     disconnect(socket, &QLocalSocket::readyRead, nullptr, nullptr);
     socket->setProperty("requestAccepted", true);
-    QTimer::singleShot(5000, socket, [socket] {
-        if (socket->state() != QLocalSocket::UnconnectedState) {
+
+    if (request == QByteArrayLiteral("status\n")) {
+        socket->write(secure_ ? "locked\n" : "unlocked\n");
+        socket->flush();
+        socket->disconnectFromServer();
+        return;
+    }
+    if (request != QByteArrayLiteral("lock\n")
+        && request != QByteArrayLiteral("suspend\n")) {
+        socket->write("error\n");
+        socket->disconnectFromServer();
+        return;
+    }
+
+    socket->setProperty("suspendHold", request == QByteArrayLiteral("suspend\n"));
+    pending_.append(socket);
+    QTimer::singleShot(5000, socket, [this, socket] {
+        if (pending_.contains(socket)) {
             socket->disconnectFromServer();
         }
     });
@@ -183,11 +210,19 @@ void LockerEndpoint::readRequest(QLocalSocket *socket)
 void LockerEndpoint::acknowledgePending()
 {
     const auto clients = pending_;
-    pending_.clear();
     for (QLocalSocket *socket : clients) {
+        pending_.removeAll(socket);
         socket->write("locked\n");
         socket->flush();
-        socket->disconnectFromServer();
+        if (socket->property("suspendHold").toBool()) {
+            const bool wasAllowed = unlockAllowed();
+            suspendHolds_.append(socket);
+            if (wasAllowed != unlockAllowed()) {
+                emit unlockAllowedChanged();
+            }
+        } else {
+            socket->disconnectFromServer();
+        }
     }
 }
 

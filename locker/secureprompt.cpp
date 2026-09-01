@@ -227,6 +227,7 @@ public:
 
     [[nodiscard]] std::span<const char> value() const noexcept { return {bytes_, size_}; }
     [[nodiscard]] int codePoints() const noexcept { return codePoints_; }
+    [[nodiscard]] int utf16Units() const noexcept { return utf16Units_; }
 
     void append(QStringView text)
     {
@@ -261,6 +262,7 @@ public:
             size_ += count;
             byteOffset += count;
             ++codePoints_;
+            utf16Units_ += codePoint > 0xffff ? 2 : 1;
         }
         explicit_bzero(encoded.data(), encoded.size());
     }
@@ -275,9 +277,11 @@ public:
                && (static_cast<unsigned char>(bytes_[first]) & 0xc0U) == 0x80U) {
             --first;
         }
-        explicit_bzero(bytes_ + first, size_ - first);
+        const std::size_t removedBytes = size_ - first;
+        explicit_bzero(bytes_ + first, removedBytes);
         size_ = first;
         --codePoints_;
+        utf16Units_ -= removedBytes == 4 ? 2 : 1;
     }
 
     bool replace(int replacementStart, int replacementLength, QStringView text)
@@ -285,33 +289,50 @@ public:
         if (replacementStart > 0 || replacementLength < 0) {
             return false;
         }
-        const int firstCodePoint = codePoints_ + replacementStart;
-        const int lastCodePoint = firstCodePoint + replacementLength;
-        if (firstCodePoint < 0 || lastCodePoint < firstCodePoint
-            || lastCodePoint > codePoints_) {
+        const qint64 firstUtf16 = static_cast<qint64>(utf16Units_) + replacementStart;
+        const qint64 lastUtf16 = firstUtf16 + replacementLength;
+        if (firstUtf16 < 0 || lastUtf16 < firstUtf16 || lastUtf16 > utf16Units_) {
             return false;
         }
 
-        const auto byteOffset = [this](int targetCodePoint) {
+        const auto locateUtf16 = [this](int targetUtf16, std::size_t &byteOffset,
+                                        int &codePointOffset) {
+            int currentUtf16 = 0;
             int currentCodePoint = 0;
             std::size_t offset = 0;
-            while (offset < size_ && currentCodePoint < targetCodePoint) {
-                ++offset;
-                while (offset < size_
-                       && (static_cast<unsigned char>(bytes_[offset]) & 0xc0U) == 0x80U) {
-                    ++offset;
+            while (offset < size_ && currentUtf16 < targetUtf16) {
+                const unsigned char lead = static_cast<unsigned char>(bytes_[offset]);
+                const std::size_t byteCount = lead < 0x80U ? 1
+                    : lead < 0xe0U ? 2 : lead < 0xf0U ? 3 : 4;
+                const int characterUtf16 = byteCount == 4 ? 2 : 1;
+                if (currentUtf16 + characterUtf16 > targetUtf16) {
+                    return false;
                 }
+                offset += byteCount;
+                currentUtf16 += characterUtf16;
                 ++currentCodePoint;
             }
-            return offset;
+            if (currentUtf16 != targetUtf16) {
+                return false;
+            }
+            byteOffset = offset;
+            codePointOffset = currentCodePoint;
+            return true;
         };
-        const std::size_t firstByte = byteOffset(firstCodePoint);
-        const std::size_t lastByte = byteOffset(lastCodePoint);
+        std::size_t firstByte = 0;
+        std::size_t lastByte = 0;
+        int firstCodePoint = 0;
+        int lastCodePoint = 0;
+        if (!locateUtf16(static_cast<int>(firstUtf16), firstByte, firstCodePoint)
+            || !locateUtf16(static_cast<int>(lastUtf16), lastByte, lastCodePoint)) {
+            return false;
+        }
         const std::size_t removedBytes = lastByte - firstByte;
         std::memmove(bytes_ + firstByte, bytes_ + lastByte, size_ - lastByte);
         size_ -= removedBytes;
         explicit_bzero(bytes_ + size_, removedBytes);
-        codePoints_ -= replacementLength;
+        codePoints_ -= lastCodePoint - firstCodePoint;
+        utf16Units_ -= replacementLength;
         insertAt(firstByte, text);
         return true;
     }
@@ -323,6 +344,7 @@ public:
         }
         size_ = 0;
         codePoints_ = 0;
+        utf16Units_ = 0;
     }
 
 #ifdef SLEEPY_LOCKER_TESTING
@@ -338,6 +360,7 @@ private:
     char *bytes_ = nullptr;
     std::size_t size_ = 0;
     int codePoints_ = 0;
+    int utf16Units_ = 0;
 };
 
 SecurePrompt::SecurePrompt(QQuickItem *parent)
@@ -430,7 +453,7 @@ QVariant SecurePrompt::inputMethodQuery(Qt::InputMethodQuery query) const
             Qt::ImhHiddenText | Qt::ImhSensitiveData | Qt::ImhNoPredictiveText));
     case Qt::ImCursorPosition:
     case Qt::ImAnchorPosition:
-        return inputLength_;
+        return secret_->utf16Units();
     case Qt::ImSurroundingText:
     case Qt::ImCurrentSelection:
         return QString();

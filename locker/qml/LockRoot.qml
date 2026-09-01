@@ -10,6 +10,7 @@ Scope {
     readonly property bool secure: sessionLock.secure
 
     LockerEndpoint {
+        id: endpoint
         secure: sessionLock.secure
         onLockRequested: root.lockRequested = true
     }
@@ -44,7 +45,7 @@ Scope {
                 onAuthenticated: {
                     // The native successful PAM result is the sole trigger for
                     // the protocol's unlock-and-destroy request.
-                    if (sessionLock.secure)
+                    if (sessionLock.secure && endpoint.unlockAllowed)
                         sessionLock.unlock();
                 }
 

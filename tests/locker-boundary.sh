@@ -66,6 +66,12 @@ rg -Fq 'lock' "$locker/main.cpp" \
   || fail 'locker endpoint must accept a lock request'
 rg -Fq 'locked' "$locker/main.cpp" \
   || fail 'locker endpoint must acknowledge only confirmed secure state'
+rg -Fq 'status\n' "$locker/main.cpp" \
+  || fail 'locker endpoint must be the authoritative secure-state source'
+rg -Fq 'suspend\n' "$locker/main.cpp" \
+  || fail 'suspend must hold PAM unlock across the sleep transition'
+rg -Fq 'unlockAllowed' "$locker/qml/LockRoot.qml" \
+  || fail 'PAM success must not unlock while a suspend transaction is held'
 rg -Fq 'URI Sleepy.Locker.Native' "$locker/CMakeLists.txt" \
   || fail 'native secure prompt and endpoint must be a dedicated QML plugin'
 if rg -Fq 'QQmlApplicationEngine' "$locker/main.cpp"; then

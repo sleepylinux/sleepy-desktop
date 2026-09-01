@@ -142,7 +142,7 @@ private slots:
     void inputMethodIsPrivateAndHonorsReplacementRanges()
     {
         FakeAuthenticator auth;
-        auth.expected = QByteArray("a\xc3\xa7" "b");
+        auth.expected = QByteArray("a\xc3\xa7Xb");
         SecurePrompt prompt(&auth);
 
         QCOMPARE(prompt.inputMethodQuery(Qt::ImEnabled).toBool(), true);
@@ -151,16 +151,21 @@ private slots:
         QVERIFY(hints.testFlag(Qt::ImhSensitiveData));
         QVERIFY(hints.testFlag(Qt::ImhNoPredictiveText));
 
-        type(prompt, QStringLiteral("ab"));
+        type(prompt, QStringLiteral("a😀b"));
+        QCOMPARE(prompt.inputLength(), 3);
+        QCOMPARE(prompt.inputMethodQuery(Qt::ImCursorPosition).toInt(), 4);
+
         QInputMethodEvent insertion;
         insertion.setCommitString(QStringLiteral("X"), -1, 0);
         QCoreApplication::sendEvent(&prompt, &insertion);
-        QCOMPARE(prompt.inputLength(), 3);
+        QCOMPARE(prompt.inputLength(), 4);
+        QCOMPARE(prompt.inputMethodQuery(Qt::ImCursorPosition).toInt(), 5);
 
         QInputMethodEvent replacement;
-        replacement.setCommitString(QStringLiteral("ç"), -2, 1);
+        replacement.setCommitString(QStringLiteral("ç"), -4, 2);
         QCoreApplication::sendEvent(&prompt, &replacement);
-        QCOMPARE(prompt.inputLength(), 3);
+        QCOMPARE(prompt.inputLength(), 4);
+        QCOMPARE(prompt.inputMethodQuery(Qt::ImCursorPosition).toInt(), 4);
         QVERIFY(prompt.authenticate());
         QCOMPARE(auth.observed, auth.expected);
         QVERIFY(prompt.secretStorageIsZeroForTesting());
@@ -207,6 +212,63 @@ private slots:
             endpoint.setSecure(true);
             QTRY_VERIFY(client.canReadLine());
             QCOMPARE(client.readLine(), QByteArrayLiteral("locked\n"));
+        }
+
+        if (oldRuntime.isNull()) qunsetenv("XDG_RUNTIME_DIR");
+        else qputenv("XDG_RUNTIME_DIR", oldRuntime);
+        if (oldSocket.isNull()) qunsetenv("SLEEPY_LOCKER_SOCKET");
+        else qputenv("SLEEPY_LOCKER_SOCKET", oldSocket);
+    }
+
+    void privateEndpointReportsAuthoritativeStatusAndHoldsSuspendAcrossSleep()
+    {
+        QTemporaryDir runtime;
+        QVERIFY(runtime.isValid());
+        const QByteArray oldRuntime = qgetenv("XDG_RUNTIME_DIR");
+        const QByteArray oldSocket = qgetenv("SLEEPY_LOCKER_SOCKET");
+        qputenv("XDG_RUNTIME_DIR", runtime.path().toUtf8());
+        qunsetenv("SLEEPY_LOCKER_SOCKET");
+
+        {
+            LockerEndpoint endpoint;
+            const QString socketPath = runtime.path() + QStringLiteral("/sleepy/locker.sock");
+
+            QLocalSocket initialStatus;
+            initialStatus.connectToServer(socketPath);
+            QVERIFY(initialStatus.waitForConnected(1000));
+            QCOMPARE(initialStatus.write("status\n"), 7);
+            QVERIFY(initialStatus.waitForBytesWritten(1000));
+            QTRY_VERIFY(initialStatus.canReadLine());
+            QCOMPARE(initialStatus.readLine(), QByteArrayLiteral("unlocked\n"));
+
+            QSignalSpy requested(&endpoint, &LockerEndpoint::lockRequested);
+            QSignalSpy holdChanged(&endpoint, &LockerEndpoint::unlockAllowedChanged);
+            QLocalSocket suspend;
+            suspend.connectToServer(socketPath);
+            QVERIFY(suspend.waitForConnected(1000));
+            QCOMPARE(suspend.write("suspend\n"), 8);
+            QVERIFY(suspend.waitForBytesWritten(1000));
+            QTRY_COMPARE(requested.count(), 1);
+            QVERIFY(endpoint.unlockAllowed());
+
+            endpoint.setSecure(true);
+            QTRY_VERIFY(suspend.canReadLine());
+            QCOMPARE(suspend.readLine(), QByteArrayLiteral("locked\n"));
+            QCOMPARE(suspend.state(), QLocalSocket::ConnectedState);
+            QVERIFY(!endpoint.unlockAllowed());
+            QCOMPARE(holdChanged.count(), 1);
+
+            QLocalSocket lockedStatus;
+            lockedStatus.connectToServer(socketPath);
+            QVERIFY(lockedStatus.waitForConnected(1000));
+            QCOMPARE(lockedStatus.write("status\n"), 7);
+            QVERIFY(lockedStatus.waitForBytesWritten(1000));
+            QTRY_VERIFY(lockedStatus.canReadLine());
+            QCOMPARE(lockedStatus.readLine(), QByteArrayLiteral("locked\n"));
+
+            suspend.disconnectFromServer();
+            QTRY_VERIFY(endpoint.unlockAllowed());
+            QCOMPARE(holdChanged.count(), 2);
         }
 
         if (oldRuntime.isNull()) qunsetenv("XDG_RUNTIME_DIR");
