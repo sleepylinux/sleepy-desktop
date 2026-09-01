@@ -137,8 +137,9 @@
       "path": "src/services/**",
       "upstreamPath": "services/**",
       "category": "compatibility",
-      "reason": "Expose Sleepy protocol-v3 compatibility providers and renamed upstream-facing service APIs without a Caelestia runtime dependency.",
+      "reason": "Keep the renamed upstream service APIs while allowing audited native Quickshell providers and fixed-argv platform tools; session-owned actions stay behind typed Sleepy session IPC.",
       "tests": [
+        "tests/direct-integrations.sh#Direct provider registry and command-safety gate",
         "tests/service-boundary.sh#Sleepy service boundary gate",
         "tests/runtime-names.sh#Sleepy runtime identity gate"
       ]

@@ -1,171 +1,225 @@
-// SPDX-License-Identifier: GPL-3.0-only
-// Modified for Sleepy on 2026-08-31: compositor state is daemon-published.
-
 pragma Singleton
 
 import QtQuick
 import Quickshell
-import "DesktopCommands.js" as DesktopCommands
+import Quickshell.Hyprland
+import Quickshell.Io
+import Sleepy.Config
+import Sleepy.Services
+import qs.components.misc
 
 Singleton {
     id: root
 
-    readonly property var compositorCapability: DesktopModel.capabilityData(
-        "compositor", "hyprland",
-        {"monitors": [], "workspaces": [], "windows": [], "focusedMonitorId": "",
-         "focusedWorkspaceId": "", "focusedWindowId": "", "keyboard": {},
-         "options": {}, "devices": []})
-    readonly property list<var> monitorList: (compositorCapability.monitors || []).map(monitorRecord)
-    readonly property list<var> workspaceList: (compositorCapability.workspaces || []).map(workspaceRecord)
-    readonly property list<var> windowList: (compositorCapability.windows || []).map(windowRecord)
-    readonly property alias monitors: monitorsModel
-    readonly property alias workspaces: workspacesModel
-    readonly property alias toplevels: toplevelsModel
-    readonly property bool usingLua: false
-    readonly property var focusedMonitor: monitorList.find(item => item.id === compositorCapability.focusedMonitorId)
-                                          || (monitorList.length ? monitorList[0] : null)
-    readonly property var focusedWorkspace: workspaceList.find(item => item.id === compositorCapability.focusedWorkspaceId)
-                                            || (workspaceList.length ? workspaceList[0] : null)
-    readonly property var activeToplevel: windowList.find(item => item.id === compositorCapability.focusedWindowId)
-                                           || null
-    readonly property int activeWsId: Number.parseInt(focusedWorkspace?.id || "1", 10) || 1
-    readonly property var keyboard: compositorCapability.keyboard || {}
-    readonly property bool capsLock: Boolean(keyboard.capsLock)
-    readonly property bool numLock: Boolean(keyboard.numLock)
-    readonly property string defaultKbLayout: keyboard.defaultLayout || keyboard.layout || ""
-    readonly property string kbLayoutFull: keyboard.layout || defaultKbLayout
-    readonly property string kbLayout: kbLayoutFull.split(",")[0] || ""
-    readonly property var kbMap: keyboard.layoutMap || {}
-    readonly property var options: compositorCapability.options || {}
-    readonly property var devices: compositorCapability.devices || []
-    readonly property string lastSpecialWorkspace: compositorCapability.lastSpecialWorkspace || ""
-    readonly property alias extras: extrasModel
+    readonly property bool available: Hyprland.monitors.values.length > 0
+    readonly property bool busy: false
+    readonly property string lastError: ""
+    readonly property var toplevels: Hyprland.toplevels
+    readonly property var workspaces: Hyprland.workspaces
+    readonly property var monitors: Hyprland.monitors
+    readonly property bool usingLua: Hyprland.usingLua
+
+    readonly property HyprlandToplevel activeToplevel: {
+        const t = Hyprland.activeToplevel;
+        return t?.workspace?.name.startsWith("special:") || Hyprland.focusedWorkspace?.toplevels.values.length > 0 ? t : null;
+    }
+    readonly property HyprlandWorkspace focusedWorkspace: Hyprland.focusedWorkspace
+    readonly property HyprlandMonitor focusedMonitor: Hyprland.focusedMonitor
+    readonly property int activeWsId: focusedWorkspace?.id ?? 1
+
+    readonly property HyprKeyboard keyboard: extras.devices.keyboards.find(kb => kb.main) ?? null
+    readonly property bool capsLock: keyboard?.capsLock ?? false
+    readonly property bool numLock: keyboard?.numLock ?? false
+    readonly property string defaultKbLayout: keyboard?.layout.split(",")[0] ?? "??"
+    readonly property string kbLayoutFull: keyboard?.activeKeymap ?? "Unknown"
+    readonly property string kbLayout: kbMap.get(kbLayoutFull) ?? "??"
+    readonly property var kbMap: new Map()
+
+    readonly property alias extras: extras
+    readonly property alias options: extras.options
+    readonly property alias devices: extras.devices
+
+    property string lastSpecialWorkspace: ""
 
     signal configReloaded
 
-    function windowRecord(window: var): var {
-        const workspaceId = String(window.workspaceId || window.workspace?.id || "");
-        const rawWorkspace = (root.compositorCapability.workspaces || [])
-            .find(item => String(item.id || item.name || "") === workspaceId) || null;
-        const workspace = rawWorkspace ? Object.assign({
-            "id": workspaceId,
-            "name": rawWorkspace.name || workspaceId
-        }, rawWorkspace) : null;
-        return Object.assign({
-            "id": window.id || window.address || "",
-            "address": window.address || window.id || "",
-            "title": window.title || "",
-            "appId": window.appId || window.class || "",
-            "workspace": workspace,
-            "wayland": null,
-            "lastIpcObject": {
-                "address": window.address || window.id || "",
-                "class": window.class || window.appId || "",
-                "fullscreen": window.fullscreen ? 2 : 0,
-                "floating": Boolean(window.floating),
-                "pinned": Boolean(window.pinned)
+    function dispatch(request: string): void {
+        Hyprland.dispatch(request);
+    }
+
+    function refresh(): void {
+        Hyprland.refreshMonitors();
+        Hyprland.refreshWorkspaces();
+        Hyprland.refreshToplevels();
+        extras.refreshOptions();
+        extras.refreshDevices();
+    }
+
+    function cycleSpecialWorkspace(direction: string): void {
+        const openSpecials = workspaces.values.filter(w => w.name.startsWith("special:") && w.lastIpcObject.windows > 0);
+
+        if (openSpecials.length === 0)
+            return;
+
+        const activeSpecial = focusedMonitor.lastIpcObject.specialWorkspace.name ?? "";
+
+        if (!activeSpecial) {
+            if (lastSpecialWorkspace) {
+                const workspace = workspaces.values.find(w => w.name === lastSpecialWorkspace);
+                if (workspace && workspace.lastIpcObject.windows > 0) {
+                    dispatch(usingLua ? `hl.dsp.focus({ workspace = "${lastSpecialWorkspace}" })` : `workspace ${lastSpecialWorkspace}`);
+                    return;
+                }
             }
-        }, window);
-    }
+            dispatch(usingLua ? `hl.dsp.focus({ workspace = "${openSpecials[0].name}" })` : `workspace ${openSpecials[0].name}`);
+            return;
+        }
 
-    function workspaceRecord(workspace: var): var {
-        const id = String(workspace.id || workspace.name || "");
-        const values = (root.compositorCapability.windows || [])
-            .filter(window => String(window.workspaceId || window.workspace?.id || "") === id)
-            .map(windowRecord);
-        return Object.assign({
-            "id": id,
-            "name": workspace.name || id,
-            "monitor": root.monitorList.find(monitor => monitor.id === workspace.monitorId) || null,
-            "toplevels": {"values": values},
-            "lastIpcObject": {
-                "id": Number.parseInt(id, 10) || 0,
-                "name": workspace.name || id,
-                "specialWorkspace": workspace.specialWorkspace || null
-            }
-        }, workspace);
-    }
+        const currentIndex = openSpecials.findIndex(w => w.name === activeSpecial);
+        let nextIndex = 0;
 
-    function monitorRecord(monitor: var): var {
-        return Object.assign({
-            "id": monitor.id || monitor.name || "",
-            "name": monitor.name || monitor.id || "",
-            "lastIpcObject": {
-                "name": monitor.name || monitor.id || "",
-                "specialWorkspace": monitor.specialWorkspace || null
-            }
-        }, monitor);
-    }
+        if (currentIndex !== -1) {
+            if (direction === "next")
+                nextIndex = (currentIndex + 1) % openSpecials.length;
+            else
+                nextIndex = (currentIndex - 1 + openSpecials.length) % openSpecials.length;
+        }
 
-    function dispatch(_request: var): bool {
-        return false;
-    }
-
-    function cycleSpecialWorkspace(direction: int): bool {
-        void(direction);
-        return false;
+        dispatch(usingLua ? `hl.dsp.focus({ workspace = "${openSpecials[nextIndex].name}" })` : `workspace ${openSpecials[nextIndex].name}`);
     }
 
     function monitorNames(): list<string> {
-        return root.monitorList.map(monitor => monitor.name || monitor.id).filter(name => name && name.length);
+        return monitors.values.map(e => e.name);
     }
 
-    function monitorFor(screen: var): var {
-        if (!screen)
-            return root.focusedMonitor;
-        const name = screen.name || screen.model || String(screen);
-        return root.monitorList.find(monitor => monitor.name === name || monitor.id === name)
-            || root.focusedMonitor;
+    function monitorFor(screen: ShellScreen): HyprlandMonitor {
+        return Hyprland.monitorFor(screen);
     }
 
-    function toplevelsForWs(workspaceId: int): list<var> {
-        return root.windowList.filter(window =>
-            Number.parseInt(window.workspaceId || window.workspace?.id || "0", 10) === workspaceId);
+    function toplevelsForWs(ws: int): list<HyprlandToplevel> {
+        return toplevels.values.filter(t => t.workspace && t.workspace.id === ws && !isToplevelIgnored(t));
     }
 
-    function isToplevelIgnored(toplevel: var): bool {
-        return Boolean(toplevel?.ignored);
+    function isToplevelIgnored(toplevel: HyprlandToplevel): bool {
+        const ipc = toplevel?.lastIpcObject;
+        if (!ipc?.class || !ipc.mapped)
+            return true;
+
+        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
+        return ipc.tags?.some(tag => ignoredTags.includes(tag.replace(/\*$/, ""))) ?? false;
     }
 
-    function reloadDynamicConfs(): bool {
-        return false;
+    function reloadDynamicConfs(): void {
+        if (usingLua) {
+            extras.batchMessage(['eval hl.bind("Caps_Lock", hl.dsp.global("sleepy:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true, release = true })', 'eval hl.bind("Num_Lock", hl.dsp.global("sleepy:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true, release = true })']);
+        } else {
+            extras.batchMessage(["keyword bindlni ,Caps_Lock,global,sleepy:refreshDevices", "keyword bindlni ,Num_Lock,global,sleepy:refreshDevices"]);
+        }
     }
 
-    function refreshDevices(): bool {
-        return false;
-    }
+    onUsingLuaChanged: reloadDynamicConfs()
+    Component.onCompleted: reloadDynamicConfs()
 
-    QtObject {
-        id: monitorsModel
+    Connections {
+        function onRawEvent(event: HyprlandEvent): void {
+            const n = event.name;
+            if (n.endsWith("v2"))
+                return;
 
-        readonly property list<var> values: root.monitorList
-    }
-
-    QtObject {
-        id: workspacesModel
-
-        readonly property list<var> values: root.workspaceList
-    }
-
-    QtObject {
-        id: toplevelsModel
-
-        readonly property list<var> values: root.windowList
-    }
-
-    QtObject {
-        id: extrasModel
-
-        readonly property var options: root.options
-        readonly property var devices: root.devices
-
-        function applyOptions(_updates: var): bool {
-            return false;
+            if (n === "configreloaded") {
+                root.configReloaded();
+                root.reloadDynamicConfs();
+            } else if (["workspace", "moveworkspace", "activespecial", "focusedmon"].includes(n)) {
+                Hyprland.refreshWorkspaces();
+                Hyprland.refreshMonitors();
+            } else if (["openwindow", "closewindow", "movewindow"].includes(n)) {
+                Hyprland.refreshToplevels();
+                Hyprland.refreshWorkspaces();
+            } else if (n.includes("mon")) {
+                Hyprland.refreshMonitors();
+            } else if (n.includes("workspace")) {
+                Hyprland.refreshWorkspaces();
+            } else if (n.includes("window") || n.includes("group") || ["pin", "fullscreen", "changefloatingmode", "minimize"].includes(n)) {
+                Hyprland.refreshToplevels();
+            }
         }
 
-        function message(messageName: string): bool {
-            void(messageName);
-            return false;
+        target: Hyprland
+    }
+
+    Connections {
+        function onLastIpcObjectChanged(): void {
+            const specialName = root.focusedMonitor.lastIpcObject.specialWorkspace.name;
+
+            if (specialName && specialName.startsWith("special:")) {
+                root.lastSpecialWorkspace = specialName;
+            }
         }
+
+        target: root.focusedMonitor
+    }
+
+    FileView {
+        id: kbLayoutFile
+
+        path: Quickshell.env("SLEEPY_XKB_RULES_PATH") || "/usr/share/X11/xkb/rules/base.lst"
+        onLoaded: {
+            const layoutMatch = text().match(/! layout\n([\s\S]*?)\n\n/);
+            if (layoutMatch) {
+                const lines = layoutMatch[1].split("\n");
+                for (const line of lines) {
+                    if (!line.trim() || line.trim().startsWith("!"))
+                        continue;
+
+                    const match = line.match(/^\s*([a-z]{2,})\s+([a-zA-Z() ]+)$/);
+                    if (match)
+                        root.kbMap.set(match[2], match[1]);
+                }
+            }
+
+            const variantMatch = text().match(/! variant\n([\s\S]*?)\n\n/);
+            if (variantMatch) {
+                const lines = variantMatch[1].split("\n");
+                for (const line of lines) {
+                    if (!line.trim() || line.trim().startsWith("!"))
+                        continue;
+
+                    const match = line.match(/^\s*([a-zA-Z0-9_-]+)\s+([a-z]{2,}): (.+)$/);
+                    if (match)
+                        root.kbMap.set(match[3], match[2]);
+                }
+            }
+        }
+    }
+
+    IpcHandler {
+        function refreshDevices(): void {
+            extras.refreshDevices();
+        }
+
+        function cycleSpecialWorkspace(direction: string): void {
+            root.cycleSpecialWorkspace(direction);
+        }
+
+        function listSpecialWorkspaces(): string {
+            return root.workspaces.values.filter(w => w.name.startsWith("special:") && w.lastIpcObject.windows > 0).map(w => w.name).join("\n");
+        }
+
+        target: "hypr"
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "refreshDevices"
+        description: "Reload devices"
+        onPressed: extras.refreshDevices()
+        onReleased: extras.refreshDevices()
+    }
+
+    HyprExtras {
+        id: extras
+
+        usingLua: Hyprland.usingLua
     }
 }

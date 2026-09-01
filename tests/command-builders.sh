@@ -9,6 +9,14 @@ if [[ ! -f "$repo_root/src/services/DesktopCommands.js" ]]; then
   failed=1
 fi
 
+for direct_provider in Hypr.qml Nmcli.qml Audio.qml Brightness.qml Players.qml Notifs.qml; do
+  if rg -n 'CommandClient\.|DesktopCommands\.' "$repo_root/src/services/$direct_provider"; then
+    printf 'FAIL: %s is registered as direct and must not use the sleepy-sessiond command builder\n' \
+      "$direct_provider" >&2
+    failed=1
+  fi
+done
+
 if rg -n '"type":[[:space:]]*"(setOutputVolume|setInputVolume|setDefaultOutput|setDefaultInput|previewWallpaper|stopWallpaperPreview|refreshWeather|dismiss|invoke|reloadDynamicConfig|refreshDevices|cycleSpecialWorkspace|message|play|pause|toggle|stop)"' \
     "$repo_root/src/services" --glob '*.qml'; then
   printf 'FAIL: active service code emits command variants outside the reviewed SDK v3 schema\n' >&2

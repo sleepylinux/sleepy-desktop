@@ -1,173 +1,192 @@
-// SPDX-License-Identifier: GPL-3.0-only
-// Modified for Sleepy on 2026-08-31: audio state and mutations are daemon-owned.
-
 pragma Singleton
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Pipewire
+import Sleepy
 import Sleepy.Config
-import "DesktopCommands.js" as DesktopCommands
+import Sleepy.Services
 
 Singleton {
     id: root
 
-    readonly property var audioCapability: DesktopModel.capabilityData(
-        "system", "audio", {"nodes": [], "streams": [], "visualiser": [], "meters": {}})
-    readonly property list<var> sinks: audioNodes("output")
-    readonly property list<var> sources: audioNodes("input")
-    readonly property list<var> streams: (audioCapability.streams || []).map(streamNode)
-    readonly property var sink: sinks.find(node => node.isDefault) || (sinks.length ? sinks[0] : null)
-    readonly property var source: sources.find(node => node.isDefault) || (sources.length ? sources[0] : null)
-    readonly property bool muted: Boolean(sink?.audio?.muted)
-    readonly property real volume: numberOr(sink?.audio?.volume, 0)
-    readonly property bool sourceMuted: Boolean(source?.audio?.muted)
-    readonly property real sourceVolume: numberOr(source?.audio?.volume, 0)
+    readonly property bool available: sink !== null || source !== null
+    readonly property bool busy: false
+    readonly property string lastError: ""
+    property string previousSinkName: ""
+    property string previousSourceName: ""
+
+    property list<PwNode> sinks: []
+    property list<PwNode> sources: []
+    property list<PwNode> streams: []
+
+    readonly property PwNode sink: Pipewire.defaultAudioSink
+    readonly property PwNode source: Pipewire.defaultAudioSource
+
+    readonly property bool muted: !!sink?.audio?.muted
+    readonly property real volume: sink?.audio?.volume ?? 0
+
+    readonly property bool sourceMuted: !!source?.audio?.muted
+    readonly property real sourceVolume: source?.audio?.volume ?? 0
+
     readonly property alias cava: cava
     readonly property alias beatTracker: beatTracker
 
-    function numberOr(value: var, fallback: real): real {
-        return Number.isFinite(value) ? value : fallback;
+    function setVolume(newVolume: real): void {
+        if (sink?.ready && sink?.audio) {
+            sink.audio.muted = false;
+            sink.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        }
     }
 
-    function clampVolume(value: real): real {
-        return Math.max(0, Math.min(GlobalConfig.services.maxVolume, value));
+    function incrementVolume(amount: real): void {
+        setVolume(volume + (amount || GlobalConfig.services.audioIncrement));
     }
 
-    function audioNodes(kind: string): list<var> {
-        return (audioCapability.nodes || [])
-            .filter(node => node.kind === kind)
-            .map(node => audioNode(node));
+    function decrementVolume(amount: real): void {
+        setVolume(volume - (amount || GlobalConfig.services.audioIncrement));
     }
 
-    function audioNode(node: var): var {
-        const volume = root.numberOr(node.volume, 0);
-        const muted = Boolean(node.muted);
-        return {
-            "id": node.id || node.name || "",
-            "name": node.name || node.description || node.id || "",
-            "description": node.description || node.name || node.id || qsTr("Unknown Device"),
-            "ready": node.ready ?? true,
-            "isSink": node.kind === "output",
-            "isStream": false,
-            "isDefault": Boolean(node.isDefault),
-            "properties": node.properties || {},
-            "audio": {
-                "volume": volume,
-                "muted": muted
-            }
-        };
+    function setSourceVolume(newVolume: real): void {
+        if (source?.ready && source?.audio) {
+            source.audio.muted = false;
+            source.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        }
     }
 
-    function streamNode(node: var): var {
-        const mapped = root.audioNode(Object.assign({"kind": "stream"}, node));
-        mapped.isStream = true;
-        mapped.applicationName = node.applicationName || mapped.properties["application.name"] || mapped.name;
-        return mapped;
+    function incrementSourceVolume(amount: real): void {
+        setSourceVolume(sourceVolume + (amount || GlobalConfig.services.audioIncrement));
     }
 
-    function nodeId(node: var): string {
-        return node?.id || node?.name || "";
+    function decrementSourceVolume(amount: real): void {
+        setSourceVolume(sourceVolume - (amount || GlobalConfig.services.audioIncrement));
     }
 
-    function setVolume(newVolume: real): bool {
-        if (!root.sink)
-            return false;
-        const command = DesktopCommands.audioSetNodeVolume(
-            root.nodeId(root.sink), root.clampVolume(newVolume));
-        return command ? CommandClient.system(command) : false;
+    function setAudioSink(newSink: PwNode): void {
+        Pipewire.preferredDefaultAudioSink = newSink;
     }
 
-    function incrementVolume(amount: real): bool {
-        return root.setVolume(root.volume + (amount || GlobalConfig.services.audioIncrement));
+    function setAudioSource(newSource: PwNode): void {
+        Pipewire.preferredDefaultAudioSource = newSource;
     }
 
-    function decrementVolume(amount: real): bool {
-        return root.setVolume(root.volume - (amount || GlobalConfig.services.audioIncrement));
+    function cycleNextAudioOutput(): void {
+        if (sinks.length === 0)
+            return;
+
+        const currentIndex = sinks.findIndex(s => s === sink);
+        const nextIndex = (currentIndex + 1) % sinks.length;
+        setAudioSink(sinks[nextIndex]);
     }
 
-    function setSourceVolume(newVolume: real): bool {
-        if (!root.source)
-            return false;
-        const command = DesktopCommands.audioSetNodeVolume(
-            root.nodeId(root.source), root.clampVolume(newVolume));
-        return command ? CommandClient.system(command) : false;
+    function setStreamVolume(stream: PwNode, newVolume: real): void {
+        if (stream?.ready && stream?.audio) {
+            stream.audio.muted = false;
+            stream.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
+        }
     }
 
-    function incrementSourceVolume(amount: real): bool {
-        return root.setSourceVolume(root.sourceVolume + (amount || GlobalConfig.services.audioIncrement));
+    function setStreamMuted(stream: PwNode, muted: bool): void {
+        if (stream?.ready && stream?.audio) {
+            stream.audio.muted = muted;
+        }
     }
 
-    function decrementSourceVolume(amount: real): bool {
-        return root.setSourceVolume(root.sourceVolume - (amount || GlobalConfig.services.audioIncrement));
+    function getStreamVolume(stream: PwNode): real {
+        return stream?.audio?.volume ?? 0;
     }
 
-    function setAudioSink(newSink: var): bool {
-        const id = root.nodeId(newSink);
-        if (!id.length)
-            return false;
-        const command = DesktopCommands.audioSetDefaultNode(id);
-        return command ? CommandClient.system(command) : false;
+    function getStreamMuted(stream: PwNode): bool {
+        return !!stream?.audio?.muted;
     }
 
-    function setAudioSource(newSource: var): bool {
-        const id = root.nodeId(newSource);
-        if (!id.length)
-            return false;
-        const command = DesktopCommands.audioSetDefaultNode(id);
-        return command ? CommandClient.system(command) : false;
-    }
-
-    function cycleNextAudioOutput(): bool {
-        if (root.sinks.length === 0)
-            return false;
-        const currentIndex = root.sinks.findIndex(node => root.nodeId(node) === root.nodeId(root.sink));
-        const nextIndex = (currentIndex + 1) % root.sinks.length;
-        return root.setAudioSink(root.sinks[nextIndex]);
-    }
-
-    function setStreamVolume(stream: var, newVolume: real): bool {
-        const id = root.nodeId(stream);
-        if (!id.length)
-            return false;
-        const command = DesktopCommands.audioSetStreamVolume(id, root.clampVolume(newVolume));
-        return command ? CommandClient.system(command) : false;
-    }
-
-    function setStreamMuted(stream: var, muted: bool): bool {
-        const id = root.nodeId(stream);
-        if (!id.length)
-            return false;
-        const command = DesktopCommands.audioSetStreamMuted(id, muted);
-        return command ? CommandClient.system(command) : false;
-    }
-
-    function getStreamVolume(stream: var): real {
-        return root.numberOr(stream?.audio?.volume, 0);
-    }
-
-    function getStreamMuted(stream: var): bool {
-        return Boolean(stream?.audio?.muted);
-    }
-
-    function getStreamName(stream: var): string {
+    function getStreamName(stream: PwNode): string {
         if (!stream)
             return qsTr("Unknown");
-        return stream.applicationName || stream.properties?.["application.name"]
-            || stream.description || stream.name || qsTr("Unknown Application");
+        // Try application name first, then description, then name
+        return stream.properties["application.name"] || stream.description || stream.name || qsTr("Unknown Application");
     }
 
-    QtObject {
+    function refreshNodes(): void {
+        const newSinks = [];
+        const newSources = [];
+        const newStreams = [];
+
+        for (const node of Pipewire.nodes.values) {
+            if (!node.isStream) {
+                if (node.isSink)
+                    newSinks.push(node);
+                else if (node.audio)
+                    newSources.push(node);
+            } else if (node.audio) {
+                newStreams.push(node);
+            }
+        }
+
+        root.sinks = newSinks;
+        root.sources = newSources;
+        root.streams = newStreams;
+    }
+
+    function refresh(): void {
+        root.refreshNodes();
+    }
+
+    onSinkChanged: {
+        if (!sink?.ready)
+            return;
+
+        const newSinkName = sink.description || sink.name || qsTr("Unknown Device");
+
+        if (previousSinkName && previousSinkName !== newSinkName && GlobalConfig.utilities.toasts.audioOutputChanged)
+            Toaster.toast(qsTr("Audio output changed"), qsTr("Now using: %1").arg(newSinkName), "volume_up");
+
+        previousSinkName = newSinkName;
+    }
+
+    onSourceChanged: {
+        if (!source?.ready)
+            return;
+
+        const newSourceName = source.description || source.name || qsTr("Unknown Device");
+
+        if (previousSourceName && previousSourceName !== newSourceName && GlobalConfig.utilities.toasts.audioInputChanged)
+            Toaster.toast(qsTr("Audio input changed"), qsTr("Now using: %1").arg(newSourceName), "mic");
+
+        previousSourceName = newSourceName;
+    }
+
+    // Populate immediately: Pipewire.nodes may already be filled by the time this
+    // lazily-loaded singleton is created, so onValuesChanged would never fire.
+    Component.onCompleted: {
+        refreshNodes();
+        previousSinkName = sink?.description || sink?.name || qsTr("Unknown Device");
+        previousSourceName = source?.description || source?.name || qsTr("Unknown Device");
+    }
+
+    Connections {
+        function onValuesChanged(): void {
+            root.refreshNodes();
+        }
+
+        target: Pipewire.nodes
+    }
+
+    // Always track the current defaults so volume/mute bind even if the lists
+    // momentarily lag behind the default node.
+    PwObjectTracker {
+        objects: [root.sink, root.source, ...root.sinks, ...root.sources, ...root.streams].filter(n => n)
+    }
+
+    CavaProvider {
         id: cava
 
-        readonly property list<real> values: root.audioCapability.visualiser || []
-        readonly property int bars: GlobalConfig.services.visualiserBars
+        bars: GlobalConfig.services.visualiserBars
     }
 
-    QtObject {
+    BeatTracker {
         id: beatTracker
-
-        readonly property real bpm: root.numberOr(root.audioCapability.meters?.bpm, 0)
     }
 
     IpcHandler {

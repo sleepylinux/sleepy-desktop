@@ -32,10 +32,13 @@ TestCase {
 
     function test_brightness_set_tracks_pending_without_mutating_confirmed_level() {
         const qml = source("../../src/services/Brightness.qml");
+        const setter = qml.slice(qml.indexOf("function setBrightness(value: real)"),
+                                 qml.indexOf("function initBrightness()"));
 
-        verify(qml.indexOf("readonly property real brightness:") >= 0);
-        verify(qml.indexOf("root.pendingBrightness = value") >= 0);
-        verify(qml.indexOf("brightness = value") < 0);
-        verify(qml.indexOf("monitor.brightness =") < 0);
+        verify(qml.indexOf("property real requestedBrightness: NaN") >= 0);
+        verify(setter.indexOf("requestedBrightness = value") >= 0);
+        verify(setter.indexOf("brightness = value") < 0);
+        verify(setter.indexOf("monitor.brightness =") < 0);
+        verify(qml.indexOf("monitor.initBrightness()") >= 0);
     }
 }

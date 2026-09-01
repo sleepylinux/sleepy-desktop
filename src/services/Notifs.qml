@@ -1,145 +1,144 @@
-// SPDX-License-Identifier: GPL-3.0-only
-// Modified for Sleepy on 2026-08-31: notifications are daemon-published.
-
 pragma Singleton
 pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Notifications
 import Sleepy
 import Sleepy.Config
 import qs.components.misc
 import qs.services
-import "DesktopCommands.js" as DesktopCommands
+import qs.utils
 
 Singleton {
     id: root
 
-    readonly property var notificationsState: DesktopModel.notifications || ({})
+    readonly property bool available: true
+    readonly property bool busy: saveTimer.running
+    property string lastError: ""
     property list<NotifData> list: []
     readonly property list<NotifData> notClosed: list.filter(n => !n.closed)
     readonly property list<NotifData> popups: list.filter(n => n.popup)
-    property bool dnd: Boolean(notificationsState.dnd)
-    property bool loaded: true
-    property bool syncingDnd: false
+    property alias dnd: props.dnd
 
-    function records(): list<var> {
-        return notificationsState.active || notificationsState.items || notificationsState.notifications || [];
-    }
+    property bool loaded
 
     function hasFullscreen(): bool {
-        return Hypr.toplevels.values.some(window => window.lastIpcObject?.fullscreen > 1);
+        for (const monitor of Hypr.monitors.values) {
+            if (monitor?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1))
+                return true;
+        }
+        return false;
     }
 
     function shouldShowPopup(): bool {
-        if (root.dnd || ShellState.anySidebarOpen())
+        if (props.dnd || ShellState.anySidebarOpen())
             return false;
-        if (GlobalConfig.notifs.fullscreen === NotifsFullscreen.Off && root.hasFullscreen())
+        if (GlobalConfig.notifs.fullscreen === NotifsFullscreen.Off && hasFullscreen())
             return false;
         return true;
     }
 
-    function actionRecord(notificationId: string, action: var): var {
-        const identifier = action.identifier || action.id || "";
-        return {
-            "identifier": identifier,
-            "text": action.text || action.label || identifier,
-            "invoke": function() {
-                const command = DesktopCommands.notificationInvokeAction(
-                    Number(notificationId), identifier);
-                return command ? CommandClient.notification(command) : false;
-            }
-        };
-    }
-
-    function rebuildList(): void {
-        for (const existing of root.list)
-            existing.destroy();
-
-        const next = [];
-        for (const record of root.records()) {
-            const notificationId = String(record.id || record.notificationId || "");
-            const createdAt = Date.parse(record.createdAt || record.time || "");
-            next.push(notifComp.createObject(root, {
-                "popup": record.popup ?? root.shouldShowPopup(),
-                "closed": Boolean(record.closed || record.archived),
-                "time": Number.isNaN(createdAt) ? new Date() : new Date(createdAt),
-                "notificationId": notificationId,
-                "summary": record.summary || "",
-                "body": record.body || "",
-                "appIcon": record.appIcon || record.applicationIcon || "",
-                "appName": record.appName || record.applicationId || "",
-                "image": record.image || "",
-                "hints": record.hints || {},
-                "expireTimeout": record.expireTimeout ?? record.timeoutMs ?? GlobalConfig.notifs.defaultExpireTimeout,
-                "urgency": record.urgency ?? 1,
-                "resident": Boolean(record.resident),
-                "hasActionIcons": Boolean(record.hasActionIcons),
-                "actions": (record.actions || []).map(action => root.actionRecord(notificationId, action))
-            }));
-        }
-        root.list = next;
-    }
-
-    function syncDnd(): void {
-        const next = Boolean(root.notificationsState.dnd);
-        if (root.dnd === next)
-            return;
-        root.syncingDnd = true;
-        root.dnd = next;
-        root.syncingDnd = false;
-    }
-
-    function dismiss(notificationId: string): bool {
-        const command = DesktopCommands.notificationArchive(Number(notificationId));
-        return command ? CommandClient.notification(command) : false;
-    }
-
-    function clear(): void {
-        for (const notif of root.list.slice())
-            notif.close();
-    }
-
-    function setDnd(enabled: bool): bool {
-        return CommandClient.notification(DesktopCommands.notificationSetDnd(enabled));
-    }
-
-    function toggleDnd(): bool {
-        return root.setDnd(!root.dnd);
-    }
-
-    function enableDnd(): bool {
-        return root.setDnd(true);
-    }
-
-    function disableDnd(): bool {
-        return root.setDnd(false);
-    }
-
-    onNotificationsStateChanged: {
-        root.syncDnd();
-        root.rebuildList();
+    function refresh(): void {
+        if (!storage.loaded)
+            storage.reload();
     }
 
     onDndChanged: {
-        if (!root.syncingDnd) {
-            const desired = root.dnd;
-            root.syncDnd();
-            root.setDnd(desired);
-            return;
-        }
         if (!GlobalConfig.utilities.toasts.dndChanged)
             return;
-        if (root.dnd)
+
+        if (dnd)
             Toaster.toast(qsTr("Do not disturb enabled"), qsTr("Popup notifications are now disabled"), "do_not_disturb_on");
         else
             Toaster.toast(qsTr("Do not disturb disabled"), qsTr("Popup notifications are now enabled"), "do_not_disturb_off");
     }
 
-    Component.onCompleted: {
-        root.syncDnd();
-        root.rebuildList();
+    onListChanged: {
+        if (loaded)
+            saveTimer.restart();
+    }
+
+    Timer {
+        id: saveTimer
+
+        interval: 1000
+        onTriggered: storage.setText(JSON.stringify(root.notClosed.map(n => ({
+                    time: n.time,
+                    id: n.id,
+                    summary: n.summary,
+                    body: n.body,
+                    appIcon: n.appIcon,
+                    appName: n.appName,
+                    image: n.image,
+                    expireTimeout: n.expireTimeout,
+                    urgency: n.urgency,
+                    resident: n.resident,
+                    hasActionIcons: n.hasActionIcons,
+                    actions: n.actions
+                }))))
+    }
+
+    PersistentProperties {
+        id: props
+
+        property bool dnd
+
+        reloadableId: "notifs"
+    }
+
+    NotificationServer {
+        id: server
+
+        keepOnReload: false
+        actionsSupported: true
+        bodyHyperlinksSupported: true
+        bodyImagesSupported: true
+        bodyMarkupSupported: true
+        imageSupported: true
+        persistenceSupported: true
+
+        onNotification: notif => {
+            notif.tracked = true;
+
+            const comp = notifComp.createObject(root, {
+                popup: root.shouldShowPopup(),
+                notification: notif
+            });
+            root.list = [comp, ...root.list];
+        }
+    }
+
+    FileView {
+        id: storage
+
+        printErrors: false
+        path: `${Paths.state}/notifs.json`
+        onLoaded: {
+            root.lastError = "";
+            const data = JSON.parse(text());
+            for (const notif of data) {
+                const properties = Object.assign({}, notif);
+
+                // Backwards compatibility for old notifications
+                if (properties.notificationId === undefined && properties.id !== undefined)
+                    properties.notificationId = properties.id;
+
+                delete properties.id;
+                root.list.push(notifComp.createObject(root, properties));
+            }
+            root.list.sort((a, b) => b.time - a.time);
+            root.loaded = true;
+        }
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound) {
+                root.loaded = true;
+                Qt.callLater(() => setText("[]"));
+            } else {
+                root.lastError = qsTr("Failed to load notification history");
+            }
+        }
     }
 
     // qmllint disable unresolved-type
@@ -147,28 +146,32 @@ Singleton {
         // qmllint enable unresolved-type
         name: "clearNotifs"
         description: "Clear all notifications"
-        onPressed: root.clear()
+        onPressed: {
+            for (const notif of root.list.slice())
+                notif.close();
+        }
     }
 
     IpcHandler {
         function clear(): void {
-            root.clear();
+            for (const notif of root.list.slice())
+                notif.close();
         }
 
         function isDndEnabled(): bool {
-            return root.dnd;
+            return props.dnd;
         }
 
         function toggleDnd(): void {
-            root.toggleDnd();
+            props.dnd = !props.dnd;
         }
 
         function enableDnd(): void {
-            root.enableDnd();
+            props.dnd = true;
         }
 
         function disableDnd(): void {
-            root.disableDnd();
+            props.dnd = false;
         }
 
         target: "notifs"

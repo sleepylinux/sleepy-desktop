@@ -59,8 +59,8 @@
       "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
       "spdx": "GPL-3.0-only",
       "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
-      "attribution": "Imported service paths rewritten as Sleepy desktop v3 daemon facades.",
-      "modified": "2026-08-31",
+      "attribution": "Imported service graph renamed to Sleepy; audited desktop providers use native Quickshell APIs or fixed-argv platform tools, while session-owned actions remain behind typed Sleepy session IPC.",
+      "modified": "2026-09-01",
       "disposition": "active"
     },
     {

@@ -1,0 +1,126 @@
+{
+  "formatVersion": 1,
+  "providers": [
+    {
+      "id": "hyprland",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell.Hyprland",
+      "commands": ["hyprctl", "xmllint"],
+      "stateSource": "Quickshell.Hyprland socket model",
+      "mutationSource": "Quickshell.Hyprland dispatch",
+      "reconciliation": "native Hyprland events followed by targeted refresh",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "network",
+      "owner": "sleepy-shell",
+      "mechanism": "NetworkManager CLI with fixed argv",
+      "commands": ["nmcli", "cat"],
+      "stateSource": "nmcli terse reads",
+      "mutationSource": "nmcli fixed argv",
+      "reconciliation": "refresh all NetworkManager observations after completion",
+      "secretPolicy": "secrets are passed only by stdin or a NetworkManager secret agent, never argv",
+      "tests": ["tests/direct-integrations.sh"]
+    },
+    {
+      "id": "audio",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell.Services.Pipewire",
+      "commands": [],
+      "stateSource": "PipeWire registry",
+      "mutationSource": "PipeWire node bindings",
+      "reconciliation": "native PipeWire object changes",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "brightness",
+      "owner": "sleepy-shell",
+      "mechanism": "hardware-specific fixed argv",
+      "commands": ["brightnessctl", "ddcutil", "asdbctl"],
+      "stateSource": "brightnessctl, ddcutil, or asdbctl readback",
+      "mutationSource": "the same selected hardware provider",
+      "reconciliation": "read back the selected provider after completion",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh"]
+    },
+    {
+      "id": "media",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell.Services.Mpris",
+      "commands": [],
+      "stateSource": "session D-Bus MPRIS",
+      "mutationSource": "MPRIS player methods",
+      "reconciliation": "native MPRIS property changes",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "notifications",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell.Services.Notifications",
+      "commands": ["notify-send"],
+      "stateSource": "freedesktop notification server",
+      "mutationSource": "tracked notification objects",
+      "reconciliation": "notification lifecycle signals and persisted history",
+      "secretPolicy": "notification content is never copied to process argv by the provider",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "tray",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell.Services.SystemTray",
+      "commands": [],
+      "stateSource": "StatusNotifierItem D-Bus",
+      "mutationSource": "DBusMenu item activation",
+      "reconciliation": "native tray and menu signals",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "power",
+      "owner": "sleepy-shell for telemetry; sleepy-sessiond for session actions",
+      "mechanism": "Quickshell.Services.UPower plus typed Sleepy session IPC",
+      "commands": [],
+      "stateSource": "UPower D-Bus",
+      "mutationSource": "sleepy-sessiond confirmed session command",
+      "reconciliation": "typed command acknowledgement followed by UPower/session observation",
+      "secretPolicy": "authentication remains in the system/session authority",
+      "tests": ["tests/direct-integrations.sh", "tests/service-boundary.sh"]
+    },
+    {
+      "id": "clipboard",
+      "owner": "sleepy-shell",
+      "mechanism": "Wayland clipboard fixed argv",
+      "commands": ["wl-copy", "cliphist"],
+      "stateSource": "cliphist database",
+      "mutationSource": "wl-copy stdin",
+      "reconciliation": "clipboard history refresh after copy",
+      "secretPolicy": "clipboard payload is stdin only, never argv",
+      "tests": ["tests/direct-integrations.sh"]
+    },
+    {
+      "id": "screenshot",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell screencopy with fixed viewer argv",
+      "commands": ["hyprctl", "swappy"],
+      "stateSource": "Quickshell.Wayland ScreencopyView",
+      "mutationSource": "bounded local image save and swappy",
+      "reconciliation": "completion callback from the captured image save",
+      "secretPolicy": "temporary paths only; no credentials accepted",
+      "tests": ["tests/direct-integrations.sh"]
+    },
+    {
+      "id": "applications",
+      "owner": "sleepy-shell",
+      "mechanism": "Quickshell DesktopEntries",
+      "commands": ["ghostty", "sleepy"],
+      "stateSource": "freedesktop desktop-entry index",
+      "mutationSource": "DesktopEntry.execute or configured terminal argv",
+      "reconciliation": "launch completion is intentionally fire-and-forget",
+      "secretPolicy": "desktop entry fields are argv, never shell code",
+      "tests": ["tests/direct-integrations.sh"]
+    }
+  ]
+}
