@@ -3,16 +3,24 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
-for composition_root in \
-  "$repository_root/src/shell.qml" \
-  "$repository_root/src/preview/main.qml"; do
-  if ! rg -Uq 'Theme\.ThemeTokens[[:space:]]*\{[^}]*effectsPolicy:[[:space:]]*effects' \
-      "$composition_root"; then
-    printf 'FAIL: %s must inject EffectsPolicy into ThemeTokens\n' \
-      "${composition_root#"$repository_root"/}" >&2
+if rg -n 'Theme\.ThemeTokens|Theme\.EffectsPolicy' "$repository_root/src/shell.qml"; then
+  printf 'FAIL: modular shell must use the upstream native Tokens animation graph\n' >&2
+  exit 1
+fi
+for animation_root in \
+  "$repository_root/src/components/Anim.qml" \
+  "$repository_root/src/components/AnchorAnim.qml"; do
+  if ! rg -Fq 'Tokens.anim.durations' "$animation_root"; then
+    printf 'FAIL: upstream animation component is detached from native Tokens: %s\n' \
+      "${animation_root#"$repository_root"/}" >&2
     exit 1
   fi
 done
+if ! rg -Uq 'Theme\.ThemeTokens[[:space:]]*\{[^}]*effectsPolicy:[[:space:]]*effects' \
+    "$repository_root/src/preview/main.qml"; then
+  printf 'FAIL: legacy preview must retain its isolated EffectsPolicy tokens\n' >&2
+  exit 1
+fi
 
 drawer_component="$repository_root/src/drawers/ControlCenterDrawer.qml"
 if ! rg -q 'readonly property int transitionDuration:[[:space:]]*tokens\.motionDuration' \
@@ -24,7 +32,12 @@ if ! rg -q 'readonly property int transitionDuration:[[:space:]]*tokens\.motionD
 fi
 
 mapfile -t animated_components < <(
-  rg -l '(Number|Color)Animation' "$repository_root/src" --glob '*.qml' | sort
+  rg -l '(Number|Color)Animation' \
+    "$repository_root/src/drawers" \
+    "$repository_root/src/panels" \
+    "$repository_root/src/widgets" \
+    "$repository_root/src/preview" \
+    --glob '*.qml' | sort
 )
 for animated_component in "${animated_components[@]}"; do
   if rg -n 'duration:[[:space:]]*[1-9][0-9]*' "$animated_component"; then

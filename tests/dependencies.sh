@@ -2,9 +2,9 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-sdk_revision=152173b470fa7d1e90c6d3d6be103a4a4d3529bc
+sdk_revision=1ee5b424887eb6f7acfe3b931b37a2c610ff6498
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
-session_revision=03eef8fa32595d7887ed36830212f9abc6c01a84
+session_revision=125efe94e4ef9b22dea1369c4bbb11d4cad80237
 flake="$repository_root/flake.nix"
 workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
@@ -73,8 +73,47 @@ if ! rg -Fq 'sessionPackage = sleepy-session.packages.${system}.sleepy-session;'
   exit 1
 fi
 
-if ! rg -Fq -- '--prefix PATH : "${sessionPackage}/bin"' "$flake"; then
-  printf 'FAIL: packaged runners must expose pinned sleepyctl on PATH\n' >&2
+if rg -Fq 'pkgs.qt6.qtquickcontrols2' "$flake"; then
+  printf 'FAIL: pinned nixpkgs provides Qt Quick Controls 2 through qt6.qtdeclarative, not qt6.qtquickcontrols2\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkgs.qt6.qtdeclarative' "$flake"; then
+  printf 'FAIL: native plugin must retain the Qt declarative/Quick Controls dependency\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'cmakeDir = "../locker";' "$flake"; then
+  printf 'FAIL: out-of-source CMake must resolve the locker directory from the build directory\n' >&2
+  exit 1
+fi
+
+for contract in desktop-event-v3.schema.json desktop-command-v3.schema.json; do
+  if ! rg -Fq "\"\${sleepy-sdk}/schemas/$contract\"" "$flake" ||
+      ! rg -Fq "\"\$out/\${installRoot}/contracts/$contract\"" "$flake"; then
+    printf 'FAIL: desktop package must install reviewed SDK v3 contract %s\n' "$contract" >&2
+    exit 1
+  fi
+done
+
+if ! rg -Fq -- '--prefix PATH : "${directRuntimePath}"' "$flake"; then
+  printf 'FAIL: packaged runners must expose the complete reviewed direct runtime PATH\n' >&2
+  exit 1
+fi
+for marker in runtimeCommandManifest FONTCONFIG_FILE SLEEPY_XKB_RULES_PATH material-symbols nerd-fonts.caskaydia-cove; do
+  if ! rg -Fq "$marker" "$flake"; then
+    printf 'FAIL: complete shell closure is missing %s\n' "$marker" >&2
+    exit 1
+  fi
+done
+if ! rg -Fq 'bash tests/packaged-full-shell-smoke.sh' "$flake"; then
+  printf 'FAIL: Nix QML check must run the empty-home complete closure smoke\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'QT_QUICK_BACKEND=software' "$repository_root/tests/packaged-full-shell-smoke.sh"; then
+  printf 'FAIL: empty-home full-shell smoke must use a deterministic software scenegraph\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'Quickshell.env("SHELL") || ""' "$repository_root/src/utils/SysInfo.qml"; then
+  printf 'FAIL: system info must tolerate SHELL being absent from a clean environment\n' >&2
   exit 1
 fi
 
@@ -93,7 +132,7 @@ if ! rg -Fq -- '--set QML_XHR_ALLOW_FILE_READ 1' "$flake"; then
   exit 1
 fi
 
-if ! rg -Fq -- '--set QML2_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+if ! rg -Fq -- '--set QML2_IMPORT_PATH "${qtQmlImportPath}"' "$flake"; then
   printf 'FAIL: packaged QML runners must close imports to the pinned Qt and Quickshell roots\n' >&2
   exit 1
 fi
@@ -101,7 +140,7 @@ if rg -Fq -- '--prefix QML2_IMPORT_PATH' "$flake"; then
   printf 'FAIL: packaged QML runners must not retain caller-provided QML imports\n' >&2
   exit 1
 fi
-if ! rg -Fq -- '--set QML_IMPORT_PATH "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml"' "$flake"; then
+if ! rg -Fq -- '--set QML_IMPORT_PATH "${qtQmlImportPath}"' "$flake"; then
   printf 'FAIL: packaged QML runners must close modern imports to the pinned Qt and Quickshell roots\n' >&2
   exit 1
 fi
@@ -117,6 +156,54 @@ fi
 qml_check_block="$(
   sed -n '/^          qml = pkgs.runCommand /,/^          package = pkgs.runCommand /p' "$flake"
 )"
+socket_contract_inputs_block="$(
+  sed -n '/^      socketContractNativeInputs = pkgs: \[/,/^      \];/p' "$flake"
+)"
+for dependency in \
+  pkgs.stdenv.cc \
+  pkgs.pkg-config \
+  pkgs.qt6.qtbase \
+  pkgs.qt6.qtdeclarative; do
+  if ! rg -Fxq "        $dependency" <<< "$socket_contract_inputs_block"; then
+    printf 'FAIL: socket contract native input set must declare %s\n' \
+      "$dependency" >&2
+    exit 1
+  fi
+done
+if ! rg -Fq '] ++ socketContractNativeInputs pkgs;' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must consume the complete socket contract native input set\n' >&2
+  exit 1
+fi
+dev_shell_block="$(
+  sed -n '/^      devShells = forAllSystems /,/^      checks = forAllSystems /p' "$flake"
+)"
+if ! rg -Fq 'packages = socketContractNativeInputs pkgs;' <<< "$dev_shell_block"; then
+  printf 'FAIL: default dev shell must consume the complete socket contract native input set\n' >&2
+  exit 1
+fi
+socket_moc_resolver="$repository_root/tests/lib/qt6-moc-resolver.sh"
+if ! rg -Fq 'candidate="$(command -v moc || true)"' \
+    "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must discover the Nix-provided moc through PATH\n' >&2
+  exit 1
+fi
+if ! rg -Fq '"$qtpaths_binary" --query QT_INSTALL_LIBEXECS' \
+    "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must discover Nix moc through Qt libexec metadata\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkg-config --variable=libexecdir Qt6Core' \
+    "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must retain Qt6Core libexec metadata fallback\n' >&2
+  exit 1
+fi
+if ! rg -Fq '[[ -n "$libexec_dir" && "$libexec_dir" == /* ]] || return 1' \
+    "$socket_moc_resolver" \
+    || ! rg -Fq '[[ "$libexec_dir" != *$'\''\n'\''* && "$libexec_dir" != *$'\''\r'\''* ]] || return 1' \
+      "$socket_moc_resolver"; then
+  printf 'FAIL: socket contract runner must reject empty, relative, and multiline Qt metadata\n' >&2
+  exit 1
+fi
 if ! rg -Fq 'bash "$repo_root/tests/dependencies.sh"' "$repository_root/tests/run.sh"; then
   printf 'FAIL: QML runner must invoke dependency checks through the pinned Bash on PATH\n' >&2
   exit 1
@@ -129,8 +216,52 @@ if ! rg -Fq 'pkgs.qt6.qtsvg' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must provide the Qt SVG image plugin used by icon fixtures\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/libexec:$PATH' <<< "$qml_check_block"; then
-  printf 'FAIL: qml check must expose pinned Qt declarative libexec tools to static validation\n' >&2
+if ! rg -Fq 'referencePython' <<< "$qml_check_block" ||
+    ! rg -Fq 'pythonPackages.numpy' "$flake" ||
+    ! rg -Fq 'pythonPackages.pillow' "$flake"; then
+  printf 'FAIL: qml check must provide Python, Pillow, and NumPy for schemas and pixel comparison\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'pkgs.util-linux' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.dbus' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.procps' <<< "$qml_check_block" ||
+    ! rg -Fq 'pkgs.sway' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must declare setsid, dbus-run-session, ps, and Sway for its private Wayland host gate\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'unset WAYLAND_DISPLAY' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash tests/run.sh' <<< "$qml_check_block" ||
+    rg -Fq 'bash tests/with-private-wayland.sh bash tests/run.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'export SLEEPY_TEST_SWAY=${pkgs.sway}/bin/sway' \
+      <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must preserve Xvfb for aggregate tests and privately wrap only host gates\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'bash tests/with-private-wayland.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash tests/packaged-shell-smoke.sh' <<< "$qml_check_block" ||
+    ! rg -Fq 'bash "$repo_root/tests/private-wayland-contract.sh"' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: private Wayland status/cleanup and packaged shell smoke gates must be mandatory\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'if [[ "${SLEEPY_REQUIRE_REAL_RHI_HOST:-0}" == 1 ]]' "$repository_root/tests/run.sh" ||
+    ! rg -Fq 'SLEEPY_TEST_WLR_RENDERER=gles2 bash "$repo_root/tests/with-private-wayland.sh"' \
+      "$repository_root/tests/run.sh" ||
+    ! rg -Fq 'DEFER: real Quickshell RHI host gate requires direct DRM/EGL access' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: real RHI host gate must be explicit, DRM-hosted, and use a software GLES2-capable compositor\n' >&2
+  exit 1
+fi
+if ! rg -Fq "export SLEEPY_SDK_ROOT='\${sleepy-sdk}'" <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must validate command fixtures against the pinned sleepy-sdk input\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export PATH=${pkgs.qt6.qtdeclarative}/bin:${pkgs.qt6.qtdeclarative}/libexec:$PATH' \
+      <<< "$qml_check_block" ||
+    ! rg -Fq '${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' <<< "$qml_check_block" ||
+    ! rg -Fq 'SLEEPY_QML_TEST_RUNNER=${pkgs.qt6.qtdeclarative}/bin/qmltestrunner' \
+      <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must execute the pinned Qt declarative qmltestrunner output\n' >&2
   exit 1
 fi
 if ! rg -Fq 'export QT_PLUGIN_PATH=${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins' \
@@ -145,6 +276,7 @@ if ! rg -Fq 'pkgs.vulkan-loader' <<< "$qml_check_block" ||
     ! rg -Fq 'export SLEEPY_TEST_RHI_BACKEND=vulkan' <<< "$qml_check_block" ||
     ! rg -Fq 'export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json' <<< "$qml_check_block" ||
     ! rg -Fq 'export LD_LIBRARY_PATH=${pkgs.vulkan-loader}/lib' <<< "$qml_check_block" ||
+    ! rg -Fq 'QT_QPA_PLATFORM="${SLEEPY_TEST_QPA_PLATFORM:-offscreen}"' "$repository_root/tests/run.sh" ||
     ! rg -Fq 'QSG_RHI_BACKEND="${SLEEPY_TEST_RHI_BACKEND:-opengl}"' "$repository_root/tests/run.sh"; then
   printf 'FAIL: qml check must provide Xvfb/xcb and pinned Mesa lavapipe for its configurable real RHI smoke\n' >&2
   exit 1
@@ -153,22 +285,55 @@ if rg -Fq 'lvp_icd.x86_64.json' <<< "$qml_check_block"; then
   printf 'FAIL: qml check must not hard-code an x86-only Mesa lavapipe ICD filename\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export QML2_IMPORT_PATH=${pkgs.qt6.qtdeclarative}/lib/qt-6/qml:${pkgs.quickshell}/lib/qt-6/qml' \
+if ! rg -Fq 'quickshellWithModules' <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must use the pinned Quickshell-with-m3shapes package\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'export QML2_IMPORT_PATH=${qtQmlImportPath}' \
     <<< "$qml_check_block"; then
   printf 'FAIL: qml check must expose its pinned Qt and Quickshell QML module roots\n' >&2
   exit 1
 fi
-if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${pkgs.quickshell}/lib/qt-6/qml' \
+if ! rg -Fq 'export SLEEPY_QUICKSHELL_IMPORT_PATH=${quickshellWithModules}/lib/qt-6/qml' \
     <<< "$qml_check_block"; then
   printf 'FAIL: static validation must receive the exact pinned Quickshell QML root\n' >&2
   exit 1
 fi
+mapfile -t quickshell_assignments < <(
+  rg 'SLEEPY_TEST_QUICKSHELL[[:space:]]*=' \
+    <<< "$qml_check_block" || true
+)
+if [[ ${#quickshell_assignments[@]} -ne 1 ]] ||
+    ! rg -q '^[[:space:]]*readonly SLEEPY_TEST_QUICKSHELL=\$\{quickshellWithModules\}/bin/qs$' \
+      <<< "${quickshell_assignments[0]:-}" ||
+    ! rg -q '^[[:space:]]*export SLEEPY_TEST_QUICKSHELL$' <<< "$qml_check_block" ||
+    ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"' \
+      "$repository_root/tests/run.sh" ||
+    ! rg -Fq '"$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"' \
+      "$repository_root/tests/run.sh"; then
+  printf 'FAIL: real host gates must receive one immutable pinned Quickshell qs executable explicitly\n' >&2
+  exit 1
+fi
+if ! rg -Fq 'test -d "${nativePlugin}/${pkgs.qt6.qtbase.qtQmlPrefix}/Sleepy"' \
+    <<< "$qml_check_block"; then
+  printf 'FAIL: qml check must expose the built Sleepy native plugin on the closed import path\n' >&2
+  exit 1
+fi
+if [[ $(rg -Fxc '          installRoot = "share/sleepy-desktop";' "$flake") -ne 2 ]]; then
+  printf 'FAIL: package and check scopes must each define the installed shell root\n' >&2
+  exit 1
+fi
 if ! rg -Fq '"$production_shell/bin/sleepy-shell"' <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'Failed to load configuration'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'ReferenceError:'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'TypeError:'" <<< "$qml_check_block" ||
-    ! rg -Fq "grep -Fq 'SyntaxError:'" <<< "$qml_check_block" ||
-    ! rg -Fq '[[ $production_status -ne 124 ]]' <<< "$qml_check_block"; then
+    ! rg -Fq "grep -Fq 'Failed to load configuration'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'ReferenceError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'TypeError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq "grep -Fq 'SyntaxError:'" \
+      "$repository_root/tests/packaged-shell-smoke.sh" ||
+    ! rg -Fq '[[ $status -ne 124 ]]' \
+      "$repository_root/tests/packaged-shell-smoke.sh"; then
   printf 'FAIL: qml check must launch the packaged production shell and reject load failures\n' >&2
   exit 1
 fi
@@ -212,8 +377,8 @@ mapfile -t check_names < <(
     -e 's/^          "([^"]+)"[[:space:]]*=.*/\1/p' \
     <<< "$checks_attrset"
 )
-if [[ "${check_names[*]:-}" != "qml package preview" ]]; then
-  printf 'FAIL: per-system desktop checks must expose exactly qml package preview, found: %s\n' \
+if [[ "${check_names[*]:-}" != "locker qml package preview" ]]; then
+  printf 'FAIL: per-system desktop checks must expose exactly locker qml package preview, found: %s\n' \
     "${check_names[*]:-(none)}" >&2
   exit 1
 fi

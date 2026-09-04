@@ -1,0 +1,9 @@
+{
+  "entries": [
+    {
+      "path": "src/RootService.qml",
+      "disposition": "drop-with-reason",
+      "sleepyOwner": "none"
+    }
+  ]
+}

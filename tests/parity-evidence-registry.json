@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "qmlRunners": [
+    {
+      "id": "qml-software-suite",
+      "kind": "qmltestrunner-directory",
+      "input": "tests/qml",
+      "filePattern": "tst_*.qml"
+    }
+  ],
+  "shellRunners": [
+    {
+      "id": "shell-active-graph",
+      "path": "tests/active-graph.sh",
+      "passIdentity": "PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
+    },
+    {
+      "id": "shell-locker-boundary",
+      "path": "tests/locker-boundary.sh",
+      "passIdentity": "PASS: fail-secure locker source boundary"
+    },
+    {
+      "id": "shell-native-plugin-contracts",
+      "path": "tests/native-plugin-contracts.sh",
+      "passIdentity": "PASS: complete renamed native plugin graph and dependencies are declared"
+    },
+    {
+      "id": "shell-selection-capture-contract",
+      "path": "tests/selection-capture-contract.sh",
+      "passIdentity": "PASS: area selection uses constrained native clipboard and temporary-image helpers"
+    },
+    {
+      "id": "shell-appearance-cli",
+      "path": "tests/appearance-cli.sh",
+      "passIdentity": "PASS: Sleepy-owned appearance CLI lists/applies schemes and persists/analyzes wallpapers"
+    },
+    {
+      "id": "shell-direct-integrations",
+      "path": "tests/direct-integrations.sh",
+      "passIdentity": "PASS: 15 direct providers are registered and 272 active files use safe reviewed mechanisms"
+    }
+  ]
+}

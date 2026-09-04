@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "description": "Only product marks and product-name glyph bounds may differ from the pinned upstream reference.",
+  "regions": [
+    {"name":"bar-product-mark","bounds":[16,16,56,56]},
+    {"name":"center-product-mark","bounds":[840,400,240,240]},
+    {"name":"about-product-name","bounds":[690,250,540,180]}
+  ],
+  "surfaces": []
+}

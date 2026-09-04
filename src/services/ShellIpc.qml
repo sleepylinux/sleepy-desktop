@@ -1,70 +1,78 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Sleepy compatibility IPC names mapped onto the modular shell graph.
+
 import QtQuick 6.0
 import Quickshell
 import Quickshell.Io
+import "DesktopCommands.js" as DesktopCommands
+import qs.modules.nexus
 
 Scope {
     id: root
-    required property var shortcutRouter
-    required property var surfaceController
-    required property var eventSource
-    property string pendingMethod: ""
-    property string pendingArgument: ""
-    property var requestQueue: ([])
-    property bool queryActive: false
-    property string diagnostic: ""
 
-    function request(method, argument) {
-        const queue = root.requestQueue.slice();
-        queue.push({"method": method, "argument": argument || ""});
-        root.requestQueue = queue;
-        root.startNext();
+    function activeState(): var {
+        return ShellState.forActive();
+    }
+
+    function setDrawer(name: string, open: bool): bool {
+        const state = root.activeState();
+        if (!state || typeof state[name] !== "boolean")
+            return false;
+        state[name] = open;
         return true;
     }
-    function startNext() {
-        if (root.queryActive || !root.requestQueue.length)
+
+    function toggleDrawer(name: string): bool {
+        const state = root.activeState();
+        return state ? root.setDrawer(name, !state[name]) : false;
+    }
+
+    function closeDrawers(): bool {
+        const state = root.activeState();
+        if (!state)
             return false;
-        const queue = root.requestQueue.slice();
-        const next = queue.shift();
-        root.requestQueue = queue;
-        root.pendingMethod = next.method;
-        root.pendingArgument = next.argument;
-        root.queryActive = true;
-        const output = root.eventSource.focusedOutputId;
-        if (!output || root.eventSource.connectionState !== "ready") {
-            root.diagnostic = "Focused output unavailable from session event stream";
-            root.queryActive = false;
-            Qt.callLater(root.startNext);
-            return false;
-        }
-        root.finishQuery(output);
-        root.queryActive = false;
-        Qt.callLater(root.startNext);
+        for (const name of ["launcher", "dashboard", "sidebar", "session", "utilities"])
+            state[name] = false;
         return true;
     }
-    function finishQuery(output) {
-        if (root.pendingMethod === "toggle")
-            return root.surfaceController.toggle("controlCenter", output);
-        if (root.pendingMethod === "open")
-            return root.surfaceController.open("controlCenter", output);
-        if (root.pendingMethod === "close")
-            return root.surfaceController.close(undefined, output);
-        if (root.pendingMethod === "power") {
-            return root.surfaceController.requestPowerMenu(output);
-        }
-        if (root.pendingMethod === "session")
-            return root.shortcutRouter.routeOnOutput("session." + root.pendingArgument, output);
-        return false;
+
+    function sessionAction(action: string): bool {
+        const command = DesktopCommands.session(action);
+        return command ? CommandClient.session(command) : false;
+    }
+
+    function media(transport: string): bool {
+        const player = Players.active;
+        if (!player)
+            return false;
+        if (transport === "playPause")
+            player.togglePlaying();
+        else if (transport === "next")
+            player.next();
+        else if (transport === "previous")
+            player.previous();
+        else
+            return false;
+        return true;
     }
 
     IpcHandler {
         target: "sleepy"
-        function toggleControlCenter(): void { root.request("toggle", ""); }
-        function openControlCenter(): void { root.request("open", ""); }
-        function closeActiveSurface(): void { root.request("close", ""); }
-        function openPowerMenu(): void { root.request("power", ""); }
-        function requestSessionAction(action: string): void {
-            if (["lock", "logout", "reboot", "powerOff"].indexOf(action) >= 0)
-                root.request("session", action);
-        }
+
+        function toggleControlCenter(): void { root.toggleDrawer("dashboard"); }
+        function openControlCenter(): void { root.setDrawer("dashboard", true); }
+        function closeActiveSurface(): void { root.closeDrawers(); }
+        function requestSessionAction(action: string): void { root.sessionAction(action); }
+
+        function toggleLauncher(): void { root.toggleDrawer("launcher"); }
+        function toggleNotifications(): void { root.toggleDrawer("sidebar"); }
+        function toggleDashboard(): void { root.toggleDrawer("dashboard"); }
+        function toggleNexus(): void { WindowFactory.create(); }
+        function closeOverlay(): void { root.closeDrawers(); }
+        function mediaPlayPause(): void { root.media("playPause"); }
+        function mediaNext(): void { root.media("next"); }
+        function mediaPrevious(): void { root.media("previous"); }
+        function lock(): void { root.sessionAction("lock"); }
+        function openPowerMenu(): void { root.setDrawer("session", true); }
     }
 }

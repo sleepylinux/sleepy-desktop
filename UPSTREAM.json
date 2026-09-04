@@ -1,0 +1,157 @@
+{
+  "formatVersion": 1,
+  "source": {
+    "repository": "https://github.com/caelestia-dots/shell",
+    "tag": "v2.4.0",
+    "tagObject": "15c41f3e19818199f653aa7dcec81d49affd7152",
+    "commit": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+    "license": "GPL-3.0-only"
+  },
+  "dependencies": {
+    "quickshell": {
+      "rev": "0fed22a2c47d9568ddf13cf61586b3f2ac4378a2",
+      "narHash": "sha256-OZdLL1rMR9kjTFZroOODeyQ0u6nrSxcFHlK6JUi+R/c="
+    },
+    "m3shapes": {
+      "rev": "32ad9ce328bb77ed349b40a3be10ee9ea610b8ab",
+      "narHash": "sha256-YZelgEZflFNwGutX4/tIzBdbOeghJgE2oDw0uWYGxns="
+    }
+  },
+  "localPatchInventory": "tests/patch-inventory.json",
+  "completionPolicy": {
+    "manifestFormatVersion": 2,
+    "reachableStatus": "verified",
+    "nonRuntimeStatus": "excluded-non-runtime",
+    "forbiddenStatuses": [
+      "approved-deviation",
+      "deferred-environment"
+    ]
+  },
+  "import": {
+    "destination": "src",
+    "paths": [
+      "components",
+      "modules",
+      "services",
+      "plugin",
+      "extras",
+      "assets",
+      "utils",
+      "shell.qml",
+      "CMakeLists.txt",
+      "LICENSE"
+    ]
+  },
+  "inventory": [
+    {
+      "path": "src/shell.qml",
+      "originPath": "shell.qml",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Derived from Caelestia Shell v2.4.0 and modified for Sleepy runtime identity and daemon-owned Task 6 loading.",
+      "modified": "2026-08-31",
+      "disposition": "active"
+    },
+    {
+      "path": "src/services/**",
+      "originPath": "services/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported service graph renamed to Sleepy; audited desktop providers use native Quickshell APIs or fixed-argv platform tools, while session-owned actions remain behind typed Sleepy session IPC.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/plugin/**",
+      "originPath": "plugin/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Complete native plugin graph imported from Caelestia Shell v2.4.0, renamed to Sleepy, and built without a Caelestia runtime dependency.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/components/**",
+      "originPath": "components/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Complete upstream visual component graph active under the Sleepy shell runtime.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/modules/**",
+      "originPath": "modules/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Complete upstream shell module graph active under Sleepy identity; the in-process upstream lock module remains excluded in favour of sleepy-locker.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/utils/**",
+      "originPath": "utils/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Complete upstream utility graph active under the Sleepy shell runtime.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/extras/**",
+      "originPath": "extras/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Imported helper version source renamed for Sleepy package metadata.",
+      "modified": "2026-08-31",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/logo.svg",
+      "originPath": "assets/logo.svg",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Upstream logo replaced with the reviewed sleepy-artwork primary mark; packaged branding and in-shell fallbacks use the same Sleepy asset.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/wrap_term_launch.sh",
+      "originPath": "assets/wrap_term_launch.sh",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "GPL-3.0-only",
+      "copyright": "Caelestia Shell contributors; Sleepy Desktop contributors",
+      "attribution": "Terminal-launch wrapper active for launcher entries using the configured Sleepy terminal.",
+      "modified": "2026-09-01",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/google-sans-flex/**",
+      "originPath": "assets/google-sans-flex/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "OFL-1.1",
+      "copyright": "See src/assets/google-sans-flex/LICENSE; imported license file does not state a separate copyright holder.",
+      "attribution": "Google Sans Flex font software as imported by Caelestia Shell v2.4.0.",
+      "modified": "unmodified",
+      "disposition": "active"
+    },
+    {
+      "path": "src/assets/bongocat.gif; src/assets/dino.png; src/assets/kurukuru.gif; src/assets/wallpaper.webp; src/assets/pam.d/**",
+      "originPath": "assets/bongocat.gif; assets/dino.png; assets/kurukuru.gif; assets/wallpaper.webp; assets/pam.d/**",
+      "originRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
+      "spdx": "NOASSERTION",
+      "copyright": "Not asserted by Sleepy Desktop.",
+      "attribution": "Upstream binary media/PAM snippets were present in the imported source but lacked Task 6 redistribution authority suitable for the production package.",
+      "modified": "2026-08-31",
+      "disposition": "excluded"
+    }
+  ]
+}

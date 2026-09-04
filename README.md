@@ -69,8 +69,41 @@ enables local-file XHR process-wide for QML in that process; it is not an OS
 sandbox or a path allowlist. Sleepy QML never refers to a source checkout or
 workstation path. Functional SVGs are tinted through Qt 6 `MultiEffect`, with a
 visible geometric fallback when resolution or manifest validation fails.
-The pinned `sleepy-sdk` settings, preset, and system schemas are installed
-alongside the QML.
+The pinned `sleepy-sdk` settings, preset, system, desktop-event-v3, and
+desktop-command-v3 schemas are installed alongside the QML.
+
+## Full shell graph
+
+The production entry point loads the complete modular shell graph: bar and
+popouts, launcher modes, dashboard tabs, sidebar, notifications, Nexus pages
+and dialogs, OSDs, session controls, utilities, window information,
+wallpaper/style controls and the secure lock presentation. The source remains
+split under `src/modules`, `src/services`, `src/components`, and `src/config`;
+Sleepy-specific transport adapters are separate from the visual components, so
+a provider or individual surface can be changed without forking a monolithic
+entry point.
+
+The visual and interaction baseline is Caelestia Shell v2.4.0. Production files
+are Sleepy-owned and import only Sleepy QML modules and packages. There is no
+runtime Caelestia executable, configuration directory, IPC service, plugin, or
+network bootstrap. The only intentional visible differences are Sleepy names
+and branding; deterministic reference tests mask only those declared regions.
+
+`ServiceLoader.qml` composes the provider layer. Compositor state and dispatch
+use `Quickshell.Hyprland` and fixed `hyprctl` queries; network uses fixed-argv
+`nmcli`; audio, media, tray, notifications and power telemetry use native
+Quickshell Qt/D-Bus models. Brightness and VPN adapters select one installed
+backend and read it back after mutation. Wallpaper and colour-scheme state use
+the modular `sleepy` appearance CLI. The complete executable map is substituted
+to immutable Nix store paths when the package is built, so an empty XDG home
+cannot accidentally resolve a Caelestia helper from `PATH`.
+
+Protected actions are deliberately outside that direct-provider layer.
+Recording lifecycle and confined deletion, idle inhibition, game mode, lock,
+suspend, logout, reboot and power-off are typed `sleepy-sessiond` requests.
+The lock view receives redacted presentation state only; `sleepy-locker` owns
+the ext-session-lock protocol and PAM conversation, and no QML API can unlock
+the session.
 
 ## Validate
 
@@ -83,6 +116,8 @@ hard failure.
 
 ```sh
 bash tests/run.sh
+bash tests/packaged-full-shell-smoke.sh
+bash tests/reference-contract.sh
 bash tests/dependencies.sh
 bash tests/validate-qml-paths.sh
 bash scripts/validate-qml.sh
@@ -94,6 +129,30 @@ The behavior tests use Qt's real QML test runner; they do not inspect QML source
 text. Their negative fixtures cover unknown settings keys and malformed JSON.
 The main suite uses the Qt Quick software backend, then performs a focused RHI
 pass with Mesa software rendering for the real `MultiEffect` pixel assertion.
+The reference comparator additionally checks exact RGBA pixels outside the
+Sleepy branding mask, surface bounds and ordered animation frames/timestamps.
+Real reference captures and the real virt-manager acceptance remain separate
+environment gates; unit fixtures do not stand in for those gates.
+
+## Customization and upstream updates
+
+User-adjustable values live in the typed Sleepy settings/config layer and XDG
+Sleepy state, not in the entry point. Surface code can be edited independently
+inside its module directory; provider changes belong in `src/services` or the
+Sleepy transport adapters. Add an executable only through the direct-integration
+registry and Nix runtime command map, with a fixed argv contract, explicit
+secret policy, readback strategy and failure test. Add a protected transition
+to `sleepy-sdk` first, implement it in `sleepy-sessiond`, and expose only the
+typed command to QML.
+
+To import a newer Caelestia release, fetch an immutable upstream tag/commit into
+a separate reference tree, regenerate the provenance/parity inventory, and
+port changes by module rather than replacing Sleepy transport or security
+boundaries. Review every new command, native plugin, state path and secret flow;
+rename runtime identities to Sleepy; update deterministic fixtures and branding
+masks; then run component tests, exact reference capture comparison and the real
+virt-manager acceptance. The upstream source is a review reference only and is
+never a runtime dependency.
 
 ## Preview
 
@@ -124,12 +183,12 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`152173b470fa7d1e90c6d3d6be103a4a4d3529bc` and the reviewed public
+`1ee5b424887eb6f7acfe3b931b37a2c610ff6498` and the reviewed public
 `sleepy-artwork` flake at
 `175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`03eef8fa32595d7887ed36830212f9abc6c01a84` and prefixes its exact package
+`125efe94e4ef9b22dea1369c4bbb11d4cad80237` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
 These revisions are the reviewed public M3 component commits merged to each

@@ -2,7 +2,20 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-artwork_root="${SLEEPY_ARTWORK_ROOT:-$repository_root/../sleepy-artwork}"
+if [[ -n "${SLEEPY_ARTWORK_ROOT:-}" ]]; then
+  artwork_root="$SLEEPY_ARTWORK_ROOT"
+else
+  artwork_root=""
+  for candidate in \
+    "$repository_root/../sleepy-artwork" \
+    "$repository_root/../../sleepy-artwork" \
+    "$repository_root/../../../sleepy-artwork"; do
+    if [[ -f "$candidate/branding/manifest.json" ]]; then
+      artwork_root="$(cd "$candidate" && pwd -P)"
+      break
+    fi
+  done
+fi
 manifest="$artwork_root/branding/manifest.json"
 
 test -f "$manifest"

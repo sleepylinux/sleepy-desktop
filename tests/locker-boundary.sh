@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+locker="$repo_root/locker"
+flake="$repo_root/flake.nix"
+
+fail() {
+  printf 'FAIL: %s\n' "$1" >&2
+  exit 1
+}
+
+for path in \
+  "$locker/CMakeLists.txt" \
+  "$locker/main.cpp" \
+  "$locker/supervisor.cpp" \
+  "$locker/secureprompt.hpp" \
+  "$locker/secureprompt.cpp" \
+  "$locker/qml/LockRoot.qml" \
+  "$locker/qml/SleepyLockView.qml" \
+  "$repo_root/tests/packaged-locker-smoke.sh" \
+  "$repo_root/tests/locker_native.cpp"; do
+  [[ -f "$path" ]] || fail "missing locker source: ${path#"$repo_root/"}"
+done
+
+rg -Fq 'Q_PROPERTY(int inputLength' "$locker/secureprompt.hpp" \
+  || fail 'QML may observe only the native input length'
+rg -Fq 'Q_PROPERTY(AuthState authState' "$locker/secureprompt.hpp" \
+  || fail 'QML must receive a redacted authentication state'
+if rg -n 'Q_PROPERTY\([^)]*(password|secret|text|buffer)|QString[[:space:]]+(password|secret|buffer)_' \
+    "$locker/secureprompt.hpp" "$locker/secureprompt.cpp"; then
+  fail 'plaintext credentials must never be a QML property or persistent QString'
+fi
+
+rg -Fq 'mlock(' "$locker/secureprompt.cpp" \
+  || fail 'native credential storage must request locked memory'
+rg -Fq 'explicit_bzero(' "$locker/secureprompt.cpp" \
+  || fail 'native credential storage must explicitly zeroize'
+for exit_path in submit cancel failure destruction shutdown; do
+  rg -Fq "ZEROIZE_${exit_path^^}" "$locker/secureprompt.cpp" \
+    || fail "missing auditable zeroization marker for $exit_path"
+done
+rg -Fq 'terminationSignalHandler' "$locker/secureprompt.cpp" \
+  || fail 'SIGTERM must zeroize native credential memory without depending on Qt teardown'
+for hint in ImhHiddenText ImhSensitiveData ImhNoPredictiveText; do
+  rg -Fq "$hint" "$locker/secureprompt.cpp" \
+    || fail "secure input must publish the $hint IME hint"
+done
+if rg -Fq 'pam_acct_mgmt' "$locker/secureprompt.cpp"; then
+  fail 'an unprivileged screen locker must not run login-time PAM account management'
+fi
+
+rg -Fq 'WlSessionLock' "$locker/qml/LockRoot.qml" \
+  || fail 'locker must own ext-session-lock through Quickshell WlSessionLock'
+rg -Fq 'WlSessionLockSurface' "$locker/qml/LockRoot.qml" \
+  || fail 'locker must create a lock surface for every compositor output'
+rg -Fq 'secure' "$locker/qml/LockRoot.qml" \
+  || fail 'locked acknowledgement must be driven by secure session-lock state'
+rg -Fq 'onVisibleChanged: {' "$locker/qml/LockRoot.qml" \
+  || fail 'each newly visible lock surface must reacquire keyboard focus'
+rg -Fq 'prompt.forceActiveFocus()' "$locker/qml/LockRoot.qml" \
+  || fail 'the native secure prompt must receive keyboard focus after lock activation'
+
+if rg -n '\b(unlock|Unlock)\b' "$locker" \
+    | rg -v 'PAM result|authenticated|unlock-and-destroy|sessionLock\.unlock\(\)|unlockAnimation'; then
+  fail 'locker must not expose a public or generic unlock path'
+fi
+rg -Fq 'SleepyLockView' "$locker/qml/LockRoot.qml" \
+  || fail 'secure prompt must host the complete Sleepy lock view'
+rg -Fq 'inputLength: prompt.inputLength' "$locker/qml/LockRoot.qml" \
+  || fail 'lock view may receive only redacted credential length'
+if rg -n '(property string (password|secret|text)|IpcHandler|GlobalShortcut|CustomShortcut)' \
+    "$locker/qml/SleepyLockView.qml"; then
+  fail 'lock view must remain presentation-only and receive no secret or authority'
+fi
+if rg -n 'property[[:space:]]+[[:alnum:]<>]+[[:space:]]+on[A-Z]' \
+    "$locker/qml/SleepyLockView.qml"; then
+  fail 'lock view properties must not collide with QML onSignal handler syntax'
+fi
+if rg -n '(IpcHandler|CustomShortcut|GlobalShortcut)' "$locker"; then
+  fail 'locker must not expose Quickshell IPC or shortcut authority'
+fi
+
+rg -Fq 'SO_PEERCRED' "$locker/main.cpp" \
+  || fail 'locker request endpoint must authenticate its local peer'
+rg -Fq 'lock' "$locker/main.cpp" \
+  || fail 'locker endpoint must accept a lock request'
+rg -Fq 'locked' "$locker/main.cpp" \
+  || fail 'locker endpoint must acknowledge only confirmed secure state'
+rg -Fq 'status\n' "$locker/main.cpp" \
+  || fail 'locker endpoint must be the authoritative secure-state source'
+rg -Fq 'suspend\n' "$locker/main.cpp" \
+  || fail 'suspend must hold PAM unlock across the sleep transition'
+rg -Fq 'unlockAllowed' "$locker/qml/LockRoot.qml" \
+  || fail 'PAM success must not unlock while a suspend transaction is held'
+rg -Fq 'URI Sleepy.Locker.Native' "$locker/CMakeLists.txt" \
+  || fail 'native secure prompt and endpoint must be a dedicated QML plugin'
+if rg -Fq 'QQmlApplicationEngine' "$locker/main.cpp"; then
+  fail 'standalone Qt engines cannot load Quickshell static Wayland modules'
+fi
+rg -Fq 'runner = "${quickshellWithModules}/bin/qs"' "$flake" \
+  || fail 'locker must run inside the pinned Quickshell engine'
+rg -Fq 'LockRoot.qml' "$flake" \
+  || fail 'packaged locker must start only its immutable lock configuration'
+rg -Fq 'sleepy-locker-supervisor' "$flake" \
+  || fail 'packaged locker must fail when its Quickshell child exits unexpectedly'
+if rg -Fq 'sleepy-locker-control' "$flake"; then
+  fail 'same-UID callers must not have a clean-exit locker control wrapper'
+fi
+rg -Fq 'packaged-locker-smoke.sh' "$flake" \
+  || fail 'Nix gate must acquire a real lock on the private two-output compositor'
+rg -Fq 'sleepy-locker = lockerPackage;' "$flake" \
+  || fail 'flake must export the dedicated sleepy-locker package'
+rg -Fq 'quickShellWithModules' "$flake" 2>/dev/null \
+  && fail 'locker package must use the reviewed quickshellWithModules value exactly'
+rg -Fq 'quickshellWithModules' "$flake" \
+  || fail 'locker package must carry the reviewed Quickshell Wayland module'
+
+printf 'PASS: fail-secure locker source boundary\n'

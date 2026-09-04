@@ -5,6 +5,10 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
 for file in \
+  src/services/DesktopProtocol.qml \
+  src/services/DesktopClient.qml \
+  src/services/DesktopModel.qml \
+  src/services/CommandClient.qml \
   src/services/SessionEventClient.qml \
   src/services/DailyClient.qml \
   src/services/OsdClient.qml \
@@ -17,8 +21,21 @@ for file in \
   test -f "$repo_root/$file"
 done
 
-rg -Fq '[root.executable, "events", "watch", "--format", "ndjson"]' \
-  "$repo_root/src/services/SessionEventClient.qml"
+rg -Fq 'DesktopProtocol {' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq '/sleepy/desktop.sock' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq '/sleepy/desktop-control.sock' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq 'minimumRetryMs: 250' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq 'maximumRetryMs: 10000' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq 'maximumObservedRequests: 64' "$repo_root/src/services/DesktopClient.qml"
+rg -Fq 'function acceptEnvelope(envelope)' "$repo_root/src/services/DesktopProtocol.qml"
+rg -Fq 'payload.type !== "fullSnapshot"' "$repo_root/src/services/DesktopProtocol.qml"
+rg -Fq 'envelope.generation <= root.generation' "$repo_root/src/services/DesktopProtocol.qml"
+rg -Fq 'root.clearObservedRequests()' "$repo_root/src/services/DesktopProtocol.qml"
+rg -Fq 'generation: DesktopClient.generation' "$repo_root/src/services/CommandClient.qml"
+rg -Fq '"schemaVersion": 3' "$repo_root/src/services/DesktopCommandProtocol.qml"
+rg -Fq '"expectedGeneration": root.generation' "$repo_root/src/services/DesktopCommandProtocol.qml"
+rg -Fq 'controlSocketPath: DesktopClient.controlSocketPath' "$repo_root/src/services/CommandClient.qml"
+rg -Fq 'property var desktopClient: DesktopClient' "$repo_root/src/services/SessionEventClient.qml"
 rg -Fq 'Socket {' "$repo_root/src/services/DailyClient.qml"
 rg -Fq '/sleepy/daily.sock' "$repo_root/src/services/DailyClient.qml"
 rg -Fq '/sleepy/osd.sock' "$repo_root/src/services/OsdClient.qml"
@@ -38,21 +55,24 @@ rg -Fq 'themeSocket.write(JSON.stringify(ack) + "\n")' \
 rg -Fq 'SLEEPY_QML_TIMEOUT_SECONDS' "$repo_root/tests/run.sh"
 rg -Fq 'timeout --signal=TERM --kill-after=5s' "$repo_root/tests/run.sh"
 rg -Fq "while [[ -e /tmp/.X''\${display_number}-lock" "$repo_root/flake.nix"
-rg -Fq 'eventProcess.signal(9)' "$repo_root/src/services/SessionEventClient.qml"
-for process in snapshot session; do
-  rg -Fq "root.${process}Process.signal(9)" "$repo_root/src/services/SystemAdapter.qml"
-done
-if rg -n 'mutationProcess|sleepyctl.*system.*set' "$repo_root/src/services/SystemAdapter.qml"; then
-  printf 'FAIL: production UI retained local M2 mutation authority\n' >&2
+if rg -n '\bProcess[[:space:]]*[{:]|Quickshell\.execDetached' \
+    "$repo_root/src/services/SessionEventClient.qml" \
+    "$repo_root/src/services/SystemAdapter.qml" \
+    "$repo_root/src/services/SessionAdapter.qml" \
+    "$repo_root/src/services/PresetAdapter.qml"; then
+  printf 'FAIL: production adapters retained local process authority\n' >&2
   exit 1
 fi
-rg -Fq 'root.settingsProcess.signal(9)' "$repo_root/src/services/SessionAdapter.qml"
-rg -Fq 'root.activationProcess.signal(9)' "$repo_root/src/services/SessionAdapter.qml"
-rg -Fq 'root.process.signal(9)' "$repo_root/src/services/PresetAdapter.qml"
-rg -Fq 'portalDark: Application.styleHints.colorScheme !== Qt.Light' \
-  "$repo_root/src/shell.qml"
-if rg -n 'appearanceMode.*system.*dark' "$repo_root/src/shell.qml"; then
-  printf 'FAIL: system appearance is hard-coded instead of portal-backed\n' >&2
+rg -Fq 'eventSource: DesktopClient' "$repo_root/src/services/SystemAdapter.qml"
+rg -Fq 'controlClient: CommandClient' "$repo_root/src/services/SystemAdapter.qml"
+rg -Fq 'CommandClient.appearance' "$repo_root/src/services/SessionAdapter.qml"
+rg -Fq 'Preset mutations are delegated to sleepy-sessiond' "$repo_root/src/services/PresetAdapter.qml"
+rg -Fq 'path: `${Paths.state}/scheme.json`' \
+  "$repo_root/src/services/Colours.qml"
+rg -Fq 'FileSystemModel {' "$repo_root/src/services/Wallpapers.qml"
+rg -Fq 'path: Paths.wallsdir' "$repo_root/src/services/Wallpapers.qml"
+if rg -n 'appearanceMode.*system.*dark|portalDark:' "$repo_root/src/shell.qml"; then
+  printf 'FAIL: modular shell appearance must come from the confirmed Sleepy appearance model\n' >&2
   exit 1
 fi
 
