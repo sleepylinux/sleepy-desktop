@@ -525,9 +525,9 @@
   {
     "name": "utility screenshot",
     "builder": "utilityScreenshot",
-    "args": ["active"],
+    "args": ["DP-1"],
     "family": "utility",
-    "command": { "type": "screenshot", "data": { "outputId": "active" } }
+    "command": { "type": "screenshot", "data": { "outputId": "DP-1" } }
   },
   {
     "name": "utility screenshot oversized output id",
@@ -565,6 +565,13 @@
     "args": ["suspend"],
     "family": "session",
     "command": "suspend"
+  },
+  {
+    "name": "session hibernate",
+    "builder": "session",
+    "args": ["hibernate"],
+    "family": "session",
+    "command": "hibernate"
   },
   {
     "name": "session logout",

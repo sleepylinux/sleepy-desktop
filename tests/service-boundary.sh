@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 shell="$repo_root/src/shell.qml"
 idle="$repo_root/src/modules/IdleMonitors.qml"
+session_surface="$repo_root/src/modules/session/Content.qml"
+launcher_actions="$repo_root/src/modules/launcher/services/Actions.qml"
+battery_monitor="$repo_root/src/modules/BatteryMonitor.qml"
 failed=0
 
 python3 "$repo_root/tests/active-graph.py" "$shell"
@@ -41,6 +44,22 @@ fi
 
 if ! rg -Fq 'CommandClient.session(DesktopCommands.session("lock"))' "$idle"; then
   printf 'FAIL: idle and login1 lock requests must route through sleepy-sessiond\n' >&2
+  failed=1
+fi
+if rg -n 'SessionManager\.(exec|logout|suspend|suspendThenHibernate|hibernate|poweroff|reboot)' \
+    "$repo_root/src"; then
+  printf 'FAIL: production session mutations must route through desktop-control.sock\n' >&2
+  failed=1
+fi
+for path in "$session_surface" "$launcher_actions" "$battery_monitor" "$idle"; do
+  if ! rg -Fq 'SessionActions.' "$path"; then
+    printf 'FAIL: %s must use the typed Sleepy session action router\n' "$path" >&2
+    failed=1
+  fi
+done
+if rg -n 'Quickshell\.execDetached\(action\)' "$idle" \
+    || ! rg -Fq '!SessionActions.exec(command) && !dangerous' "$launcher_actions"; then
+  printf 'FAIL: configurable session/idle actions may not fall back to arbitrary privileged argv\n' >&2
   failed=1
 fi
 if rg -n '^import "lock"|\bLock\s*\{|lock\.lock\.' "$shell" "$idle"; then

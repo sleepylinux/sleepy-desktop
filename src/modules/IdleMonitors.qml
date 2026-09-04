@@ -36,8 +36,8 @@ Scope {
             return;
         else if (typeof action === "string")
             Hypr.dispatch(Hypr.usingLua && ["dpms off", "dpms on"].includes(action) ? `hl.dsp.dpms({ action = "${action === "dpms off" ? "disable" : "enable"}" })` : action);
-        else if (!SessionManager.exec(action))
-            Quickshell.execDetached(action);
+        else
+            SessionActions.exec(action);
     }
 
     Connections {

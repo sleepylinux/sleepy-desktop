@@ -79,6 +79,6 @@ Scope {
         id: hibernateTimer
 
         interval: 5000
-        onTriggered: SessionManager.hibernate()
+        onTriggered: SessionActions.perform("hibernate")
     }
 }

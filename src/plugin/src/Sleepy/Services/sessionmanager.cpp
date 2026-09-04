@@ -3,12 +3,8 @@
 #include <QtDBus/qdbusconnection.h>
 #include <QtDBus/qdbuserror.h>
 #include <QtDBus/qdbusmessage.h>
-#include <QtDBus/qdbuspendingcall.h>
-#include <QtDBus/qdbuspendingreply.h>
 #include <QtDBus/qdbusreply.h>
 #include <qloggingcategory.h>
-
-#include "../toaster.hpp"
 
 Q_LOGGING_CATEGORY(lcSessionManager, "sleepy.services.sessionmanager", QtInfoMsg)
 
@@ -52,77 +48,6 @@ SessionManager::SessionManager(QObject* parent)
         qCWarning(lcSessionManager) << "Failed to connect to Unlock signal:" << bus->lastError().message();
 }
 
-bool SessionManager::exec(const QStringList& command) {
-    if (command.isEmpty()) {
-        return false;
-    }
-
-    using Qt::StringLiterals::operator""_s;
-    static const QHash<QString, void (SessionManager::*)()> cmds = {
-        { u"logout"_s, &SessionManager::logout },
-        { u"suspend"_s, &SessionManager::suspend },
-        { u"suspendthenhibernate"_s, &SessionManager::suspendThenHibernate },
-        { u"hibernate"_s, &SessionManager::hibernate },
-        { u"poweroff"_s, &SessionManager::poweroff },
-        { u"reboot"_s, &SessionManager::reboot },
-    };
-
-    auto cmd = command.first();
-    // Alias systemctl and loginctl to raw dbus calls (only match exact command)
-    if ((cmd == u"systemctl"_s || cmd == u"loginctl"_s) && command.size() == 2)
-        cmd = command.at(1);
-    if (cmd == u"loginctl"_s && command.size() == 3 && command.at(1) == u"terminate-user"_s && command.at(2).isEmpty())
-        cmd = u"logout"_s; // Manual alias `loginctl terminate-user ''` -> logout
-
-    // Normalise command
-    cmd = cmd.remove("-").remove("_").toLower();
-
-    const auto methodPtr = cmds.value(cmd, nullptr);
-    if (methodPtr) {
-        (this->*methodPtr)();
-        return true;
-    }
-
-    return false;
-}
-
-void SessionManager::logout() {
-    callSession("Terminate");
-}
-
-void SessionManager::suspend() {
-    callManager("Suspend");
-}
-
-void SessionManager::suspendThenHibernate() {
-    if (queryHibernateAvailable()) {
-        callManager("SuspendThenHibernate");
-    } else {
-        // Fall back to suspend when no hibernate
-        qCInfo(lcSessionManager) << "SuspendThenHibernate unavailable, falling back to suspend";
-        callManager("Suspend");
-    }
-}
-
-void SessionManager::hibernate() {
-    if (queryHibernateAvailable()) {
-        callManager("Hibernate");
-    } else {
-        qCWarning(lcSessionManager) << "Hibernate unavailable, ignoring hibernate request";
-
-        Toaster::instance()->toast(
-            tr("Hibernate failed"), tr("Enable hibernation to use this feature."), "warning", Toast::Type::Warning);
-    }
-}
-
-void SessionManager::poweroff() {
-    callManager("PowerOff");
-}
-
-void SessionManager::reboot() {
-    callManager("Reboot");
-}
-
 std::optional<QDBusConnection> SessionManager::getSystemBus() const {
     auto bus = QDBusConnection::systemBus();
     if (!bus.isConnected()) {
@@ -130,53 +55,6 @@ std::optional<QDBusConnection> SessionManager::getSystemBus() const {
         return std::nullopt;
     }
     return bus;
-}
-
-bool SessionManager::queryHibernateAvailable() const {
-    auto bus = getSystemBus();
-    if (!bus)
-        return false;
-
-    auto hibernateMsg = QDBusMessage::createMethodCall(LOGIN_SERVICE, LOGIN_PATH, LOGIN_IFACE, "CanHibernate");
-    const QDBusReply<QString> hibernateReply = bus->call(hibernateMsg);
-    if (!hibernateReply.isValid()) {
-        qCWarning(lcSessionManager) << "Failed to query hibernate support:" << hibernateReply.error().message();
-    } else {
-        const auto state = hibernateReply.value();
-        return state == "yes" || state == "challenge";
-    }
-
-    return false;
-}
-
-void SessionManager::call(const QString& path, const QString& iface, const QString& method, const QVariantList& args) {
-    auto bus = getSystemBus();
-    if (!bus)
-        return;
-
-    auto msg = QDBusMessage::createMethodCall(LOGIN_SERVICE, path, iface, method);
-    msg.setArguments(args);
-
-    auto* watcher = new QDBusPendingCallWatcher(bus->asyncCall(msg), this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, [method](QDBusPendingCallWatcher* self) {
-        const QDBusPendingReply<> reply = *self;
-        if (reply.isError())
-            qCWarning(lcSessionManager) << "Call to" << method << "failed:" << reply.error().message();
-        self->deleteLater();
-    });
-}
-
-void SessionManager::callManager(const QString& method) {
-    call(LOGIN_PATH, LOGIN_IFACE, method, { /* interactive = */ true });
-}
-
-void SessionManager::callSession(const QString& method) {
-    if (m_sessionPath.isEmpty()) {
-        qCWarning(lcSessionManager) << "Cannot call" << method << "- no session path";
-        return;
-    }
-
-    call(m_sessionPath, SESSION_IFACE, method);
 }
 
 void SessionManager::handlePrepareForSleep(bool sleep) {

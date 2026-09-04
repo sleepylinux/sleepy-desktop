@@ -46,7 +46,7 @@ Searcher {
                 Colours.setMode(command[1]);
             } else {
                 list.screenState.launcher = false;
-                if (!SessionManager.exec(command))
+                if (!SessionActions.exec(command) && !dangerous)
                     Quickshell.execDetached(command);
             }
         }

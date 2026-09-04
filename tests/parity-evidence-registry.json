@@ -37,7 +37,7 @@
     {
       "id": "shell-direct-integrations",
       "path": "tests/direct-integrations.sh",
-      "passIdentity": "PASS: 14 direct providers are registered and 271 active files use safe reviewed mechanisms"
+      "passIdentity": "PASS: 14 direct providers are registered and 272 active files use safe reviewed mechanisms"
     }
   ]
 }

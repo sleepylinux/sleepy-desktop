@@ -14,6 +14,7 @@ Column {
     id: root
 
     required property ScreenState screenState
+    property string pendingAction: ""
 
     padding: Tokens.padding.large
     rightPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
@@ -84,23 +85,37 @@ Column {
         id: button
 
         required property list<string> command
+        readonly property string action: SessionActions.resolveAction(command)
 
         function exec(): void {
-            SessionManager.exec(command);
+            if (!action.length)
+                return;
+            if (root.pendingAction !== action) {
+                root.pendingAction = action;
+                return;
+            }
+            root.pendingAction = "";
+            if (SessionActions.perform(action))
+                root.screenState.session = false;
         }
 
         implicitWidth: Tokens.sizes.session.button
         implicitHeight: Tokens.sizes.session.button
 
-        inactiveColour: activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
-        inactiveOnColour: activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+        inactiveColour: root.pendingAction === action ? Colours.palette.m3errorContainer : activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+        inactiveOnColour: root.pendingAction === action ? Colours.palette.m3onErrorContainer : activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
         radius: pressed ? Tokens.rounding.medium : activeFocus ? Tokens.rounding.extraLarge : Tokens.rounding.largeIncreased
         font: Tokens.font.icon.builders.large.scale(1.3).build()
         onClicked: exec()
 
         Keys.onEnterPressed: exec()
         Keys.onReturnPressed: exec()
-        Keys.onEscapePressed: root.screenState.session = false
+        Keys.onEscapePressed: {
+            if (root.pendingAction.length)
+                root.pendingAction = "";
+            else
+                root.screenState.session = false;
+        }
         Keys.onPressed: event => {
             if (!Config.session.vimKeybinds)
                 return;

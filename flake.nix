@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/63b2370a39f47f2b361310c12c0333da0faaee9d";
+      url = "github:sleepylinux/sleepy-sdk/f9178fd920877744db54ddccc59fd7efdc68bb6e";
       flake = false;
     };
 
@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/8430c42652905a298ae4010a15204397fd40dbdd";
+      url = "github:sleepylinux/sleepy-session/f0a29ac5559b374e25b5978dd1ed568a9e8b106d";
     };
 
     quickshell = {
@@ -298,9 +298,9 @@
               '';
 
               passthru = {
-                sdkRevision = "63b2370a39f47f2b361310c12c0333da0faaee9d";
+                sdkRevision = "f9178fd920877744db54ddccc59fd7efdc68bb6e";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "8430c42652905a298ae4010a15204397fd40dbdd";
+                sessionRevision = "f0a29ac5559b374e25b5978dd1ed568a9e8b106d";
                 inherit artworkRoot artworkManifest;
               };
 

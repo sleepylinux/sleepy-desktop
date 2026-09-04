@@ -29,15 +29,14 @@
     },
     {
       "path": "src/modules/GSFLoader.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "not reachable from the production shell",
-      "degradedState": "No production affordance; replacement exists only where strict desktop-v3 authority is available",
+      "disposition": "render",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "production ShellRoot font loader for the packaged Google Sans Flex asset",
+      "degradedState": "Qt falls back to the configured UI font if the packaged face cannot load",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy module depended on ambient shell-local authority or duplicated a retained Core surface",
-      "behaviorStatus": "approved-deviation"
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/modules/IdleMonitors.qml",
@@ -4228,7 +4227,7 @@
       "degradedState": "Network controls expose provider-local unavailable/error state",
       "tests": [
         "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_wifi_secrets_never_enter_process_argv_or_logs",
-        "tests/direct-integrations.sh#PASS: 14 direct providers are registered and 271 active files use safe reviewed mechanisms"
+        "tests/direct-integrations.sh#PASS: 14 direct providers are registered and 272 active files use safe reviewed mechanisms"
       ],
       "behaviorStatus": "verified"
     },
@@ -4385,6 +4384,18 @@
       ],
       "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
       "behaviorStatus": "approved-deviation"
+    },
+    {
+      "path": "src/services/SessionActions.qml",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-session",
+      "protocol": "typed desktop-v3 command over desktop-control.sock",
+      "degradedState": "Unrecognized or unavailable session actions fail closed without arbitrary argv fallback",
+      "tests": [
+        "tests/qml/tst_session_actions.qml#test_upstream_command_arrays_map_to_closed_sleepy_actions",
+        "tests/qml/tst_session_actions.qml#test_arbitrary_commands_never_gain_session_authority"
+      ],
+      "behaviorStatus": "verified"
     },
     {
       "path": "src/services/SessionAdapterCore.qml",

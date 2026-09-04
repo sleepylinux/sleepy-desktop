@@ -32,7 +32,9 @@ TestCase {
     function test_recorder_maps_region_and_audio_independently_and_deletes_through_daemon() {
         const recorder = source("../../src/services/Recorder.qml");
         const modal = source("../../src/modules/utilities/RecordingDeleteModal.qml");
-        containsAll(recorder, ["extraArgs.some(arg => arg.includes(\"r\"))", "extraArgs.some(arg => arg.includes(\"s\"))", "utilityStartRecording(outputId, withAudio)", "function deleteRecording(path: string)", "utilityDeleteRecording"]);
+        containsAll(recorder, ["extraArgs.some(arg => arg.includes(\"r\"))", "extraArgs.some(arg => arg.includes(\"s\"))", "Hypr.focusedMonitor?.name", "utilityStartRecording(outputId, withAudio)", "function deleteRecording(path: string)", "utilityDeleteRecording"]);
+        verify(recorder.indexOf('"active"') < 0);
+        verify(recorder.indexOf('"selection"') < 0);
         containsAll(modal, ["Recorder.deleteRecording(root.props.recordingConfirmDelete)"]);
         verify(modal.indexOf("CUtils.deleteFile") < 0);
     }
@@ -40,7 +42,7 @@ TestCase {
     function test_session_surface_keeps_original_animation_and_only_closed_native_actions() {
         const content = source("../../src/modules/session/Content.qml");
         const wrapper = source("../../src/modules/session/Wrapper.qml");
-        containsAll(content, ["Config.session.icons.logout", "Config.session.icons.shutdown", "Config.session.icons.hibernate", "Config.session.icons.reboot", "SessionManager.exec(command)", "Keys.onEscapePressed"]);
+        containsAll(content, ["Config.session.icons.logout", "Config.session.icons.shutdown", "Config.session.icons.hibernate", "Config.session.icons.reboot", "SessionActions.perform(action)", "pendingAction", "Keys.onEscapePressed"]);
         containsAll(wrapper, ["Behavior on offsetScale", "Anim {}", "screenState.session"]);
         verify(content.indexOf("Quickshell.execDetached(command)") < 0);
     }

@@ -19,7 +19,9 @@ Singleton {
     function start(extraArgs = []): void {
         const region = extraArgs.some(arg => arg.includes("r"));
         const withAudio = extraArgs.some(arg => arg.includes("s"));
-        const outputId = region ? "selection" : "active";
+        const outputId = String(Hypr.focusedMonitor?.name ?? "");
+        if (!outputId.length)
+            return;
         const command = DesktopCommands.utilityStartRecording(outputId, withAudio);
         if (command && CommandClient.utility(command)) {
             root.elapsed = 0;

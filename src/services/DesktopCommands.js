@@ -393,7 +393,7 @@ function utilitySetGameMode(enabled) {
 }
 
 function session(action) {
-    return ["lock", "suspend", "logout", "reboot", "powerOff"].indexOf(action) >= 0
+    return ["lock", "suspend", "hibernate", "logout", "reboot", "powerOff"].indexOf(action) >= 0
         ? action : null;
 }
 
