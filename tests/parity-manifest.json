@@ -17,14 +17,14 @@
   "entries": [
     {
       "path": "src/modules/BatteryMonitor.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "not reachable from the production shell",
-      "degradedState": "No production affordance; replacement exists only where strict desktop-v3 authority is available",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-session",
+      "protocol": "Quickshell UPower warnings; typed desktop-v3 hibernate through SessionActions",
+      "degradedState": "Unready battery is ignored; daemon rejection cannot execute a direct power command",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy module depended on ambient shell-local authority or duplicated a retained Core surface",
+      "approvedDeviation": "Reachable nonvisual service; physical low-battery hibernation evidence remains pending",
       "behaviorStatus": "approved-deviation"
     },
     {
@@ -40,38 +40,38 @@
     },
     {
       "path": "src/modules/IdleMonitors.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "not reachable from the production shell",
-      "degradedState": "No production affordance; replacement exists only where strict desktop-v3 authority is available",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-session",
+      "protocol": "Wayland idle notifications; Hyprland DPMS; typed desktop-v3 secure lock and sleep",
+      "degradedState": "Missing idle protocol prevents timeouts; rejected sleep commands have no direct fallback",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy module depended on ambient shell-local authority or duplicated a retained Core surface",
+      "approvedDeviation": "Reachable nonvisual service; real suspend/resume hardware evidence remains pending",
       "behaviorStatus": "approved-deviation"
     },
     {
       "path": "src/modules/ServiceLoader.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "not reachable from the production shell",
-      "degradedState": "No production affordance; replacement exists only where strict desktop-v3 authority is available",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Eager singleton initialization for native providers and private desktop-v3 clients",
+      "degradedState": "Individual providers report unavailable independently",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy module depended on ambient shell-local authority or duplicated a retained Core surface",
+      "approvedDeviation": "Reachable startup service; exact upstream behavior comparison remains pending",
       "behaviorStatus": "approved-deviation"
     },
     {
       "path": "src/modules/Shortcuts.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "not reachable from the production shell",
-      "degradedState": "No production affordance; replacement exists only where strict desktop-v3 authority is available",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Quickshell global shortcuts and shell surface controllers",
+      "degradedState": "Unavailable global-shortcut registration prevents the corresponding shortcut",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy module depended on ambient shell-local authority or duplicated a retained Core surface",
+      "approvedDeviation": "Reachable shortcut service; full shortcut parity evidence remains pending",
       "behaviorStatus": "approved-deviation"
     },
     {
@@ -4227,7 +4227,7 @@
       "degradedState": "Network controls expose provider-local unavailable/error state",
       "tests": [
         "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_wifi_secrets_never_enter_process_argv_or_logs",
-        "tests/direct-integrations.sh#PASS: 14 direct providers are registered and 272 active files use safe reviewed mechanisms"
+        "tests/direct-integrations.sh#PASS: 15 direct providers are registered and 272 active files use safe reviewed mechanisms"
       ],
       "behaviorStatus": "verified"
     },
@@ -4435,14 +4435,14 @@
     },
     {
       "path": "src/services/ShellIpc.qml",
-      "disposition": "drop-with-reason",
-      "sleepyOwner": "none",
-      "protocol": "replaced by strict desktop-v3 facade or not reachable",
-      "degradedState": "No local service fallback; the active Core graph reports daemon capability diagnostics",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "Quickshell IPC for drawers and native media; typed desktop-v3 protected session commands",
+      "degradedState": "Missing active screen or daemon rejects the requested action",
       "tests": [
         "tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"
       ],
-      "approvedDeviation": "Legacy service duplicated daemon authority or belongs to the quarantined pre-v3 surface graph",
+      "approvedDeviation": "Reachable compatibility service; complete upstream IPC parity remains pending",
       "behaviorStatus": "approved-deviation"
     },
     {

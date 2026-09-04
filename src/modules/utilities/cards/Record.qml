@@ -66,7 +66,7 @@ StyledRect {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Recorder.paused ? qsTr("Paused") : Recorder.running ? qsTr("Running...") : qsTr("Ready")
+                    text: !Recorder.available ? qsTr("Unavailable") : Recorder.selecting ? qsTr("Select a region") : Recorder.paused ? qsTr("Paused") : Recorder.running ? qsTr("Running...") : qsTr("Ready")
                     color: Colours.palette.m3onSurfaceVariant
                     font: Tokens.font.body.small
                     elide: Text.ElideRight
@@ -75,7 +75,7 @@ StyledRect {
             }
 
             SplitButton {
-                disabled: Recorder.running
+                disabled: !Recorder.available || Recorder.running || Recorder.selecting
 
                 active: menuItems.find(m => root.props.recordingMode === m.icon + m.text) ?? menuItems[0]
                 menu.onItemSelected: item => root.props.recordingMode = item.icon + item.text

@@ -29,8 +29,10 @@ QtObject {
         candidate = candidate.replace(/[-_]/g, "").toLowerCase();
         const actions = ({
             "lock": "lock",
+            "locksession": "lock",
             "suspend": "suspend",
             "hibernate": "hibernate",
+            "suspendthenhibernate": "suspendThenHibernate",
             "logout": "logout",
             "poweroff": "powerOff",
             "shutdown": "powerOff",

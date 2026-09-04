@@ -497,9 +497,16 @@
   {
     "name": "utility start recording",
     "builder": "utilityStartRecording",
-    "args": ["eDP-1", false],
+    "args": ["eDP-1", "output", false],
     "family": "utility",
-    "command": { "type": "startRecording", "data": { "outputId": "eDP-1", "audio": false } }
+    "command": { "type": "startRecording", "data": { "outputId": "eDP-1", "target": "output", "audio": false } }
+  },
+  {
+    "name": "utility start region recording with sound",
+    "builder": "utilityStartRecording",
+    "args": ["eDP-1", "region", true, {"x": -100, "y": 20, "width": 640, "height": 480}],
+    "family": "utility",
+    "command": { "type": "startRecording", "data": { "outputId": "eDP-1", "target": "region", "audio": true, "region": {"x": -100, "y": 20, "width": 640, "height": 480} } }
   },
   {
     "name": "utility delete recording",

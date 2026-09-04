@@ -36,7 +36,7 @@ done
 if ! jq -e '
   [.providers[].id] | sort ==
     ["appearance", "applications", "audio", "brightness", "clipboard", "hyprland", "media",
-     "network", "notifications", "power", "screenshot", "tray", "vpn", "weather"]
+     "network", "notifications", "power", "region-selection", "screenshot", "tray", "vpn", "weather"]
 ' "$repo_root/tests/direct-integrations.json" >/dev/null; then
   printf 'FAIL: reviewed direct provider registry is incomplete\n' >&2
   failed=1
@@ -58,7 +58,8 @@ for path in "$session_surface" "$launcher_actions" "$battery_monitor" "$idle"; d
   fi
 done
 if rg -n 'Quickshell\.execDetached\(action\)' "$idle" \
-    || ! rg -Fq '!SessionActions.exec(command) && !dangerous' "$launcher_actions"; then
+    || ! rg -Fq 'const sessionAction = SessionActions.resolveAction(command);' "$launcher_actions" \
+    || ! rg -Fq 'else if (!dangerous)' "$launcher_actions"; then
   printf 'FAIL: configurable session/idle actions may not fall back to arbitrary privileged argv\n' >&2
   failed=1
 fi

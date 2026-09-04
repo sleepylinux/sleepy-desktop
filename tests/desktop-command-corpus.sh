@@ -159,6 +159,7 @@ for index, fixture in enumerate(fixtures):
         failures.append(f"{name}: {error}")
 
 helpers = {
+    "parseRecordingRegion", "validRecordingRegion",
     "own", "exact", "oneOf", "noControlCharacters", "stableId",
     "validStableId", "positiveInteger", "normalized", "booleanValue",
     "enabledData", "systemDomain", "stableField", "validStableField",

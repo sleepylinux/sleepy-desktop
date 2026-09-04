@@ -20,7 +20,7 @@ Singleton {
     readonly property string imagecache: `${cache}/imagecache`
     readonly property string notifimagecache: `${imagecache}/notifs`
     readonly property string wallsdir: Quickshell.env("SLEEPY_WALLPAPERS_DIR") || absolutePath(GlobalConfig.paths.wallpaperDir)
-    readonly property string recsdir: Quickshell.env("SLEEPY_RECORDINGS_DIR") || `${videos}/Recordings`
+    readonly property string recsdir: `${state}/captures`
     readonly property string libdir: Quickshell.env("SLEEPY_LIB_DIR") || "/usr/lib/sleepy"
 
     function toLocalFile(path: url): string {

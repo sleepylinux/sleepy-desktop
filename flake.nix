@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/f9178fd920877744db54ddccc59fd7efdc68bb6e";
+      url = "github:sleepylinux/sleepy-sdk/1ee5b424887eb6f7acfe3b931b37a2c610ff6498";
       flake = false;
     };
 
@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/f0a29ac5559b374e25b5978dd1ed568a9e8b106d";
+      url = "github:sleepylinux/sleepy-session/125efe94e4ef9b22dea1369c4bbb11d4cad80237";
     };
 
     quickshell = {
@@ -62,6 +62,7 @@
             ddcutil = pkgs.ddcutil;
             notify-send = pkgs.libnotify;
             swappy = pkgs.swappy;
+            slurp = pkgs.slurp;
             sleepy = appearanceCli;
             ping = pkgs.iputils;
             ip = pkgs.iproute2;
@@ -81,6 +82,7 @@
               pkgs.power-profiles-daemon
               pkgs.upower
               pkgs.wl-clipboard
+              pkgs.gpu-screen-recorder
               pkgs.libqalculate
               pkgs.lm_sensors
             ]
@@ -298,9 +300,9 @@
               '';
 
               passthru = {
-                sdkRevision = "f9178fd920877744db54ddccc59fd7efdc68bb6e";
+                sdkRevision = "1ee5b424887eb6f7acfe3b931b37a2c610ff6498";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "f0a29ac5559b374e25b5978dd1ed568a9e8b106d";
+                sessionRevision = "125efe94e4ef9b22dea1369c4bbb11d4cad80237";
                 inherit artworkRoot artworkManifest;
               };
 

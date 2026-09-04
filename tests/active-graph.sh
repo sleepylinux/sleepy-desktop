@@ -34,4 +34,17 @@ for payload_style in quoted unquoted; do
     fi
 done
 
+if python3 "$gate" \
+        "$repo_root/tests/fixtures/active-graph-dropped-root/src/shell.qml" \
+        >"${TMPDIR:-/tmp}/sleepy-active-graph-dropped-root.out" 2>&1; then
+    printf 'FAIL: directly instantiated root declared dropped passed the gate\n' >&2
+    exit 1
+fi
+if ! rg -Fq 'directly instantiated production root is missing or declared dropped' \
+        "${TMPDIR:-/tmp}/sleepy-active-graph-dropped-root.out"; then
+    printf 'FAIL: dropped root fixture did not report the manifest contradiction\n' >&2
+    exit 1
+fi
+
+printf 'PASS: directly instantiated roots cannot be declared dropped\n'
 printf 'PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected\n'

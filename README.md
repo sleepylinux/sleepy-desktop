@@ -183,12 +183,12 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`f9178fd920877744db54ddccc59fd7efdc68bb6e` and the reviewed public
+`1ee5b424887eb6f7acfe3b931b37a2c610ff6498` and the reviewed public
 `sleepy-artwork` flake at
 `175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`f0a29ac5559b374e25b5978dd1ed568a9e8b106d` and prefixes its exact package
+`125efe94e4ef9b22dea1369c4bbb11d4cad80237` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
 These revisions are the reviewed public M3 component commits merged to each

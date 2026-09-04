@@ -2,6 +2,17 @@
   "formatVersion": 1,
   "providers": [
     {
+      "id": "region-selection",
+      "owner": "sleepy-shell",
+      "mechanism": "slurp with fixed argv",
+      "commands": ["slurp"],
+      "stateSource": "interactive Wayland region selection",
+      "mutationSource": "bounded geometry sent to typed Sleepy recording IPC",
+      "reconciliation": "successful selection exit and validated integer geometry",
+      "secretPolicy": "no credentials accepted",
+      "tests": ["tests/direct-integrations.sh", "tests/qml/tst_full_utilities_session.qml"]
+    },
+    {
       "id": "hyprland",
       "owner": "sleepy-shell",
       "mechanism": "Quickshell.Hyprland",

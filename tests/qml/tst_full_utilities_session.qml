@@ -2,6 +2,7 @@
 
 import QtQuick 6.0
 import QtTest 1.0
+import "../../src/services/DesktopCommands.js" as DesktopCommands
 
 TestCase {
     name: "FullUtilitiesSession"
@@ -32,7 +33,22 @@ TestCase {
     function test_recorder_maps_region_and_audio_independently_and_deletes_through_daemon() {
         const recorder = source("../../src/services/Recorder.qml");
         const modal = source("../../src/modules/utilities/RecordingDeleteModal.qml");
-        containsAll(recorder, ["extraArgs.some(arg => arg.includes(\"r\"))", "extraArgs.some(arg => arg.includes(\"s\"))", "Hypr.focusedMonitor?.name", "utilityStartRecording(outputId, withAudio)", "function deleteRecording(path: string)", "utilityDeleteRecording"]);
+        const region = DesktopCommands.parseRecordingRegion("640x480+-100+20\n");
+        compare(JSON.stringify(region), JSON.stringify({"x": -100, "y": 20, "width": 640, "height": 480}));
+        for (const audio of [false, true]) {
+            const full = DesktopCommands.utilityStartRecording("DP-1", "output", audio);
+            const area = DesktopCommands.utilityStartRecording("DP-1", "region", audio, region);
+            compare(full.data.target, "output");
+            compare(full.data.region, undefined);
+            compare(area.data.region.width, 640);
+            compare(area.data.region.x, -100);
+            compare(area.data.audio, audio);
+            compare(full.data.audio, audio);
+            verify(DesktopCommands.validUtilityCommand(area));
+        }
+        compare(DesktopCommands.utilityStartRecording("DP-1", "region", false), null);
+        for (const invalid of ["", "0x480+0+0", "640x480+999999+0", "640x480+0+0;exec", "32769x1+0+0"])
+            compare(DesktopCommands.parseRecordingRegion(invalid), null);
         verify(recorder.indexOf('"active"') < 0);
         verify(recorder.indexOf('"selection"') < 0);
         containsAll(modal, ["Recorder.deleteRecording(root.props.recordingConfirmDelete)"]);

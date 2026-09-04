@@ -2,9 +2,9 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-sdk_revision=f9178fd920877744db54ddccc59fd7efdc68bb6e
+sdk_revision=1ee5b424887eb6f7acfe3b931b37a2c610ff6498
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
-session_revision=f0a29ac5559b374e25b5978dd1ed568a9e8b106d
+session_revision=125efe94e4ef9b22dea1369c4bbb11d4cad80237
 flake="$repository_root/flake.nix"
 workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")

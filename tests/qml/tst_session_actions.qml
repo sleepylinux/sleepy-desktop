@@ -28,6 +28,8 @@ TestCase {
         compare(router.resolveAction(["loginctl", "terminate-user", ""]), "logout");
         compare(router.resolveAction(["systemctl", "suspend"]), "suspend");
         compare(router.resolveAction(["systemctl", "hibernate"]), "hibernate");
+        compare(router.resolveAction(["loginctl", "lock-session"]), "lock");
+        compare(router.resolveAction(["suspendThenHibernate"]), "suspendThenHibernate");
         compare(router.resolveAction(["systemctl", "poweroff"]), "powerOff");
         compare(router.resolveAction(["systemctl", "reboot"]), "reboot");
     }
@@ -37,5 +39,22 @@ TestCase {
         compare(router.resolveAction(["sh", "-c", "poweroff"]), "");
         compare(router.resolveAction(["systemctl", "poweroff", "--force"]), "");
         compare(router.resolveAction([]), "");
+    }
+
+    function test_launcher_daemon_rejection_does_not_execute_protected_argv() {
+        const qml = source("../../src/modules/launcher/services/Actions.qml");
+        const marker = "function onClicked(list: AppList): void {";
+        const body = qml.slice(qml.indexOf(marker) + marker.length, qml.lastIndexOf("\n        }"));
+        const invoke = new Function("command", "dangerous", "list", "SessionActions", "Quickshell", body);
+        const router = fresh();
+        let calls = [];
+        const session = {
+            resolveAction: command => router.resolveAction(command),
+            perform: action => { calls.push(action); return false; }
+        };
+        const quickshell = {execDetached: command => { calls.push("raw"); }};
+        for (const command of [["loginctl", "lock-session"], ["suspendThenHibernate"]])
+            invoke(command, false, {screenState: {launcher: true}}, session, quickshell);
+        compare(JSON.stringify(calls), JSON.stringify(["lock", "suspendThenHibernate"]));
     }
 }

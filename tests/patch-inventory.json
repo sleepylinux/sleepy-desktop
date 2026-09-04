@@ -3,6 +3,20 @@
   "upstreamRevision": "24aa15eefdb146350d2548c0a015b04eddbd1008",
   "entries": [
     {
+      "path": "src/utils/Paths.qml",
+      "upstreamPath": "utils/Paths.qml",
+      "category": "compatibility",
+      "reason": "Show recordings from the daemon-owned capture directory used by playback and deletion.",
+      "tests": ["tests/qml/tst_full_utilities_session.qml#test_recorder_maps_region_and_audio_independently_and_deletes_through_daemon"]
+    },
+    {
+      "path": "src/utils/SysInfo.qml",
+      "upstreamPath": "utils/SysInfo.qml",
+      "category": "compatibility",
+      "reason": "Handle absent SHELL in an isolated user service without breaking the system-info singleton.",
+      "tests": ["tests/active-graph.sh#PASS: production active graph is closed and import/quoted/unquoted payload fixtures are rejected"]
+    },
+    {
       "path": "src/CMakeLists.txt",
       "upstreamPath": "CMakeLists.txt",
       "category": "packaging",

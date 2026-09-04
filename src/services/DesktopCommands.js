@@ -356,12 +356,37 @@ function utilityInvokeTrayMenu(itemId, menuId) {
     } : null;
 }
 
-function utilityStartRecording(outputId, withAudio) {
+function validRecordingRegion(region) {
+    return exact(region, ["x", "y", "width", "height"], [])
+        && Number.isInteger(region.x) && Math.abs(region.x) <= 131072
+        && Number.isInteger(region.y) && Math.abs(region.y) <= 131072
+        && Number.isInteger(region.width) && region.width >= 1 && region.width <= 32768
+        && Number.isInteger(region.height) && region.height >= 1 && region.height <= 32768;
+}
+
+function parseRecordingRegion(text) {
+    const match = /^(\d+)x(\d+)\+(-?\d+)\+(-?\d+)$/.exec(String(text).trim());
+    if (!match)
+        return null;
+    const region = {"x": Number(match[3]), "y": Number(match[4]), "width": Number(match[1]), "height": Number(match[2])};
+    return validRecordingRegion(region) ? region : null;
+}
+
+function utilityStartRecording(outputId, target, withAudio, region) {
     const id = stableId(outputId);
+    const normalizedTarget = ["output", "region"].includes(target) ? target : null;
     const audio = booleanValue(withAudio);
-    return id && audio !== null ? {
-        "type": "startRecording", "data": {"outputId": id, "audio": audio}
-    } : null;
+    if (!id || !normalizedTarget || audio === null)
+        return null;
+    const data = {"outputId": id, "target": normalizedTarget, "audio": audio};
+    if (target === "region") {
+        if (!validRecordingRegion(region))
+            return null;
+        data.region = region;
+    } else if (region !== undefined && region !== null) {
+        return null;
+    }
+    return {"type": "startRecording", "data": data};
 }
 
 function utilityDeleteRecording(recordingId) {
@@ -393,7 +418,7 @@ function utilitySetGameMode(enabled) {
 }
 
 function session(action) {
-    return ["lock", "suspend", "hibernate", "logout", "reboot", "powerOff"].indexOf(action) >= 0
+    return ["lock", "suspend", "hibernate", "suspendThenHibernate", "logout", "reboot", "powerOff"].indexOf(action) >= 0
         ? action : null;
 }
 
@@ -619,8 +644,10 @@ function validUtilityCommand(command) {
     case "setGameMode":
         return validEnabledData(command.data);
     case "startRecording":
-        return exact(command.data, ["outputId", "audio"], [])
+        return exact(command.data, ["outputId", "target", "audio"], ["region"])
             && validStableId(command.data.outputId)
+            && oneOf(command.data.target, ["output", "region"])
+            && (command.data.target === "region" ? validRecordingRegion(command.data.region) : command.data.region === undefined)
             && typeof command.data.audio === "boolean";
     case "screenshot":
         return validStableField(command.data, "outputId");

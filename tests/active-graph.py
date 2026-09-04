@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pathlib
+import json
 import re
 import sys
 
@@ -95,6 +96,19 @@ def resolve_graph(root: pathlib.Path) -> tuple[pathlib.Path, list[pathlib.Path],
 def main() -> int:
     root = pathlib.Path(sys.argv[1]).resolve()
     _repo_src, graph, failures = resolve_graph(root)
+    manifest_path = _repo_src.parent / "tests/parity-manifest.json"
+    if manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        entries = {entry["path"]: entry for entry in manifest["entries"]}
+        root_text = root.read_text(encoding="utf-8")
+        direct_names, _ = component_references(root_text)
+        for path in graph:
+            if path.stem not in direct_names:
+                continue
+            relative = str(path.relative_to(_repo_src.parent))
+            entry = entries.get(relative)
+            if entry is None or entry["disposition"] == "drop-with-reason" or entry["sleepyOwner"] == "none":
+                failures.append(f"{relative}: directly instantiated production root is missing or declared dropped in parity manifest")
     for path in graph:
         text = path.read_text(encoding="utf-8")
         display = str(path)

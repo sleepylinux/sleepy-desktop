@@ -4,6 +4,7 @@ import Quickshell.Services.UPower
 import Sleepy
 import Sleepy.Config
 import Sleepy.Services
+import qs.services
 
 Scope {
     id: root
