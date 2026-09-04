@@ -80,4 +80,29 @@ if [[ $status -ne 0 || ! -e "$marker" ]]; then
     exit 1
 fi
 
+# Exercise the aggregate's real host-launch stanza with an unavailable shebang
+# interpreter, as in the Nix sandbox where /usr/bin/env does not exist.
+mkdir -p "$test_root/host-repo/tests"
+ln -s "$repo_root/tests/with-private-wayland.sh" "$test_root/host-repo/tests/with-private-wayland.sh"
+cat >"$test_root/host-repo/tests/quickshell-core-host.sh" <<'SH'
+#!/sleepy-test-no-such-interpreter
+printf '%s\n' "$1" >>"$SLEEPY_HOST_CALLS"
+SH
+chmod 0700 "$test_root/host-repo/tests/quickshell-core-host.sh"
+sed -n '/^private_compositor=/,$p' "$repo_root/tests/run.sh" >"$test_root/host-stanza.sh"
+if ! repo_root="$test_root/host-repo" \
+    SLEEPY_HOST_CALLS="$test_root/host-calls" \
+    SLEEPY_TEST_WAYLAND_COMPOSITOR="$fake_compositor" \
+    SLEEPY_REQUIRE_REAL_RHI_HOST=1 \
+    SLEEPY_PRIVATE_WAYLAND_TIMEOUT_SECONDS=10 \
+    bash -e "$test_root/host-stanza.sh" >"$test_root/host-stanza.log" 2>&1; then
+    printf 'FAIL: aggregate host launch depends on an unavailable shebang interpreter\n' >&2
+    cat "$test_root/host-stanza.log" >&2
+    exit 1
+fi
+if [[ "$(<"$test_root/host-calls")" != $'software\nrhi' ]]; then
+    printf 'FAIL: aggregate must run both software and RHI host gates\n' >&2
+    exit 1
+fi
+
 printf 'PASS: Nix aggregate preserves Xvfb while real host gates remain privately wrapped\n'

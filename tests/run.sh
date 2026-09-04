@@ -101,10 +101,10 @@ validate_parity_evidence_results "$parity_manifest" "$evidence_results"
 private_compositor="${SLEEPY_TEST_WAYLAND_COMPOSITOR:-${SLEEPY_TEST_SWAY:-}}"
 SLEEPY_TEST_QUICKSHELL="${SLEEPY_TEST_QUICKSHELL:-}"
 if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then
-  bash "$repo_root/tests/with-private-wayland.sh" \
+  bash "$repo_root/tests/with-private-wayland.sh" bash \
     "$repo_root/tests/quickshell-core-host.sh" software "$SLEEPY_TEST_QUICKSHELL"
   if [[ "${SLEEPY_REQUIRE_REAL_RHI_HOST:-0}" == 1 ]]; then
-    SLEEPY_TEST_WLR_RENDERER=gles2 bash "$repo_root/tests/with-private-wayland.sh" \
+    SLEEPY_TEST_WLR_RENDERER=gles2 bash "$repo_root/tests/with-private-wayland.sh" bash \
       "$repo_root/tests/quickshell-core-host.sh" rhi "$SLEEPY_TEST_QUICKSHELL"
   else
     printf 'DEFER: real Quickshell RHI host gate requires direct DRM/EGL access; run with SLEEPY_REQUIRE_REAL_RHI_HOST=1 on the acceptance host\n'
