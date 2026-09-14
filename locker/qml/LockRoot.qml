@@ -55,7 +55,7 @@ Scope {
                     // The native successful PAM result is the sole trigger for
                     // the protocol's unlock-and-destroy request.
                     if (sessionLock.secure && endpoint.unlockAllowed)
-                        sessionLock.unlock();
+                        root.lockRequested = false;
                 }
 
                 SleepyLockView {
