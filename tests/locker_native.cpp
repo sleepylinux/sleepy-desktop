@@ -2,6 +2,9 @@
 #include "main.hpp"
 
 #include <QGuiApplication>
+#include <QFile>
+#include <QJSEngine>
+#include <QRegularExpression>
 #include <QKeyEvent>
 #include <QLocalSocket>
 #include <QTemporaryDir>
@@ -45,6 +48,61 @@ private:
     }
 
 private slots:
+    void authenticatedQmlTransition_data()
+    {
+        QTest::addColumn<bool>("secure");
+        QTest::addColumn<bool>("allowed");
+        QTest::addColumn<bool>("correctSecret");
+        QTest::newRow("secure-success") << true << true << true;
+        QTest::newRow("suspend-held") << true << false << true;
+        QTest::newRow("not-secure") << false << true << true;
+        QTest::newRow("not-secure-and-held") << false << false << true;
+        QTest::newRow("rejected-secret") << true << true << false;
+    }
+
+    void authenticatedQmlTransition()
+    {
+        QFETCH(bool, secure);
+        QFETCH(bool, allowed);
+        QFETCH(bool, correctSecret);
+        QFile source(QStringLiteral(SLEEPY_LOCK_ROOT_PATH));
+        QVERIFY(source.open(QIODevice::ReadOnly));
+        const QString qml = QString::fromUtf8(source.readAll());
+        const QRegularExpression expression(
+            QStringLiteral("onAuthenticated:\\s*\\{(.*?)\\n\\s*\\}"),
+            QRegularExpression::DotMatchesEverythingOption);
+        const auto match = expression.match(qml);
+        QVERIFY(match.hasMatch());
+
+        // Execute the shipped handler, not a copy of its decision logic. The
+        // pinned WlSessionLock QML API exposes a writable locked property;
+        // its private C++ unlock() method is intentionally absent here.
+        QJSEngine engine;
+        auto root = engine.newObject();
+        root.setProperty(QStringLiteral("lockRequested"), true);
+        auto sessionLock = engine.newObject();
+        sessionLock.setProperty(QStringLiteral("secure"), secure);
+        auto endpoint = engine.newObject();
+        endpoint.setProperty(QStringLiteral("unlockAllowed"), allowed);
+        engine.globalObject().setProperty(QStringLiteral("root"), root);
+        engine.globalObject().setProperty(QStringLiteral("sessionLock"), sessionLock);
+        engine.globalObject().setProperty(QStringLiteral("endpoint"), endpoint);
+        const auto handler = engine.evaluate(QStringLiteral("(function() {\n") + match.captured(1) + QStringLiteral("\n})"));
+        QVERIFY2(!handler.isError(), qPrintable(handler.toString()));
+
+        FakeAuthenticator auth;
+        SecurePrompt prompt(&auth);
+        QJSValue outcome;
+        connect(&prompt, &SecurePrompt::authenticated, &prompt, [&] {
+            outcome = handler.call();
+        });
+        type(prompt, correctSecret ? QStringLiteral("correct horse") : QStringLiteral("wrong"));
+        QCOMPARE(prompt.authenticate(), correctSecret);
+        QVERIFY2(!outcome.isError(), qPrintable(outcome.toString()));
+        QCOMPARE(root.property(QStringLiteral("lockRequested")).toBool(), !(secure && allowed && correctSecret));
+        QVERIFY(prompt.secretStorageIsZeroForTesting());
+    }
+
     void correctSecretAuthenticatesAndZeroizes()
     {
         FakeAuthenticator auth;

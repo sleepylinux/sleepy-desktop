@@ -52,7 +52,9 @@ if(BUILD_TESTING)
         secureprompt.cpp
         secureprompt.hpp)
     target_include_directories(sleepy-locker-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-    target_compile_definitions(sleepy-locker-tests PRIVATE SLEEPY_LOCKER_TESTING)
+    target_compile_definitions(sleepy-locker-tests PRIVATE
+        SLEEPY_LOCKER_TESTING
+        SLEEPY_LOCK_ROOT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/qml/LockRoot.qml")
     target_link_libraries(sleepy-locker-tests PRIVATE
         Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::Network Qt6::Test PkgConfig::PAM)
     add_test(NAME sleepy-locker-native-tests COMMAND sleepy-locker-tests)
