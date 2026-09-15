@@ -38,6 +38,16 @@
       "id": "shell-direct-integrations",
       "path": "tests/direct-integrations.sh",
       "passIdentity": "PASS: 15 direct providers are registered and 273 active files use safe reviewed mechanisms"
+    },
+    {
+      "id": "shell-capture-client-process",
+      "path": "tests/capture-client-process.sh",
+      "passIdentity": "PASS: capture client preserves consent and cancellation across real processes"
+    },
+    {
+      "id": "shell-capture-writer",
+      "path": "tests/capture-writer.sh",
+      "passIdentity": "PASS: anonymous capture writer preserves pixels and rejects unsafe or failed writes"
     }
   ]
 }

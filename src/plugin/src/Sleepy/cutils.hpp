@@ -22,6 +22,8 @@ public:
     Q_INVOKABLE static void copyTextToClipboard(const QString& text);
     Q_INVOKABLE void copyItemToClipboard(QQuickItem* target, const QRect& rect, QJSValue onCopied);
     Q_INVOKABLE void saveItemToTemp(QQuickItem* target, const QRect& rect, QJSValue onSaved);
+    Q_INVOKABLE void saveItemToCapture(QQuickItem* target, const QRect& rect, const QString& path, QJSValue onSaved);
+    Q_INVOKABLE static bool captureJobStatus(const QString& state, const QString& code = {}, const QString& message = {});
 
     Q_INVOKABLE static QString toLocalFile(const QUrl& url);
 

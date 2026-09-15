@@ -15,6 +15,15 @@ MouseArea {
     required property LazyLoader loader
     required property ShellScreen screen
 
+    // Opt-in helper mode. Native Print/clipboard paths remain the defaults.
+    property bool captureJob: false
+    property string capturePath: ""
+    property bool captureInProgress: false
+    property bool captureCancelled: false
+    signal captureStarted()
+    signal captureFinished(bool ok, int width, int height)
+    signal captureDismissed()
+
     property bool onClient
 
     property real realBorderWidth: onClient ? (Hypr.options["general:border_size"] ?? 1) : 2
@@ -73,7 +82,12 @@ MouseArea {
 
     function save(): void {
         const selectionRect = Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh));
-        if (root.loader.clipboardOnly) {
+        if (root.captureJob) {
+            CUtils.saveItemToCapture(screencopy, selectionRect, root.capturePath, (ok, width, height) => {
+                if (!root.captureCancelled)
+                    root.captureFinished(ok, width, height);
+            });
+        } else if (root.loader.clipboardOnly) {
             CUtils.copyItemToClipboard(screencopy, selectionRect, () => {
                 Toaster.toast(qsTr("Screenshot taken"), qsTr("Screenshot copied to clipboard"), "screenshot_region");
                 closeAnim.start();
@@ -125,8 +139,13 @@ MouseArea {
     }
 
     onReleased: {
-        if (closeAnim.running)
+        if (closeAnim.running || root.captureInProgress || root.captureCancelled)
             return;
+        if (root.captureJob) {
+            if (root.sw < 1 || root.sh < 1) return;
+            root.captureInProgress = true;
+            root.captureStarted();
+        }
 
         if (root.loader.freeze) {
             save();
@@ -153,7 +172,14 @@ MouseArea {
     }
 
     focus: true
-    Keys.onEscapePressed: closeAnim.start()
+    Keys.onEscapePressed: {
+        if (root.captureJob) {
+            root.captureCancelled = true;
+            root.captureDismissed();
+        } else {
+            closeAnim.start();
+        }
+    }
 
     SequentialAnimation {
         id: closeAnim
@@ -221,6 +247,25 @@ MouseArea {
                     root.save();
                 }
             }
+        }
+    }
+
+    Rectangle {
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: 24
+        width: Math.min(parent.width - 32, 560)
+        height: consentText.implicitHeight + 24
+        radius: 12
+        color: Colours.palette.m3surfaceContainer
+        visible: root.captureJob && !root.captureInProgress
+        StyledText {
+            id: consentText
+            anchors.fill: parent
+            anchors.margins: 12
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            text: qsTr("Capture requested on %1. Select an area to allow a screenshot, or press Escape to cancel.").arg(root.screen.name)
         }
     }
 
