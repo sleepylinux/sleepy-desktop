@@ -1,4 +1,5 @@
 #include "cutils.hpp"
+#include "capturewriter.hpp"
 
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <QtGui/qclipboard.h>
@@ -15,6 +16,10 @@
 #include <qstandardpaths.h>
 #include <quuid.h>
 #include <qqmlengine.h>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <cerrno>
+#include <unistd.h>
 
 #include "util/metaenum.hpp"
 
@@ -96,6 +101,73 @@ void CUtils::saveItemToTemp(QQuickItem* target, const QRect& rect, QJSValue onSa
             });
             watcher->setFuture(future);
         });
+}
+
+void CUtils::saveItemToCapture(QQuickItem* target, const QRect& rect, const QString& path, QJSValue onSaved) {
+    const QString jobId = qEnvironmentVariable("SLEEPY_CAPTURE_JOB_ID");
+    static const QRegularExpression idPattern(
+        QStringLiteral("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"));
+    const QString runtime = QStringLiteral("/run/user/%1").arg(::geteuid());
+    const QString expected = runtime + QStringLiteral("/sleepy/captures/screenshot-%1.png").arg(jobId);
+    auto fail = [onSaved]() mutable {
+        if (onSaved.isCallable()) onSaved.call({QJSValue(false), QJSValue(0), QJSValue(0)});
+    };
+    if (!target || !target->window() || !rect.isValid() || !idPattern.match(jobId).hasMatch() || path != expected ||
+        qEnvironmentVariable("SLEEPY_CAPTURE_OUTPUT_FD") != QStringLiteral("4")) {
+        fail();
+        return;
+    }
+    const QRect selection = scaledSelection(target, rect);
+    const QSharedPointer<const QQuickItemGrabResult> result = target->grabToImage();
+    if (!result) {
+        fail();
+        return;
+    }
+    QObject::connect(result.data(), &QQuickItemGrabResult::ready, this,
+        [this, result, selection, onSaved]() mutable {
+            const auto future = QtConcurrent::run([result, selection]() {
+                const QImage image = result->image();
+                if (image.isNull() || !image.rect().contains(selection)) return QSize();
+                const QImage cropped = image.copy(selection);
+                return writeCapturePng(cropped, 4) ? cropped.size() : QSize();
+            });
+            auto* watcher = new QFutureWatcher<QSize>(this);
+            QObject::connect(watcher, &QFutureWatcher<QSize>::finished, this, [watcher, onSaved]() mutable {
+                const QSize size = watcher->result();
+                if (onSaved.isCallable())
+                    onSaved.call({QJSValue(size.isValid()), QJSValue(qMax(0, size.width())), QJSValue(qMax(0, size.height()))});
+                watcher->deleteLater();
+            });
+            watcher->setFuture(future);
+        });
+}
+
+bool CUtils::captureJobStatus(const QString& state, const QString& code, const QString& message) {
+    if (qEnvironmentVariable("SLEEPY_CAPTURE_STATUS_FD") != QStringLiteral("3")) return false;
+    if (state != QStringLiteral("awaitingConsent") && state != QStringLiteral("capturing") &&
+        state != QStringLiteral("completed") && state != QStringLiteral("cancelled") &&
+        state != QStringLiteral("failed")) return false;
+    QJsonObject value{{QStringLiteral("state"), state}};
+    if (state == QStringLiteral("failed")) {
+        if (code != QStringLiteral("captureFailed") && code != QStringLiteral("outputUnavailable")) return false;
+        if (message.isEmpty() || message.toUtf8().size() > 256) return false;
+        for (const QChar character : message) {
+            if (character.category() == QChar::Other_Control) return false;
+        }
+        value.insert(QStringLiteral("diagnostic"), QJsonObject{
+            {QStringLiteral("code"), code}, {QStringLiteral("message"), message}});
+    } else if (!code.isEmpty() || !message.isEmpty()) {
+        return false;
+    }
+    const QByteArray frame = QJsonDocument(value).toJson(QJsonDocument::Compact) + '\n';
+    qsizetype sent = 0;
+    while (sent < frame.size()) {
+        const auto count = ::write(3, frame.constData() + sent, static_cast<size_t>(frame.size() - sent));
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) return false;
+        sent += count;
+    }
+    return true;
 }
 
 QString CUtils::toLocalFile(const QUrl& url) {

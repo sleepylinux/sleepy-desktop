@@ -2,6 +2,7 @@ qml_module(sleepy-core
     URI Sleepy
     SOURCES
         cutils.cpp
+        capturewriter.cpp
         toaster.cpp
         circularbuffer.cpp
         qalculator.cpp

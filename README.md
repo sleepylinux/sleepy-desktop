@@ -183,14 +183,29 @@ nix build .#default
 ```
 
 The flake pins `sleepy-sdk` at
-`dff28bb596950d862ae5d219e478460dfa13e8f4` and the reviewed public
+`c7d7452163d4fdfa000634e2196212a53d8b159f` and the reviewed public
 `sleepy-artwork` flake at
 `175314b9c236c1b412e8e1ebc54bbe3937b0c90d`. Desktop checks consume its exact
 `checks.<system>.assets` output and expose exact `qml`, `package`, and `preview`
 checks for root integration. The runtime also pins `sleepy-session` at
-`ca37debffa9d01f1d0c9369a31faf85e88a1198a` and prefixes its exact package
+`341d69fcb245f41b56e72e8ac89630a5e1b7d4e2` and prefixes its exact package
 `bin` directory so every packaged runner resolves the reviewed `sleepyctl`.
 
 These revisions are the reviewed public M3 component commits merged to each
 repository's `main` branch. Desktop publication and root integration pin these
 exact immutable commits and rerun every component check.
+
+### Asynchronous screenshot jobs
+
+The opt-in capture v1 endpoint (`SLEEPY_CAPTURE_ENABLE=1` on the session
+daemon) supports `sleepyctl capture request JSON` and the `CaptureJobs` QML
+service. A begin request names one output and shows an interactive region picker;
+Escape or cancellation produces no screenshot. Waiting for consent does not
+block desktop commands. Completed jobs return a private temporary PNG, retained
+until history eviction or session shutdown; copy it to keep it permanently.
+
+The packaged `sleepy-capture-job-helper` uses the existing native screencopy
+picker, with PNG bytes passed through an anonymous descriptor to the daemon for
+validation and publication. It does not implement the legacy v3 screenshot or
+color-picker helper. Native Print shortcuts retain their existing behavior.
+Actual installed-VM acceptance for this new endpoint is still pending.

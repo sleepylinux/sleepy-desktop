@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sleepy-sdk = {
-      url = "github:sleepylinux/sleepy-sdk/dff28bb596950d862ae5d219e478460dfa13e8f4";
+      url = "github:sleepylinux/sleepy-sdk/c7d7452163d4fdfa000634e2196212a53d8b159f";
       flake = false;
     };
 
@@ -14,7 +14,7 @@
     };
 
     sleepy-session = {
-      url = "github:sleepylinux/sleepy-session/ca37debffa9d01f1d0c9369a31faf85e88a1198a";
+      url = "github:sleepylinux/sleepy-session/341d69fcb245f41b56e72e8ac89630a5e1b7d4e2";
     };
 
     quickshell = {
@@ -288,6 +288,16 @@
                   --add-flags "${runnerFlags "$out/${installRoot}"}"
 
                 ${pkgs.lib.optionalString withIpcClient ''
+                  install -Dm755 scripts/capture-job-helper.sh "$out/libexec/sleepy-capture-job-helper"
+                  makeWrapper "$out/libexec/sleepy-capture-job-helper" "$out/bin/sleepy-capture-job-helper" \
+                    --set SLEEPY_CAPTURE_RUNNER "${quickshellWithModules}/bin/qs" \
+                    --set SLEEPY_CAPTURE_QML "$out/${installRoot}/CaptureJob.qml" \
+                    --set QML_XHR_ALLOW_FILE_READ 1 \
+                    --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
+                    --set QML_IMPORT_PATH "${qtQmlImportPath}" \
+                    --set QT_PLUGIN_PATH "${pkgs.qt6.qtsvg}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins" \
+                    --set FONTCONFIG_FILE "${fontconfig}" \
+                    --prefix PATH : "${directRuntimePath}"
                   makeWrapper "${quickshellWithModules}/bin/qs" "$out/bin/sleepy-shell-ipc" \
                     --set QML_XHR_ALLOW_FILE_READ 1 \
                     --set QML2_IMPORT_PATH "${qtQmlImportPath}" \
@@ -300,9 +310,9 @@
               '';
 
               passthru = {
-                sdkRevision = "dff28bb596950d862ae5d219e478460dfa13e8f4";
+                sdkRevision = "c7d7452163d4fdfa000634e2196212a53d8b159f";
                 artworkRevision = "175314b9c236c1b412e8e1ebc54bbe3937b0c90d";
-                sessionRevision = "ca37debffa9d01f1d0c9369a31faf85e88a1198a";
+                sessionRevision = "341d69fcb245f41b56e72e8ac89630a5e1b7d4e2";
                 inherit artworkRoot artworkManifest;
               };
 
@@ -374,6 +384,7 @@
 
           qml = pkgs.runCommand "sleepy-desktop-qml-contracts" {
             artworkAssets = sleepy-artwork.checks.${system}.assets;
+            buildInputs = [ pkgs.qt6.qtbase ];
             nativeBuildInputs = [
               pkgs.bash
               pkgs.coreutils
@@ -382,6 +393,8 @@
               pkgs.glibc.bin
               pkgs.jq
               pkgs.procps
+              pkgs.pkg-config
+              pkgs.stdenv.cc
               referencePython
               pkgs.util-linux
               quickshellWithModules
