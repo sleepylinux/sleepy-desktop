@@ -4046,6 +4046,20 @@
       "behaviorStatus": "verified"
     },
     {
+      "path": "src/services/LockRequest.qml",
+      "disposition": "rewrite",
+      "sleepyOwner": "sleepy-desktop",
+      "protocol": "strict desktop-v3 Unix socket envelopes",
+      "degradedState": "Only lock may wait up to 10 seconds for a current snapshot and retry one explicit stale-generation rejection; transport and terminal failures are surfaced",
+      "tests": [
+        "tests/qml/tst_lock_request.qml#test_waits_for_ready_snapshot_and_coalesces_lock",
+        "tests/qml/tst_lock_request.qml#test_stale_retries_once_after_current_snapshot_with_new_id",
+        "tests/qml/tst_lock_request.qml#test_other_action_stale_is_not_replayed",
+        "tests/qml/tst_lock_request.qml#test_missing_snapshot_expires_without_sending"
+      ],
+      "behaviorStatus": "verified"
+    },
+    {
       "path": "src/services/ControlClient.qml",
       "disposition": "drop-with-reason",
       "sleepyOwner": "none",
@@ -4227,7 +4241,7 @@
       "degradedState": "Network controls expose provider-local unavailable/error state",
       "tests": [
         "tests/qml/tst_full_dashboard_sidebar_nexus.qml#test_wifi_secrets_never_enter_process_argv_or_logs",
-        "tests/direct-integrations.sh#PASS: 15 direct providers are registered and 272 active files use safe reviewed mechanisms"
+        "tests/direct-integrations.sh#PASS: 15 direct providers are registered and 273 active files use safe reviewed mechanisms"
       ],
       "behaviorStatus": "verified"
     },
