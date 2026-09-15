@@ -12,8 +12,8 @@ cat > "$tmp/services/qmldir" <<'EOF'
 singleton CaptureJobs CaptureJobs.qml
 CaptureJobsProtocol CaptureJobsProtocol.qml
 EOF
-cat > "$tmp/bin/sleepyctl" <<'PY'
-#!/usr/bin/env python3
+printf '#!%s\n' "$(command -v python3)" > "$tmp/bin/sleepyctl"
+cat >> "$tmp/bin/sleepyctl" <<'PY'
 import json,sys
 assert sys.argv[1:3] == ['capture','request']
 command=json.loads(sys.argv[3])['command']

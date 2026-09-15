@@ -75,7 +75,7 @@ os.execvp('bash', ['bash', *sys.argv[2:]])
         self.qml.write_text("// launcher fixture; no pixel capture claimed\n")
         self.record = directory / "invocation.json"
         runner = directory / "qs"
-        runner.write_text("#!/usr/bin/env python3\n" + '''
+        runner.write_text("#!" + sys.executable + "\n" + '''
 import json, os, stat, sys
 from pathlib import Path
 Path(os.environ['TEST_RECORD']).write_text(json.dumps({
