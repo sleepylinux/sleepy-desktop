@@ -1695,6 +1695,8 @@ Singleton {
         property var callback: null
         property list<string> cmdArgs: []
         property bool callbackCalled: false
+        property bool startedSuccessfully: false
+        property bool completionScheduled: false
         property int exitCode: 0
         property string stdinPayload: ""
 
@@ -1703,6 +1705,7 @@ Singleton {
         stdinEnabled: stdinPayload.length > 0
 
         onStarted: {
+            startedSuccessfully = true;
             if (stdinPayload.length > 0)
                 write(stdinPayload + "\n");
         }
@@ -1728,7 +1731,19 @@ Singleton {
             }
         }
 
-        onExited: code => { // qmllint disable signal-handler-parameters
+        // Quickshell 0.3.1 emits only runningChanged for FailedToStart.
+        // Its ordinary exit path emits exited first, followed by runningChanged.
+        onRunningChanged: {
+            if (!running && !startedSuccessfully)
+                complete(-1, "Could not start NetworkManager command.");
+        }
+
+        onExited: code => complete(code, "") // qmllint disable signal-handler-parameters
+
+        function complete(code: int, startError: string): void {
+            if (completionScheduled)
+                return;
+            completionScheduled = true;
             exitCode = code;
 
             Qt.callLater(() => {
@@ -1739,7 +1754,7 @@ Singleton {
 
                     if (proc.callback) {
                         const output = (stdoutCollector && stdoutCollector.text) ? stdoutCollector.text : "";
-                        const error = (stderrCollector && stderrCollector.text) ? stderrCollector.text : "";
+                        const error = startError || ((stderrCollector && stderrCollector.text) ? stderrCollector.text : "");
                         const success = exitCode === 0;
                         const cmdIsConnection = isConnectionCommand(proc.cmdArgs);
 

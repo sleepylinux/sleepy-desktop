@@ -98,6 +98,13 @@ done
 
 validate_parity_evidence_results "$parity_manifest" "$evidence_results"
 
+if [[ -n "${SLEEPY_TEST_QUICKSHELL:-}" ]]; then
+  python3 "$repo_root/tests/nmcli-process-lifecycle.py" \
+    "$SLEEPY_TEST_QUICKSHELL" "$(command -v bash)"
+else
+  printf 'SKIP: real Nmcli process lifecycle requires SLEEPY_TEST_QUICKSHELL\n'
+fi
+
 private_compositor="${SLEEPY_TEST_WAYLAND_COMPOSITOR:-${SLEEPY_TEST_SWAY:-}}"
 SLEEPY_TEST_QUICKSHELL="${SLEEPY_TEST_QUICKSHELL:-}"
 if [[ -n "$private_compositor" && -x "$private_compositor" ]]; then
