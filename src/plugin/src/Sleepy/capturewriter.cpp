@@ -35,10 +35,11 @@ bool writeCapturePng(const QImage& image, int outputFd) {
         saved = writer.write(image) && file.flush();
         file.close();
     }
-    // No pathname exists to clean up or replace. The daemon rejects an empty FD.
+    // No pathname exists to clean up or replace. Cleanup failure still fails the
+    // capture; the daemon must never publish a helper-reported failed result.
     if (!saved) {
-        ::ftruncate(fd, 0);
-        ::lseek(fd, 0, SEEK_SET);
+        if (::ftruncate(fd, 0) != 0) return false;
+        if (::lseek(fd, 0, SEEK_SET) != 0) return false;
     }
     return saved;
 }
