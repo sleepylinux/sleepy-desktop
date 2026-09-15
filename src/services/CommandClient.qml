@@ -14,13 +14,13 @@ QtObject {
     property alias timeoutMs: protocol.timeoutMs
     property alias pendingRequestId: protocol.pendingRequestId
     property alias queuedLine: protocol.queuedLine
-    property alias status: protocol.status
-    property alias errorString: protocol.errorString
+    readonly property string status: lockRequest.pending ? "loading" : lockRequest.errorString.length ? "error" : protocol.status
+    readonly property string errorString: lockRequest.pending ? "" : lockRequest.errorString || protocol.errorString
     property alias lastResult: protocol.lastResult
     property alias observedRequestIds: protocol.observedRequestIds
     property alias observedRequestOrder: protocol.observedRequestOrder
     property alias responseTimeout: protocol.responseTimeout
-    readonly property bool busy: protocol.busy
+    readonly property bool busy: protocol.busy || lockRequest.pending
 
     signal commandCompleted(var result)
     signal commandFailed(string message)
@@ -44,10 +44,15 @@ QtObject {
     function send(family, command, requestId) {
         if (!protocol.send(family, command, requestId || ""))
             return false;
+        lockRequest.errorString = "";
+        root.dispatch();
+        return true;
+    }
+
+    function dispatch() {
         controlSocket.connected = true;
         if (controlSocket.connected)
             root.flush();
-        return true;
     }
 
     function system(command, requestId) {
@@ -75,6 +80,13 @@ QtObject {
     }
 
     function session(command, requestId) {
+        // Explicit request IDs retain their original one-shot correlation API.
+        if (command === "lock") {
+            if (!requestId)
+                return lockRequest.request();
+            if (lockRequest.pending)
+                return false;
+        }
         return root.send("session", command, requestId || "");
     }
 
@@ -104,6 +116,17 @@ QtObject {
         protocol.queuedLine = "";
     }
 
+    readonly property LockRequest lockRequest: LockRequest {
+        protocol: protocol
+        ready: DesktopClient.connectionState === "ready" && DesktopClient.snapshotReceived
+        generation: DesktopClient.generation
+        onDispatchNeeded: root.dispatch()
+        onFailed: message => {
+            console.warn("Sleepy lock request failed:", message);
+            root.commandFailed(message);
+        }
+    }
+
     readonly property DesktopCommandProtocol protocol: DesktopCommandProtocol {
         id: protocol
 
@@ -113,9 +136,13 @@ QtObject {
         onResponseAccepted: result => {
             DesktopClient.acceptCommandResult(result);
             controlSocket.connected = false;
+            lockRequest.handleResult(result);
         }
         onCommandCompleted: result => root.commandCompleted(result)
-        onCommandFailed: message => root.commandFailed(message)
+        onCommandFailed: message => {
+            if (!lockRequest.handleFailure(message))
+                root.commandFailed(message);
+        }
         onMutationCompleted: root.mutationCompleted()
     }
 
