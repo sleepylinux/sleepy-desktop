@@ -198,12 +198,7 @@ Singleton {
 
         activeProcesses.push(proc);
 
-        proc.processFinished.connect(() => {
-            const index = activeProcesses.indexOf(proc);
-            if (index >= 0) {
-                activeProcesses.splice(index, 1);
-            }
-        });
+        proc.processFinished.connect(() => root.retireCommandProcess(proc));
 
         Qt.callLater(() => {
             proc.exec(proc.cmdArgs);
@@ -214,8 +209,43 @@ Singleton {
         executeCommand(["--ask", ...args], callback, secret);
     }
 
+    function retireCommandProcess(proc: var): void {
+        const index = root.activeProcesses.indexOf(proc);
+        if (index >= 0) {
+            const remaining = root.activeProcesses.slice();
+            remaining.splice(index, 1);
+            root.activeProcesses = remaining;
+        }
+        // QObject parenting retains completed Process/collector objects until
+        // destruction, even after removing them from the active list.
+        proc.destroy();
+    }
+
     function isMutationCommand(args: list<string>): bool {
-        return args.some(arg => ["connect", "disconnect", "up", "down", "add", "delete", "modify", "radio"].includes(arg));
+        let index = args[0] === "nmcli" ? 1 : 0;
+        // Only skip the option grammar used by our fixed command builders.
+        // Values and profile/device names must never be interpreted as verbs.
+        while (index < args.length && args[index].startsWith("-")) {
+            if (["--ask", "-t", "--terse"].includes(args[index])) {
+                index += 1;
+            } else if (["-f", "--fields", "-g", "--get-values", "-w", "--wait"].includes(args[index])) {
+                index += 2;
+            } else {
+                return false;
+            }
+        }
+        const object = args[index];
+        const action = args[index + 1];
+        if (object === "radio")
+            return ["wifi", "wwan", "all"].includes(action) && ["on", "off"].includes(args[index + 2]);
+        if (["connection", "con", "c"].includes(object))
+            return ["up", "down", "add", "delete", "modify"].includes(action);
+        if (["device", "dev", "d"].includes(object)) {
+            if (["wifi", "w"].includes(action))
+                return ["connect", "rescan", "hotspot"].includes(args[index + 2]);
+            return ["connect", "disconnect", "modify", "set", "delete"].includes(action);
+        }
+        return false;
     }
 
     function refresh(): void {
@@ -1702,42 +1732,41 @@ Singleton {
             exitCode = code;
 
             Qt.callLater(() => {
-                if (callbackCalled) {
-                    processFinished();
-                    return;
-                }
-
-                if (proc.callback) {
-                    const output = (stdoutCollector && stdoutCollector.text) ? stdoutCollector.text : "";
-                    const error = (stderrCollector && stderrCollector.text) ? stderrCollector.text : "";
-                    const success = exitCode === 0;
-                    const cmdIsConnection = isConnectionCommand(proc.cmdArgs);
-
-                    if (root.handlePasswordRequired(proc, error, output, exitCode)) {
-                        processFinished();
+                try {
+                    if (callbackCalled) {
                         return;
                     }
 
-                    const needsPassword = cmdIsConnection && root.detectPasswordRequired(error);
+                    if (proc.callback) {
+                        const output = (stdoutCollector && stdoutCollector.text) ? stdoutCollector.text : "";
+                        const error = (stderrCollector && stderrCollector.text) ? stderrCollector.text : "";
+                        const success = exitCode === 0;
+                        const cmdIsConnection = isConnectionCommand(proc.cmdArgs);
 
-                    if (!success && cmdIsConnection && root.pendingConnection) {
-                        const failedSsid = root.pendingConnection.ssid;
-                        root.connectionFailed(failedSsid);
+                        if (root.handlePasswordRequired(proc, error, output, exitCode)) {
+                            return;
+                        }
+
+                        const needsPassword = cmdIsConnection && root.detectPasswordRequired(error);
+
+                        if (!success && cmdIsConnection && root.pendingConnection) {
+                            const failedSsid = root.pendingConnection.ssid;
+                            root.connectionFailed(failedSsid);
+                        }
+
+                        callbackCalled = true;
+                        callback({
+                            success: success,
+                            output: output,
+                            error: error,
+                            exitCode: proc.exitCode,
+                            needsPassword: needsPassword || false
+                        });
+                        root.lastError = success ? "" : error;
+                        if (success && root.isMutationCommand(proc.cmdArgs))
+                            Qt.callLater(root.refresh);
                     }
-
-                    callbackCalled = true;
-                    callback({
-                        success: success,
-                        output: output,
-                        error: error,
-                        exitCode: proc.exitCode,
-                        needsPassword: needsPassword || false
-                    });
-                    root.lastError = success ? "" : error;
-                    if (success && root.isMutationCommand(proc.cmdArgs))
-                        Qt.callLater(root.refresh);
-                    processFinished();
-                } else {
+                } finally {
                     processFinished();
                 }
             });
