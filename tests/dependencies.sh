@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 sdk_revision=dff28bb596950d862ae5d219e478460dfa13e8f4
 artwork_revision=175314b9c236c1b412e8e1ebc54bbe3937b0c90d
-session_revision=4d48082a0ff22cfefa6ebd007f41b6192709aa27
+session_revision=ca37debffa9d01f1d0c9369a31faf85e88a1198a
 flake="$repository_root/flake.nix"
 workflow="$repository_root/.github/workflows/check.yml"
 metadata_and_docs=("$flake" "$repository_root/README.md")
