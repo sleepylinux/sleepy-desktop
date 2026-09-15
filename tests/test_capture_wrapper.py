@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -20,6 +21,31 @@ class CaptureWrapperTests(unittest.TestCase):
         self.assertEqual(record["path"], self.path)
         self.assertEqual(record["fd"], "4")
         self.assertEqual(record["umask"], 0o077)
+
+    def test_anonymous_fd_survives_wrapper_exec(self):
+        fd = os.memfd_create("sleepy-wrapper-test", os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+        self.addCleanup(os.close, fd)
+        os.fchmod(fd, 0o600)
+        identity = os.fstat(fd)
+        launcher = """
+import os, sys
+source_fd = int(sys.argv[1])
+os.dup2(source_fd, 4, inheritable=True)
+os.set_inheritable(4, True)
+if source_fd != 4:
+    os.close(source_fd)
+os.execvp('bash', ['bash', *sys.argv[2:]])
+"""
+        environment = dict(self.environment, TEST_WRITE_CAPTURE_FD="1",
+                           TEST_CAPTURE_INODE=str(identity.st_ino))
+        result = subprocess.run(
+            [sys.executable, "-c", launcher, str(fd), str(self.wrapper), *self.arguments],
+            env=environment, pass_fds=(fd,), text=True, capture_output=True, timeout=5)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"state": "awaitingConsent"})
+        self.assertIn("ordinary Qt diagnostic", result.stderr)
+        self.assertEqual(os.pread(fd, 128, 0), b"capture wrapper descriptor proof")
+        self.assertEqual(os.fstat(fd).st_ino, identity.st_ino)
 
     def test_rejected_arguments_never_start_the_renderer(self):
         self.assertTrue(self.wrapper.is_file(), "capture helper wrapper is missing")
@@ -50,7 +76,7 @@ class CaptureWrapperTests(unittest.TestCase):
         self.record = directory / "invocation.json"
         runner = directory / "qs"
         runner.write_text("#!/usr/bin/env python3\n" + '''
-import json, os, sys
+import json, os, stat, sys
 from pathlib import Path
 Path(os.environ['TEST_RECORD']).write_text(json.dumps({
     'argv': sys.argv[1:], 'job': os.environ['SLEEPY_CAPTURE_JOB_ID'],
@@ -58,6 +84,13 @@ Path(os.environ['TEST_RECORD']).write_text(json.dumps({
     'path': os.environ['SLEEPY_CAPTURE_OUTPUT_PATH'], 'fd': os.environ['SLEEPY_CAPTURE_OUTPUT_FD'],
     'umask': os.umask(0o077),
 }))
+if os.environ.get('TEST_WRITE_CAPTURE_FD') == '1':
+    info = os.fstat(4)
+    assert stat.S_ISREG(info.st_mode) and info.st_nlink == 0
+    assert stat.S_IMODE(info.st_mode) == 0o600 and info.st_uid == os.geteuid()
+    assert info.st_ino == int(os.environ['TEST_CAPTURE_INODE'])
+    assert info.st_size == 0
+    os.write(4, b'capture wrapper descriptor proof')
 print('ordinary Qt diagnostic', flush=True)
 os.write(3, b'{"state":"awaitingConsent"}\\n')
 ''')
